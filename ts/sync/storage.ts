@@ -45,6 +45,11 @@ export class SyncInfoStorage extends StorageModule {
                         deviceId: '$deviceId:string'
                     }
                 },
+                removeAllDevices: {
+                    collection: 'syncDeviceInfo',
+                    operation: 'deleteObjects',
+                    args: {}
+                },
             }
         }
     }
@@ -62,5 +67,9 @@ export class SyncInfoStorage extends StorageModule {
 
     async removeDevice(deviceId: string) {
         return this.operation('removeDevice', {deviceId})
+    }
+
+    async removeAllDevices() {
+        return this.operation('removeAllDevices', {})
     }
 }
