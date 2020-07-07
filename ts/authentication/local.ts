@@ -1,11 +1,11 @@
-import { LocalStorageService } from '../local-storage'
-import {  AuthenticatedUser, } from './types'
+// import { LocalStorageService } from '../local-storage' // TODO: This module vanished...
+import { AuthenticatedUser, } from './types'
 import { MemoryAuthService } from './memory'
 
 export class LocalAuthService extends MemoryAuthService {
     private initialized = false
 
-    constructor(private options: { localStorage: LocalStorageService }) {
+    constructor(private options: { localStorage: any }) {
         super()
     }
 

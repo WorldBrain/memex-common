@@ -1,21 +1,40 @@
 {
-    "name": "@worldbrain/memex-common",
-    "version": "0.0.1",
-    "description": "Shared Storex common definitions for the Memex extension and mobile apps",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://git@github.com/WorldBrain/memex-common.git"
-    },
-    "keywords": [
-        "storex",
-        "memex"
-    ],
-    "author": "Vincent den Boer",
-    "bugs": {
-        "url": "https://github.com/WorldBrain/memex-common/issues"
-    },
-    "homepage": "https://github.com/WorldBrain/memex-common"
+  "name": "@worldbrain/memex-common",
+  "version": "0.0.1",
+  "description": "Shared Storex common definitions for the Memex extension and mobile apps",
+  "scripts": {
+    "prepare": "tsc",
+    "prepare:watch": "npm run prepare -- -w",
+    "test": "mocha --require ts-node/register \"ts/**/*.test.ts\"",
+    "test:watch": "mocha -r source-map-support/register -r ts-node/register \"ts/**/*.test.ts\" --watch --watch-extensions ts"
+  },
+  "dependencies": {
+    "@worldbrain/memex-storage": "^0.1.1",
+    "@worldbrain/storex": "^0.4.1",
+    "@worldbrain/storex-sync": "^0.1.1",
+    "json-date-parser": "^1.0.1",
+    "tweetnacl-async": "^2.0.0",
+    "tweetnacl-util": "^0.15.1",
+    "typed-emitter": "^1.2.0",
+    "openpgp": "^4.10.4"
+  },
+  "devDependencies": {
+    "@types/openpgp": "^0.0.29",
+    "mocha": "^8.0.1",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/WorldBrain/memex-common.git"
+  },
+  "keywords": [
+    "storex",
+    "memex"
+  ],
+  "author": "Vincent den Boer",
+  "bugs": {
+    "url": "https://github.com/WorldBrain/memex-common/issues"
+  },
+  "homepage": "https://github.com/WorldBrain/memex-common"
 }
