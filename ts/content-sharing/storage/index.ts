@@ -16,6 +16,7 @@ export default class ContentSharingStorage extends StorageModule {
                     createdWhen: { type: 'timestamp' },
                     updatedWhen: { type: 'timestamp' },
                     title: { type: 'string' },
+                    description: { type: 'string', optional: true },
                 },
                 relationships: [
                     { alias: 'creator', childOf: 'user' }

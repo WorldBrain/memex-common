@@ -3,6 +3,7 @@ export type SharedList =
         createdWhen: number
         updatedWhen: number
         title: string
+        description?: string
     }
 
 export type SharedListEntry =
