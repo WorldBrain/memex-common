@@ -108,10 +108,11 @@ export default class ContentSharingStorage extends StorageModule {
 
     async retrieveList(listReference: SharedListReference): Promise<{
         sharedList: SharedList,
-        entries: Array<SharedListEntry & { sharedList: SharedListReference }>
+        entries: Array<SharedListEntry & { sharedList: SharedListReference }>,
+        creator: UserReference
     } | null> {
         const id = (listReference as StoredSharedListReference).id
-        const sharedList: SharedList = await this.operation('findListByID', { id })
+        const sharedList: SharedList & { creator: string } = await this.operation('findListByID', { id })
         if (!sharedList) {
             return null
         }
@@ -123,6 +124,6 @@ export default class ContentSharingStorage extends StorageModule {
                 sharedList: { type: 'shared-list-reference', id: entry.sharedList } as StoredSharedListReference
             })
         )
-        return { sharedList, entries }
+        return { sharedList, entries, creator: { type: 'user-reference', id: sharedList.creator } }
     }
 }
