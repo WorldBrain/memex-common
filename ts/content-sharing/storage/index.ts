@@ -101,6 +101,11 @@ export default class ContentSharingStorage extends StorageModule {
         return typeof id === "string" ? id : id.toString()
     }
 
+    getSharedListReferenceFromLinkID(id: string): SharedListReference {
+        const reference: StoredSharedListReference = { type: 'shared-list-reference', id }
+        return reference
+    }
+
     async retrieveList(listReference: SharedListReference): Promise<{
         sharedList: SharedList,
         entries: Array<SharedListEntry & { sharedList: SharedListReference }>
