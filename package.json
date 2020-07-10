@@ -2,6 +2,8 @@
   "name": "@worldbrain/memex-common",
   "version": "0.0.1",
   "description": "Shared Storex common definitions for the Memex extension and mobile apps",
+  "main": "lib/index.js",
+  "typings": "lib/index",
   "scripts": {
     "prepare": "tsc",
     "prepare:watch": "npm run prepare -- -w",
