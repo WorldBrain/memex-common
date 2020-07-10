@@ -9,8 +9,10 @@
     "test:watch": "mocha -r source-map-support/register -r ts-node/register \"ts/**/*.test.ts\" --watch --watch-extensions ts"
   },
   "dependencies": {
+    "@worldbrain/memex-stemmer": "^0.1.0",
     "@worldbrain/memex-storage": "^0.1.1",
     "@worldbrain/storex": "^0.4.1",
+    "@worldbrain/storex-pattern-modules": "^0.3.0",
     "@worldbrain/storex-sync": "^0.1.1",
     "json-date-parser": "^1.0.1",
     "tweetnacl-async": "^2.0.0",

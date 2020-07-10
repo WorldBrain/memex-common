@@ -7,6 +7,14 @@
   resolved "https://registry.yarnpkg.com/@types/openpgp/-/openpgp-0.0.29.tgz#feabb9d547cb107f7b98fdd51ac616f6cf5aaebd"
   integrity sha512-z0W6ghY+Fo4Idd+y20pnvcZItdS5ARHUZkzPTK7Hy+GZ3u0MF0I8t31CQ7158T0HmBnA4NuZET0QIXDy6exbYg==
 
+"@worldbrain/memex-stemmer@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@worldbrain/memex-stemmer/-/memex-stemmer-0.1.0.tgz#f9678a63a9c0d45ae402023d6024cc580cfa1ae6"
+  integrity sha512-a/0Zk1vfFaci97UGiIhMOsqwRQhulNUM51lFvAd9shNJoQUaMZ8D278tGc1kVr3rlxdths1E7RAyJTTdC3oBGw==
+  dependencies:
+    remove-stopwords "^1.0.3"
+    url-regex "^4.1.1"
+
 ansi-colors@4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.1.tgz#cbb9ae256bf750af1eab344f229aa27fe94ba348"
@@ -370,6 +378,11 @@ inherits@2, inherits@^2.0.1:
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
+ip-regex@^1.0.1:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/ip-regex/-/ip-regex-1.0.3.tgz#dc589076f659f419c222039a33316f1c7387effd"
+  integrity sha1-3FiQdvZZ9BnCIgOaMzFvHHOH7/0=
+
 is-arguments@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/is-arguments/-/is-arguments-1.0.4.tgz#3faf966c7cba0ff437fb31f6250082fcf0448cf3"
@@ -681,6 +694,11 @@ readdirp@~3.3.0:
   dependencies:
     picomatch "^2.0.7"
 
+remove-stopwords@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/remove-stopwords/-/remove-stopwords-1.0.3.tgz#f24b481f0576ab2834a1abde01ad8ff6175efe72"
+  integrity sha512-RloG2AjACz0mAjZkJdeejQMfhd0m0OAHeLNci3tRSaPZJkNWECmSuG47y3voXvbWm/Q2VTPeRmCKeJ/+d0fzUQ==
+
 require-directory@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/require-directory/-/require-directory-2.1.1.tgz#8c64ad5fd30dab1c976e2344ffe7f792a6a6df42"
@@ -795,6 +813,11 @@ supports-color@^5.3.0:
   dependencies:
     has-flag "^3.0.0"
 
+tlds@^1.187.0:
+  version "1.207.0"
+  resolved "https://registry.yarnpkg.com/tlds/-/tlds-1.207.0.tgz#459264e644cf63ddc0965fece3898913286b1afd"
+  integrity sha512-k7d7Q1LqjtAvhtEOs3yN14EabsNO8ZCoY6RESSJDB9lst3bTx3as/m1UuAeCKzYxiyhR1qq72ZPhpSf+qlqiwg==
+
 to-regex-range@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/to-regex-range/-/to-regex-range-5.0.1.tgz#1648c44aae7c8d988a326018ed72f5b4dd0392e4"
@@ -832,6 +855,14 @@ typescript@^3.9.6:
   version "3.9.6"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.6.tgz#8f3e0198a34c3ae17091b35571d3afd31999365a"
   integrity sha512-Pspx3oKAPJtjNwE92YS05HQoY7z2SFyOpHo9MqJor3BXAGNaPUs83CuVp9VISFkSjyRfiTpmKuAYGJB7S7hOxw==
+
+url-regex@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/url-regex/-/url-regex-4.1.1.tgz#a5617b22e15e26dac57ce74c3f52088bcdfec995"
+  integrity sha512-ViSDgDPNKkrQHI81GLCjdDN+Rsk3tAW/uLXlBOJxtcHzWZjta58Z0APXhfXzS89YszsheMnEvXeDXsWUB53wwA==
+  dependencies:
+    ip-regex "^1.0.1"
+    tlds "^1.187.0"
 
 which-module@^2.0.0:
   version "2.0.0"
