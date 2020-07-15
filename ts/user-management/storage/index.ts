@@ -92,7 +92,10 @@ export default class UserStorage extends StorageModule {
             return foundUser
         }
 
-        return (await this.operation('createUser', user)).object
+        return (await this.operation('createUser', {
+            id: userReference.id,
+            ...user
+        })).object
     }
 
     async getUser(userReference: UserReference): Promise<User | null> {
@@ -100,7 +103,6 @@ export default class UserStorage extends StorageModule {
         return foundUser
     }
 
-    debug = true
     async updateUser(userReference: UserReference, options: { knownStatus?: 'exists' | 'new' }, updates: Partial<User>) {
         const status = options.knownStatus ?? (
             (await this.operation('findUserById', { id: userReference.id }))

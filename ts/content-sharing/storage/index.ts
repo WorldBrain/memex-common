@@ -70,7 +70,8 @@ export default class ContentSharingStorage extends StorageModule {
             ...options.listData,
             creator: options.userReference.id,
             createdWhen: '$now',
-            updatedWhen: '$now'
+            updatedWhen: '$now',
+            description: options.listData.description ?? null,
         })).object
         const reference: StoredSharedListReference = { type: 'shared-list-reference', id: sharedList.id }
         return reference
