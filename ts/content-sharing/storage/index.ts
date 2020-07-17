@@ -1,4 +1,4 @@
-import { StorageModule, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
+import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { SharedList, SharedListEntry, SharedListReference } from '../types'
 import { UserReference } from '../../web-interface/types/users'
@@ -8,6 +8,12 @@ interface StoredSharedListReference extends SharedListReference {
 }
 
 export default class ContentSharingStorage extends StorageModule {
+    constructor(private options: StorageModuleConstructorArgs & {
+        autoPkType: 'number' | 'string'
+    }) {
+        super(options)
+    }
+
     getConfig = (): StorageModuleConfig => ({
         collections: {
             sharedList: {
@@ -58,6 +64,14 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'findObjects',
                 collection: 'sharedListEntry',
                 args: { sharedList: '$sharedListID' }
+            },
+            updateListTitle: {
+                operation: 'updateObjects',
+                collection: 'sharedList',
+                args: [
+                    { id: '$id' },
+                    { title: '$newTitle' }
+                ]
             }
         }
     })
@@ -126,5 +140,20 @@ export default class ContentSharingStorage extends StorageModule {
             })
         )
         return { sharedList, entries, creator: { type: 'user-reference', id: sharedList.creator } }
+    }
+
+    async updateListTitle(listReference: SharedListReference, newTitle: string) {
+        await this.operation('updateListTitle', {
+            id: this._idFromListReference(listReference as StoredSharedListReference),
+            newTitle
+        })
+    }
+
+    _idFromListReference(listReference: StoredSharedListReference): number | string {
+        let id = listReference.id
+        if (this.options.autoPkType === 'number' && typeof id === 'string') {
+            id = parseInt(id)
+        }
+        return id
     }
 }
