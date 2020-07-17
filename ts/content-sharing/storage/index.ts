@@ -28,6 +28,19 @@ export default class ContentSharingStorage extends StorageModule {
                     { alias: 'creator', childOf: 'user' }
                 ]
             },
+            sharedListCreatorInfo: {
+                version: STORAGE_VERSIONS[0].date,
+                fields: {
+                    localListId: { type: 'timestamp' },
+                },
+                relationships: [
+                    { childOf: 'sharedList' },
+                    { alias: 'creator', childOf: 'user' }
+                ],
+                groupBy: [
+                    { key: 'creator', subcollectionName: 'lists' }
+                ]
+            },
             sharedListEntry: {
                 version: STORAGE_VERSIONS[0].date,
                 fields: {
@@ -41,15 +54,16 @@ export default class ContentSharingStorage extends StorageModule {
                     { childOf: 'sharedList' },
                     { alias: 'creator', childOf: 'user' }
                 ],
-                // groupBy: [
-                //     { key: 'sharedList', subcollectionName: 'entries' }
-                // ]
             }
         },
         operations: {
             createSharedList: {
                 operation: 'createObject',
                 collection: 'sharedList',
+            },
+            createSharedListCreatorInfo: {
+                operation: 'createObject',
+                collection: 'sharedListCreatorInfo',
             },
             createListEntries: {
                 operation: 'executeBatch',
@@ -78,6 +92,7 @@ export default class ContentSharingStorage extends StorageModule {
 
     async createSharedList(options: {
         listData: Omit<SharedList, 'createdWhen' | 'updatedWhen'>
+        localListId: number,
         userReference: UserReference
     }): Promise<SharedListReference> {
         const sharedList = (await this.operation('createSharedList', {
@@ -88,6 +103,11 @@ export default class ContentSharingStorage extends StorageModule {
             description: options.listData.description ?? null,
         })).object
         const reference: StoredSharedListReference = { type: 'shared-list-reference', id: sharedList.id }
+        await this.operation('createSharedListCreatorInfo', {
+            creator: options.userReference.id,
+            sharedList: reference.id,
+            localListId: options.localListId,
+        })
         return reference
     }
 

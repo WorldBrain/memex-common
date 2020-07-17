@@ -6,6 +6,11 @@ export type SharedList =
         description?: string
     }
 
+export type SharedListCreatorInfo =
+    {
+        localListId: number
+    }
+
 export type SharedListEntry =
     {
         createdWhen: number
