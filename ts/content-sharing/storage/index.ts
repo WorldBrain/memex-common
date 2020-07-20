@@ -116,7 +116,7 @@ export default class ContentSharingStorage extends StorageModule {
 
     async createListEntries(options: {
         listReference: SharedListReference,
-        listEntries: Omit<SharedListEntry, 'createdWhen' | 'updatedWhen'>[],
+        listEntries: Array<Omit<SharedListEntry, 'createdWhen' | 'updatedWhen'> & { createdWhen?: number | '$now' }>,
         userReference: UserReference
     }) {
         await this.operation('createListEntries', {
@@ -126,7 +126,7 @@ export default class ContentSharingStorage extends StorageModule {
                 args: {
                     sharedList: (options.listReference as StoredSharedListReference).id,
                     creator: options.userReference.id,
-                    createdWhen: '$now',
+                    createdWhen: '$now', // may be overwritten by entry content
                     updatedWhen: '$now',
                     ...entry,
                 }
