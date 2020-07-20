@@ -77,7 +77,10 @@ export default class ContentSharingStorage extends StorageModule {
             findListEntriesByList: {
                 operation: 'findObjects',
                 collection: 'sharedListEntry',
-                args: { sharedList: '$sharedListID' }
+                args: [
+                    { sharedList: '$sharedListID' },
+                    { sort: ['createdWhen', 'desc'] }
+                ]
             },
             updateListTitle: {
                 operation: 'updateObjects',
