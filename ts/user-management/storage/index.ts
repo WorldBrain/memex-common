@@ -81,7 +81,18 @@ export default class UserStorage extends StorageModule {
                     args: { user: '$user:pk' }
                 }
             },
-            methods: {
+            accessRules: {
+                ownership: {
+                    user: {
+                        field: 'id',
+                        access: ['create', 'update']
+                    }
+                },
+                permissions: {
+                    user: {
+                        read: { rule: true }
+                    }
+                }
             }
         }
     }

@@ -90,6 +90,27 @@ export default class ContentSharingStorage extends StorageModule {
                     { title: '$newTitle' }
                 ]
             }
+        },
+        accessRules: {
+            ownership: {
+                sharedList: {
+                    field: 'creator',
+                    access: ['create', 'update', 'delete'],
+                },
+                sharedListCreatorInfo: {
+                    field: 'creator',
+                    access: ['create', 'delete'],
+                },
+                sharedListEntry: {
+                    field: 'creator',
+                    access: ['create', 'update', 'delete'],
+                },
+            },
+            permissions: {
+                sharedList: { list: { rule: true }, read: { rule: true } },
+                sharedListCreatorInfo: { list: { rule: true }, read: { rule: true } },
+                sharedListEntry: { list: { rule: true }, read: { rule: true } },
+            }
         }
     })
 
