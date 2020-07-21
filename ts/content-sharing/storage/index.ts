@@ -85,7 +85,10 @@ export default class ContentSharingStorage extends StorageModule {
             findListEntriesByUrl: {
                 operation: 'findObjects',
                 collection: 'sharedListEntry',
-                args: { normalizedUrl: '$normalizedUrl:string' }
+                args: {
+                    sharedList: '$sharedList:pk',
+                    normalizedUrl: '$normalizedUrl:string'
+                }
             },
             deleteListEntriesByIds: {
                 operation: 'deleteObjects',
@@ -166,9 +169,13 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async removeListEntries(options: {
+        listReference: SharedListReference,
         normalizedUrl: string
     }) {
-        const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', options)
+        const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', {
+            sharedList: (options.listReference as StoredSharedListReference).id,
+            normalizedUrl: options.normalizedUrl,
+        })
         const ids = entries.map(entry => entry.id)
         await this.operation('deleteListEntriesByIds', { ids })
     }
