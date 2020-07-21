@@ -72,15 +72,25 @@ export default class ContentSharingStorage extends StorageModule {
             findListByID: {
                 operation: 'findObject',
                 collection: 'sharedList',
-                args: { id: '$id' }
+                args: { id: '$id:pk' }
             },
             findListEntriesByList: {
                 operation: 'findObjects',
                 collection: 'sharedListEntry',
                 args: [
-                    { sharedList: '$sharedListID' },
-                    { sort: ['createdWhen', 'desc'] }
+                    { sharedList: '$sharedListID:pk' },
+                    { order: [['createdWhen', 'desc']] }
                 ]
+            },
+            findListEntriesByUrl: {
+                operation: 'findObjects',
+                collection: 'sharedListEntry',
+                args: { normalizedUrl: '$normalizedUrl:string' }
+            },
+            deleteListEntriesByIds: {
+                operation: 'deleteObjects',
+                collection: 'sharedListEntry',
+                args: { id: { $in: '$ids:array:pk' } }
             },
             updateListTitle: {
                 operation: 'updateObjects',
@@ -99,7 +109,7 @@ export default class ContentSharingStorage extends StorageModule {
                 },
                 sharedListCreatorInfo: {
                     field: 'creator',
-                    access: ['create', 'delete'],
+                    access: ['create', 'update', 'delete'],
                 },
                 sharedListEntry: {
                     field: 'creator',
@@ -153,6 +163,14 @@ export default class ContentSharingStorage extends StorageModule {
                 }
             }))
         })
+    }
+
+    async removeListEntries(options: {
+        normalizedUrl: string
+    }) {
+        const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', options)
+        const ids = entries.map(entry => entry.id)
+        await this.operation('deleteListEntriesByIds', { ids })
     }
 
     getSharedListLinkID(listReference: SharedListReference): string {
