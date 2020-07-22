@@ -158,7 +158,7 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'createObject',
                 collection: 'sharedListEntry',
                 args: {
-                    sharedList: (options.listReference as StoredSharedListReference).id,
+                    sharedList: this._idFromListReference(options.listReference as StoredSharedListReference),
                     creator: options.userReference.id,
                     createdWhen: '$now', // may be overwritten by entry content
                     updatedWhen: '$now',
@@ -173,10 +173,13 @@ export default class ContentSharingStorage extends StorageModule {
         normalizedUrl: string
     }) {
         const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', {
-            sharedList: (options.listReference as StoredSharedListReference).id,
+            sharedList: this._idFromListReference(options.listReference as StoredSharedListReference),
             normalizedUrl: options.normalizedUrl,
         })
         const ids = entries.map(entry => entry.id)
+        if (!ids.length) {
+            return
+        }
         await this.operation('deleteListEntriesByIds', { ids })
     }
 
