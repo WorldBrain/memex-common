@@ -1,5 +1,5 @@
 import StorageManager from '@worldbrain/storex'
-import { SyncPostReceiveProcessor } from '@worldbrain/storex-sync'
+import { SyncPostReceiveProcessor, ExecuteReconciliationOperation } from '@worldbrain/storex-sync'
 import { SharedSyncLog } from '@worldbrain/storex-sync/lib/shared-sync-log'
 import { SyncLoggingMiddleware } from '@worldbrain/storex-sync/lib/logging-middleware'
 import { SyncSettingsStore } from '@worldbrain/storex-sync/lib/integration/settings'
@@ -30,6 +30,7 @@ export default class SyncService {
     settingStore: SyncSettingsStore
     secretStore?: SyncSecretStore
     syncLoggingMiddleware?: SyncLoggingMiddleware
+    executeReconciliationOperation?: ExecuteReconciliationOperation
 
     constructor(
         private options: {
@@ -96,6 +97,13 @@ export default class SyncService {
                     throw new Error(
                         `Tried to toggle sync logging before logging middleware was created`,
                     )
+                }
+            },
+            executeReconciliationOperation: async (name, ...operation) => {
+                if (this.executeReconciliationOperation) {
+                    return this.executeReconciliationOperation(name, ...operation)
+                } else {
+                    return options.storageManager.operation(name, ...operation)
                 }
             },
         })
