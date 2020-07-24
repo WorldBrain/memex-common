@@ -37,6 +37,22 @@ export class MemoryAuthService implements AuthService {
         this.setUser(parsed.user)
     }
 
+    async loginWithEmailAndPassword(email: string, password: string) {
+        if (password !== 'password') {
+            throw new Error(
+                `Tried to log in with invalid password (use 'password'): ` +
+                    password,
+            )
+        }
+
+        this.setUser({
+            email,
+            displayName: 'test',
+            emailVerified: true,
+            id: email,
+        })
+    }
+
     async refreshUserInfo(): Promise<void> {}
 
     signOut() {

@@ -75,6 +75,10 @@ export class WorldbrainAuthService implements AuthService {
         await this.firebase.auth().signInWithCustomToken(token)
     }
 
+    async loginWithEmailAndPassword(email: string, password: string) {
+        await this.firebase.auth().signInWithEmailAndPassword(email, password)
+    }
+
     signOut() {
         this.firebase.auth().signOut()
     }
