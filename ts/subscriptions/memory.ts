@@ -1,7 +1,7 @@
 import {
     SubscriptionsService,
     Claims,
-    SubscriptionCheckoutOptions,
+    SubscriptionCheckoutOptions, SubscriptionManageOptions,
 } from './types'
 
 export class MemorySubscriptionsService
@@ -35,7 +35,7 @@ export class MemorySubscriptionsService
     }
 
     async getManageLink(
-        options?: SubscriptionCheckoutOptions,
+        options?: SubscriptionManageOptions,
     ): Promise<{ "access_url":string }> {
         return {"access_url":`https://manage.link` }
     }

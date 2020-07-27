@@ -1,7 +1,7 @@
 export interface SubscriptionsService {
     getCurrentUserClaims(forceRefresh?: boolean): Promise<Claims | null>
     getCheckoutLink(options: SubscriptionCheckoutOptions): Promise<{ url: string }>
-    getManageLink(options?: SubscriptionCheckoutOptions): Promise<{ access_url: string }>
+    getManageLink(options?: SubscriptionManageOptions): Promise<{ access_url: string }>
 }
 
 // Taken from: https://apidocs.chargebee.com/docs/api/subscriptions#subscription_status
@@ -19,6 +19,7 @@ export type SubscriptionMap = {
         expiry: number, // Epoch in seconds
         status?: SubscriptionStatus,
         donation?:number,
+        id?: string,
     }
 }
 export type FeatureMap = {
@@ -35,4 +36,8 @@ export type UserPlan =
 export interface SubscriptionCheckoutOptions {
     planId: UserPlan
     pioneerDonationAmount?: number
+}
+
+export interface SubscriptionManageOptions {
+   forwardUrl ?: string
 }

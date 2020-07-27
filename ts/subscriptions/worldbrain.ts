@@ -1,7 +1,7 @@
 import {
     SubscriptionsService,
     Claims,
-    SubscriptionCheckoutOptions,
+    SubscriptionCheckoutOptions, SubscriptionManageOptions,
 } from './types'
 
 export class WorldbrainSubscriptionsService
@@ -30,10 +30,10 @@ export class WorldbrainSubscriptionsService
     }
 
     getManageLink = async (
-        options = {},
+        options : SubscriptionManageOptions = {},
     ): Promise<{ "access_url":string }> => {
         options["redirect_url"] = this.redirectUrl
-        options["access_url"] = this.redirectUrl
+        options["forward_url"] = options.forwardUrl
         const result = await this._callFirebaseFunction('getManageLink',options)
         return result.data['portal_session']
     }
