@@ -1,0 +1,1 @@
+export { STORAGE_VERSIONS } from '@worldbrain/memex-storage/lib/browser-extension/storage/versions'

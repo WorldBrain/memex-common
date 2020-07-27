@@ -1,7 +1,7 @@
-import * as openpgp from 'openpgp'
 import nacl from 'tweetnacl'
 import { ab2str } from './utils'
 import { SyncEncyption } from './types'
+const openpgp = require('openpgp')
 
 export class OpenPgpJsSyncEncryption implements SyncEncyption {
     async gernerateKey(): Promise<string> {

@@ -5,7 +5,7 @@ import { AuthService, AuthenticatedUser, AuthServiceEvents } from './types'
 export class WorldbrainAuthService implements AuthService {
     public events = new EventEmitter() as TypedEventEmitter<AuthServiceEvents>
 
-    constructor(private firebase: any) {
+    constructor(protected firebase: any) {
         firebase.auth().onAuthStateChanged((firebaseUser: any) => {
             const user = this._getUserFromFirebaseUser(firebaseUser)
             this.events.emit('changed', { user })
@@ -73,6 +73,10 @@ export class WorldbrainAuthService implements AuthService {
 
     async loginWithToken(token: string) {
         await this.firebase.auth().signInWithCustomToken(token)
+    }
+
+    async loginWithEmailAndPassword(email: string, password: string) {
+        await this.firebase.auth().signInWithEmailAndPassword(email, password)
     }
 
     signOut() {
