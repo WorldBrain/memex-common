@@ -1,11 +1,12 @@
 import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
-import { SharedList, SharedListEntry, SharedListReference } from '../types'
+import { SharedList, SharedListEntry, SharedListReference, SharedAnnotation, SharedAnnotationListEntry } from '../types'
 import { UserReference } from '../../web-interface/types/users'
+import { OperationBatch } from '@worldbrain/storex'
 
-interface StoredSharedListReference extends SharedListReference {
-    id: string | number
-}
+type StorexReference<Type> = Type & { id: string | number }
+type StoredSharedListReference = StorexReference<SharedListReference>
+type StoredSharedAnnotationReference = StorexReference<SharedAnnotation>
 
 export default class ContentSharingStorage extends StorageModule {
     constructor(private options: StorageModuleConstructorArgs & {
@@ -54,7 +55,35 @@ export default class ContentSharingStorage extends StorageModule {
                     { childOf: 'sharedList' },
                     { alias: 'creator', childOf: 'user' }
                 ],
-            }
+            },
+            sharedAnnotation: {
+                version: STORAGE_VERSIONS[1].date,
+                fields: {
+                    normalizedPageUrl: { type: 'string' },
+                    createdWhen: { type: 'timestamp' },
+                    uploadedWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    body: { type: 'string', optional: true },
+                    comment: { type: 'string', optional: true },
+                    selector: { type: 'string', optional: true },
+                },
+                relationships: [
+                    { alias: 'creator', childOf: 'user' }
+                ]
+            },
+            sharedAnnotationListEntry: {
+                version: STORAGE_VERSIONS[1].date,
+                fields: {
+                    createdWhen: { type: 'timestamp' },
+                    uploadedWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    normalizedPageUrl: { type: 'string' },
+                },
+                relationships: [
+                    { alias: 'creator', childOf: 'user' },
+                    { connects: ['sharedList', 'sharedAnnotation'] },
+                ],
+            },
         },
         operations: {
             createSharedList: {
@@ -102,7 +131,29 @@ export default class ContentSharingStorage extends StorageModule {
                     { id: '$id' },
                     { title: '$newTitle' }
                 ]
-            }
+            },
+            createAnnotationsAndEntries: {
+                operation: 'executeBatch',
+                args: ['$batch'],
+            },
+            findAnnotationEntries: {
+                operation: 'findObjects',
+                collection: 'sharedAnnotationListEntry',
+                args: [
+                    {
+                        sharedList: '$sharedList:pk',
+                        normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
+                    },
+                    { order: [['createdWhen', 'desc']] }
+                ]
+            },
+            findAnnotationsByIds: {
+                operation: 'findObjects',
+                collection: 'sharedAnnotation',
+                args: {
+                    id: { $in: '$ids:array:pk' }
+                }
+            },
         },
         accessRules: {
             ownership: {
@@ -158,7 +209,7 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'createObject',
                 collection: 'sharedListEntry',
                 args: {
-                    sharedList: this._idFromListReference(options.listReference as StoredSharedListReference),
+                    sharedList: this._idFromReference(options.listReference as StoredSharedListReference),
                     creator: options.userReference.id,
                     createdWhen: '$now', // may be overwritten by entry content
                     updatedWhen: '$now',
@@ -173,7 +224,7 @@ export default class ContentSharingStorage extends StorageModule {
         normalizedUrl: string
     }) {
         const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', {
-            sharedList: this._idFromListReference(options.listReference as StoredSharedListReference),
+            sharedList: this._idFromReference(options.listReference as StoredSharedListReference),
             normalizedUrl: options.normalizedUrl,
         })
         const ids = entries.map(entry => entry.id)
@@ -216,12 +267,108 @@ export default class ContentSharingStorage extends StorageModule {
 
     async updateListTitle(listReference: SharedListReference, newTitle: string) {
         await this.operation('updateListTitle', {
-            id: this._idFromListReference(listReference as StoredSharedListReference),
+            id: this._idFromReference(listReference as StoredSharedListReference),
             newTitle
         })
     }
 
-    _idFromListReference(listReference: StoredSharedListReference): number | string {
+    async createAnnotations(params: {
+        annotationsByPage: {
+            [normalizedPageUrl: string]: Array<
+                Omit<SharedAnnotation, 'normalizedPageUrl' | 'updatedWhen' | 'uploadedWhen'>
+            >
+        }
+        listReferences: SharedListReference[]
+        creator: UserReference
+    }) {
+        const batch: OperationBatch = []
+        const objectCounts = { annotations: 0, entries: 0 }
+        for (const [normalizedPageUrl, annotations] of Object.entries(params.annotationsByPage)) {
+            for (const annotation of annotations) {
+                const annotationPlaceholder = `annotation-${objectCounts.annotations++}`
+                batch.push({
+                    placeholder: annotationPlaceholder,
+                    operation: 'createObject',
+                    collection: 'sharedAnnotation',
+                    args: {
+                        ...annotation,
+                        normalizedPageUrl,
+                        createdWhen: annotation.createdWhen ?? '$now',
+                        uploadedWhen: '$now',
+                        updatedWhen: '$now',
+                        creator: params.creator.id
+                    }
+                })
+
+                for (const listReference of params.listReferences) {
+                    batch.push({
+                        placeholder: `entry-${objectCounts.entries++}`,
+                        operation: 'createObject',
+                        collection: 'sharedAnnotationListEntry',
+                        args: {
+                            sharedList: this._idFromReference(listReference as StoredSharedListReference),
+                            createdWhen: annotation.createdWhen ?? '$now',
+                            uploadedWhen: '$now',
+                            updatedWhen: '$now',
+                            creator: params.creator.id,
+                            normalizedPageUrl,
+                        },
+                        replace: [
+                            { path: 'sharedAnnotation', placeholder: annotationPlaceholder }
+                        ]
+                    })
+                }
+            }
+        }
+
+        await this.operation('createAnnotationsAndEntries', { batch })
+    }
+
+    async getAnnotationsForPagesInList(params: {
+        listReference: SharedListReference,
+        normalizedPageUrls: string[]
+    }) {
+        if (!params.normalizedPageUrls.length) {
+            return []
+        }
+        const chunkSize = 10
+        if (params.normalizedPageUrls.length > chunkSize) {
+            throw new Error(`We can't fetch annotations for more than 10 pages at a time`)
+        }
+
+        const annotationEntries: Array<
+            SharedAnnotationListEntry & { creator: number | string, sharedAnnotation: number | string }
+        > = await this.operation('findAnnotationEntries', {
+            sharedList: this._idFromReference(params.listReference as StoredSharedListReference),
+            normalizedPageUrls: params.normalizedPageUrls,
+        })
+
+        const chunkedEntries: Array<typeof annotationEntries> = []
+        for (let startIndex = 0; startIndex < annotationEntries.length; startIndex += chunkSize) {
+            chunkedEntries.push(annotationEntries.slice(startIndex, chunkSize))
+        }
+
+        const result: {
+            [normalizedPageUrl: string]: Array<{
+                // entry: SharedAnnotationListEntry
+                annotation: SharedAnnotation,
+            }>
+        } = {}
+        const annotationChunks: Array<Array<SharedAnnotation>> = await Promise.all(chunkedEntries.map(
+            chunk => this.operation('findAnnotationsByIds', {
+                ids: chunk.map(entry => entry.sharedAnnotation)
+            })
+        ))
+        for (const annotationChunk of annotationChunks) {
+            for (const annotation of annotationChunk) {
+                const pageAnnotations = result[annotation.normalizedPageUrl] = result[annotation.normalizedPageUrl] ?? []
+                pageAnnotations.push({ annotation })
+            }
+        }
+        return result
+    }
+
+    _idFromReference(listReference: { id: number | string }): number | string {
         let id = listReference.id
         if (this.options.autoPkType === 'number' && typeof id === 'string') {
             id = parseInt(id)

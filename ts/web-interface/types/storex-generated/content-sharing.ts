@@ -19,3 +19,22 @@ export type SharedListEntry =
         normalizedUrl: string
         originalUrl: string
     }
+
+export type SharedAnnotation =
+    {
+        normalizedPageUrl: string
+        createdWhen: number
+        uploadedWhen: number
+        updatedWhen: number
+        body: string
+        comment: string
+        selector: string
+    }
+
+export type SharedAnnotationListEntry =
+    {
+        createdWhen: number
+        uploadedWhen: number
+        updatedWhen: number
+        normalizedPageUrl: string
+    }
