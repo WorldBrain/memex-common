@@ -7,7 +7,11 @@ export interface SharedListReference {
 }
 
 export type SharedAnnotation = storexGenerated.SharedAnnotation
-export type SharedAnnotationListEntry = storexGenerated.SharedAnnotationListEntry
 export interface SharedAnnotationReference {
     type: 'shared-annotation-reference'
+}
+
+export type SharedAnnotationListEntry = storexGenerated.SharedAnnotationListEntry
+export interface SharedAnnotationListEntryReference {
+    type: 'shared-annotation-list-entry-reference'
 }

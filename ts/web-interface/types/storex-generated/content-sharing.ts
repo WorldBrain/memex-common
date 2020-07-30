@@ -26,9 +26,9 @@ export type SharedAnnotation =
         createdWhen: number
         uploadedWhen: number
         updatedWhen: number
-        body: string
-        comment: string
-        selector: string
+        body?: string
+        comment?: string
+        selector?: string
     }
 
 export type SharedAnnotationListEntry =
