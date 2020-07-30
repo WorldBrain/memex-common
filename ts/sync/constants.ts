@@ -2,7 +2,8 @@ import { COLLECTION_NAMES as PAGES_COLLECTION_NAMES } from '@worldbrain/memex-st
 import { COLLECTION_NAMES as TAGS_COLLECTION_NAMES } from '@worldbrain/memex-storage/lib/tags/constants'
 import { COLLECTION_NAMES as LISTS_COLLECTION_NAMES } from '@worldbrain/memex-storage/lib/lists/constants'
 import { COLLECTION_NAMES as ANNOTATIONS_COLLECTION_NAMES } from '@worldbrain/memex-storage/lib/annotations/constants'
-import { MemexSyncSetting } from "./types";
+import { COLLECTION_NAMES as READER_COLLECTION_NAMES } from '@worldbrain/memex-storage/lib/reader/constants'
+import { MemexSyncSetting } from './types'
 
 export const SYNC_STORAGE_AREA_KEYS: {
     [Key in MemexSyncSetting]: string
@@ -22,6 +23,7 @@ export const SYNCED_COLLECTIONS: string[] = [
     ANNOTATIONS_COLLECTION_NAMES.annotation,
     ANNOTATIONS_COLLECTION_NAMES.listEntry,
     ANNOTATIONS_COLLECTION_NAMES.bookmark,
+    READER_COLLECTION_NAMES.readablePage,
     'syncDeviceInfo',
     'sharedListMetadata',
 ]
