@@ -1,8 +1,9 @@
+import { OperationBatch } from '@worldbrain/storex'
 import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { SharedList, SharedListEntry, SharedListReference, SharedAnnotation, SharedAnnotationListEntry, SharedAnnotationReference, SharedAnnotationListEntryReference } from '../types'
 import { UserReference } from '../../web-interface/types/users'
-import { OperationBatch } from '@worldbrain/storex'
+import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
 
 type StorexReference<Type> = Type & { id: string | number }
 type StoredSharedListReference = StorexReference<SharedListReference>
@@ -245,13 +246,23 @@ export default class ContentSharingStorage extends StorageModule {
         await this.operation('deleteListEntriesByIds', { ids })
     }
 
-    getSharedListLinkID(listReference: SharedListReference): string {
-        const id = (listReference as StoredSharedListReference).id
+    getSharedListLinkID(reference: SharedListReference): string {
+        const id = (reference as StoredSharedListReference).id
         return typeof id === "string" ? id : id.toString()
     }
 
     getSharedListReferenceFromLinkID(id: string): SharedListReference {
         const reference: StoredSharedListReference = { type: 'shared-list-reference', id }
+        return reference
+    }
+
+    getSharedAnnotationLinkID(reference: SharedAnnotationReference): string {
+        const id = (reference as StoredSharedAnnotationReference).id
+        return typeof id === "string" ? id : id.toString()
+    }
+
+    getSharedAnnotationReferenceFromLinkID(id: string): SharedAnnotationReference {
+        const reference: StoredSharedAnnotationReference = { type: 'shared-annotation-reference', id }
         return reference
     }
 
@@ -390,16 +401,14 @@ export default class ContentSharingStorage extends StorageModule {
                 sharedList: number | string,
             }
         > = await this.operation('findAnnotationEntriesByList', {
-            sharedList: this._idFromReference(params.listReference as StoredSharedListReference),
+            sharedList:
+                // this._idFromReference(
+                params.listReference as StoredSharedListReference
+            // ),
         })
 
-        type ReturnedElement = SharedAnnotationListEntry & {
-            reference: StoredSharedAnnotationListEntryReference
-            creator: UserReference,
-            sharedAnnotation: SharedAnnotationReference
-            sharedList: SharedListReference,
-        }
-        return annotationEntries.map((entry): ReturnedElement => {
+        const returned: GetAnnotationListEntriesResult = {}
+        for (const entry of annotationEntries) {
             const reference: StoredSharedAnnotationListEntryReference = {
                 type: 'shared-annotation-list-entry-reference',
                 id: entry.id,
@@ -413,37 +422,45 @@ export default class ContentSharingStorage extends StorageModule {
                 id: entry.sharedList
             }
             delete entry.id
-            return {
+
+            const pageEntries = returned[entry.normalizedPageUrl] = returned[entry.normalizedPageUrl] ?? []
+            pageEntries.push({
                 ...entry,
                 reference,
                 creator: { type: 'user-reference', id: entry.creator },
                 sharedList,
                 sharedAnnotation,
-            }
-        })
+            })
+        }
+        return returned
     }
 
     async getAnnotations(params: {
-        references: SharedAnnotationListEntryReference[]
+        references: SharedAnnotationReference[]
     }) {
         const annotations: Array<SharedAnnotation & {
             id: number | string
-            creator: UserReference,
+            creator: number | string,
         }> = await this.operation('findAnnotationsByIds', {
-            ids: params.references.map(ref => (ref as StoredSharedAnnotationListEntryReference).id)
+            ids: params.references.map(ref => (ref as StoredSharedAnnotationReference).id)
         })
-        return annotations.map(annotation => {
+
+        const returned: GetAnnotationsResult = {}
+        for (const annotation of annotations) {
             const reference: StoredSharedAnnotationReference = {
                 type: 'shared-annotation-reference',
                 id: annotation.id
             }
+
+            const id = annotation.id
             delete annotation.id
-            return {
+            returned[id] = {
                 ...annotation,
-                reference,
                 creator: { type: 'user-reference', id: annotation.creator },
+                reference,
             }
-        })
+        }
+        return returned
     }
 
     _idFromReference(listReference: { id: number | string }): number | string {
