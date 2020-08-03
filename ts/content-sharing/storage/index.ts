@@ -271,7 +271,7 @@ export default class ContentSharingStorage extends StorageModule {
         entries: Array<SharedListEntry & { sharedList: SharedListReference }>,
         creator: UserReference
     } | null> {
-        const id = (listReference as StoredSharedListReference).id
+        const id = this._idFromReference(listReference as StoredSharedListReference)
         const sharedList: SharedList & { creator: string } = await this.operation('findListByID', { id })
         if (!sharedList) {
             return null
@@ -402,9 +402,9 @@ export default class ContentSharingStorage extends StorageModule {
             }
         > = await this.operation('findAnnotationEntriesByList', {
             sharedList:
-                // this._idFromReference(
-                params.listReference as StoredSharedListReference
-            // ),
+                this._idFromReference(
+                    params.listReference as StoredSharedListReference
+                ),
         })
 
         const returned: GetAnnotationListEntriesResult = {}
@@ -463,10 +463,13 @@ export default class ContentSharingStorage extends StorageModule {
         return returned
     }
 
-    _idFromReference(listReference: { id: number | string }): number | string {
-        let id = listReference.id
+    _idFromReference(reference: { id: number | string }): number | string {
+        let id = reference.id
         if (this.options.autoPkType === 'number' && typeof id === 'string') {
             id = parseInt(id)
+            if (id === NaN) {
+                id = reference.id
+            }
         }
         return id
     }
