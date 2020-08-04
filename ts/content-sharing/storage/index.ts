@@ -467,7 +467,7 @@ export default class ContentSharingStorage extends StorageModule {
         let id = reference.id
         if (this.options.autoPkType === 'number' && typeof id === 'string') {
             id = parseInt(id)
-            if (id === NaN) {
+            if (isNaN(id)) {
                 id = reference.id
             }
         }
