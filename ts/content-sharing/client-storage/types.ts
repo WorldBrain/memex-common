@@ -3,6 +3,7 @@ export type ContentSharingAction =
     | RemoveSharedListEntryAction
     | ChangeSharedListTitleAction
     | ChangeSharedListDescriptionAction
+    | ShareAnnotationsAction
 export interface AddSharedListEntriesAction {
     type: 'add-shared-list-entries'
     localListId: number
@@ -33,4 +34,17 @@ export interface ChangeSharedListDescriptionAction {
     localListId: number
     remoteListId: string
     newDescription: string
+}
+
+export interface ShareAnnotationsAction {
+    type: 'share-annotations'
+    localListIds: number[]
+    data: {
+        [normalizedPageUrl: string]: Array<{
+            createdWhen: number
+            body?: string
+            comment?: string
+            selector?: string
+        }>
+    }
 }
