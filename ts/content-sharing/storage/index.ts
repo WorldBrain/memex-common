@@ -297,17 +297,22 @@ export default class ContentSharingStorage extends StorageModule {
     async createAnnotations(params: {
         annotationsByPage: {
             [normalizedPageUrl: string]: Array<
-                Omit<SharedAnnotation, 'normalizedPageUrl' | 'updatedWhen' | 'uploadedWhen'>
+                Omit<SharedAnnotation, 'normalizedPageUrl' | 'updatedWhen' | 'uploadedWhen'> & { localId: string }
             >
         }
         listReferences: SharedListReference[]
         creator: UserReference
-    }) {
+    }): Promise<{ sharedAnnotationReferences: { [localId: string]: SharedAnnotationReference } }> {
         const batch: OperationBatch = []
+        const annotationPlaceholders: { [localId: string]: string } = {}
         const objectCounts = { annotations: 0, entries: 0 }
         for (const [normalizedPageUrl, annotations] of Object.entries(params.annotationsByPage)) {
-            for (const annotation of annotations) {
+            for (let annotation of annotations) {
+                annotation = { ...annotation }
                 const annotationPlaceholder = `annotation-${objectCounts.annotations++}`
+                annotationPlaceholders[annotation.localId] = annotationPlaceholder
+                delete annotation.localId
+
                 batch.push({
                     placeholder: annotationPlaceholder,
                     operation: 'createObject',
@@ -343,7 +348,15 @@ export default class ContentSharingStorage extends StorageModule {
             }
         }
 
-        await this.operation('createAnnotationsAndEntries', { batch })
+        const batchResult = await this.operation('createAnnotationsAndEntries', { batch })
+        const result: { sharedAnnotationReferences: { [localId: string]: SharedAnnotationReference } } = { sharedAnnotationReferences: {} }
+        for (const [localId, annotationPlaceholder] of Object.entries(annotationPlaceholders)) {
+            result.sharedAnnotationReferences[localId] = {
+                type: 'shared-annotation-reference',
+                id: batchResult.info[annotationPlaceholder].object.id
+            } as StoredSharedAnnotationReference
+        }
+        return result
     }
 
     async getAnnotationsForPagesInList(params: {
