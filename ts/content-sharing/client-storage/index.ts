@@ -17,6 +17,14 @@ export class ContentSharingClientStorage extends StorageModule {
                     },
                     indices: [{ field: 'localId', pk: true }],
                 },
+                sharedAnnotationMetadata: {
+                    version: STORAGE_VERSIONS[21].version,
+                    fields: {
+                        localId: { type: 'string' },
+                        remoteId: { type: 'string' },
+                    },
+                    indices: [{ field: 'localId', pk: true }],
+                },
                 contentSharingAction: {
                     version: STORAGE_VERSIONS[20].version,
                     fields: {
@@ -29,11 +37,11 @@ export class ContentSharingClientStorage extends StorageModule {
                 },
             },
             operations: {
-                createMetadata: {
+                createListMetadata: {
                     operation: 'createObject',
                     collection: 'sharedListMetadata',
                 },
-                getMetadata: {
+                getListMetadata: {
                     operation: 'findObject',
                     collection: 'sharedListMetadata',
                     args: { localId: '$localId:number' },
@@ -43,12 +51,29 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'sharedListMetadata',
                     args: { localId: { $in: '$localIds' } },
                 },
+
+                createAnnotationMetadata: {
+                    operation: 'createObject',
+                    collection: 'sharedAnnotationMetadata',
+                },
+                getAnnotationMetadata: {
+                    operation: 'findObject',
+                    collection: 'sharedAnnotationMetadata',
+                    args: { localId: '$localId:number' },
+                },
+                getMetadataForAnnotations: {
+                    operation: 'findObjects',
+                    collection: 'sharedAnnotationMetadata',
+                    args: { localId: { $in: '$localIds' } },
+                },
+
                 getPages: {
-                    // TODO: Probably doesn't belong here
+                    // TODO: Doesn't belong here
                     operation: 'findObjects',
                     collection: 'pages',
                     args: { url: { $in: '$normalizedPageUrls' } },
                 },
+
                 createAction: {
                     operation: 'createObject',
                     collection: 'contentSharingAction',
@@ -69,22 +94,22 @@ export class ContentSharingClientStorage extends StorageModule {
     }
 
     async storeListId(params: { localId: number; remoteId: string }) {
-        const existing = await this.operation('getMetadata', params)
+        const existing = await this.operation('getListMetadata', params)
         if (existing) {
             throw new Error(`List #${params.localId} already has server ID`)
         }
-        await this.operation('createMetadata', {
+        await this.operation('createListMetadata', {
             ...params,
         })
     }
 
     async getRemoteListId(params: { localId: number }): Promise<string | null> {
-        const existing = await this.operation('getMetadata', params)
+        const existing = await this.operation('getListMetadata', params)
         return existing?.remoteId ?? null
     }
 
     async getPageTitles(params: { normalizedPageUrls: string[] }) {
-        // TODO: Probably doesn't belong here
+        // TODO: Doesn't belong here
         const titles: { [pageUrl: string]: string } = {}
         for (const page of await this.operation('getPages', params)) {
             titles[page.url] = page.fullTitle
