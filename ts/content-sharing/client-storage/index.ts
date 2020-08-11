@@ -1,3 +1,4 @@
+import fromPairs from 'lodash/fromPairs'
 import {
     StorageModule,
     StorageModuleConfig,
@@ -106,6 +107,19 @@ export class ContentSharingClientStorage extends StorageModule {
     async getRemoteListId(params: { localId: number }): Promise<string | null> {
         const existing = await this.operation('getListMetadata', params)
         return existing?.remoteId ?? null
+    }
+
+    async storeAnnotationIds(params: { remoteIds: { [localId: string]: string } }) {
+        for (const [localId, remoteId] of Object.entries(params.remoteIds)) {
+            await this.operation('createAnnotationMetadata', { localId, remoteId })
+        }
+    }
+
+    async getRemoteAnnotationIds(params: {
+        localIds: string[]
+    }) {
+        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
+        return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
     }
 
     async getPageTitles(params: { normalizedPageUrls: string[] }) {

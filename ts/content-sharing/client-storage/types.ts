@@ -41,6 +41,7 @@ export interface ShareAnnotationsAction {
     localListIds: number[]
     data: {
         [normalizedPageUrl: string]: Array<{
+            localId: string
             createdWhen: number
             body?: string
             comment?: string
