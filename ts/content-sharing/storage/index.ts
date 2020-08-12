@@ -181,6 +181,14 @@ export default class ContentSharingStorage extends StorageModule {
             deleteAnnotationEntries: {
                 operation: 'executeBatch',
                 args: ['$batch'],
+            },
+            updateAnnotationComment: {
+                operation: 'updateObjects',
+                collection: 'sharedAnnotation',
+                args: [
+                    { id: '$id:pk' },
+                    { comment: '$comment:string' }
+                ]
             }
         },
         accessRules: {
@@ -554,6 +562,16 @@ export default class ContentSharingStorage extends StorageModule {
         for (const batchChuck of chunk(batch, 400)) {
             await this.operation('deleteAnnotationEntries', { batch: batchChuck })
         }
+    }
+
+    async updateAnnotationComment(params: {
+        sharedAnnotationReference: SharedAnnotationReference,
+        updatedComment: string
+    }) {
+        await this.operation('updateAnnotationComment', {
+            id: this._idFromReference(params.sharedAnnotationReference as StoredSharedAnnotationReference),
+            comment: params.updatedComment
+        })
     }
 
     _idFromReference(reference: { id: number | string }): number | string {
