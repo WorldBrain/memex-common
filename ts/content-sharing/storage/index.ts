@@ -1,4 +1,5 @@
 import chunk from 'lodash/chunk'
+import orderBy from 'lodash/orderBy'
 import { OperationBatch, StorageBackend } from '@worldbrain/storex'
 import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
@@ -10,6 +11,9 @@ type StorexReference<Type> = Type & { id: string | number }
 type StoredSharedListReference = StorexReference<SharedListReference>
 type StoredSharedAnnotationReference = StorexReference<SharedAnnotationReference>
 type StoredSharedAnnotationListEntryReference = StorexReference<SharedAnnotationListEntryReference>
+
+const PAGE_LIST_ENTRY_ORDER = 'desc'
+const ANNOTATION_LIST_ENTRY_ORDER = 'asc'
 
 export default class ContentSharingStorage extends StorageModule {
     constructor(private options: StorageModuleConstructorArgs & {
@@ -111,7 +115,7 @@ export default class ContentSharingStorage extends StorageModule {
                 collection: 'sharedListEntry',
                 args: [
                     { sharedList: '$sharedListID:pk' },
-                    { order: [['createdWhen', 'desc']] }
+                    { order: [['createdWhen', PAGE_LIST_ENTRY_ORDER]] }
                 ]
             },
             findListEntriesByUrl: {
@@ -151,7 +155,7 @@ export default class ContentSharingStorage extends StorageModule {
                         sharedList: '$sharedList:pk',
                         normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
                     },
-                    { order: [['createdWhen', 'desc']] }
+                    { order: [['createdWhen', ANNOTATION_LIST_ENTRY_ORDER]] }
                 ]
             },
             findAnnotationEntriesByList: {
@@ -161,7 +165,7 @@ export default class ContentSharingStorage extends StorageModule {
                     {
                         sharedList: '$sharedList:pk',
                     },
-                    { order: [['createdWhen', 'desc']] }
+                    { order: [['createdWhen', ANNOTATION_LIST_ENTRY_ORDER]] }
                 ]
             },
             findAnnotationsByIds: {
@@ -402,10 +406,7 @@ export default class ContentSharingStorage extends StorageModule {
             normalizedPageUrls: params.normalizedPageUrls,
         })
 
-        const chunkedEntries: Array<typeof annotationEntries> = []
-        for (let startIndex = 0; startIndex < annotationEntries.length; startIndex += chunkSize) {
-            chunkedEntries.push(annotationEntries.slice(startIndex, chunkSize))
-        }
+        const chunkedEntries: Array<typeof annotationEntries> = chunk(annotationEntries, chunkSize)
 
         const result: {
             [normalizedPageUrl: string]: Array<{
@@ -423,6 +424,12 @@ export default class ContentSharingStorage extends StorageModule {
                 const pageAnnotations = result[annotation.normalizedPageUrl] = result[annotation.normalizedPageUrl] ?? []
                 pageAnnotations.push({ annotation })
             }
+        }
+        for (const normalizedPageUrl of Object.keys(result)) {
+            result[normalizedPageUrl] = orderBy(result[normalizedPageUrl], [
+                ({ annotation }) => annotation.createdWhen,
+                ANNOTATION_LIST_ENTRY_ORDER]
+            )
         }
         return result
     }
@@ -503,11 +510,11 @@ export default class ContentSharingStorage extends StorageModule {
     async addAnnotationsToLists(params: {
         creator: UserReference,
         sharedListReferences: SharedListReference[],
-        sharedAnnotations: Array<{ reference: SharedAnnotationReference, normalizedPageUrl: string }>
+        sharedAnnotations: Array<{ reference: SharedAnnotationReference, normalizedPageUrl: string, createdWhen: number }>
     }) {
         const batch: OperationBatch = []
         const objectCounts = { entries: 0 }
-        for (const { reference: annotationReference, normalizedPageUrl } of params.sharedAnnotations) {
+        for (const { reference: annotationReference, normalizedPageUrl, createdWhen } of params.sharedAnnotations) {
             for (const listReference of params.sharedListReferences) {
                 batch.push({
                     placeholder: `entry-${objectCounts.entries++}`,
@@ -516,7 +523,7 @@ export default class ContentSharingStorage extends StorageModule {
                     args: {
                         sharedList: this._idFromReference(listReference as StoredSharedListReference),
                         sharedAnnotation: this._idFromReference(annotationReference as StoredSharedAnnotationReference),
-                        createdWhen: '$now',
+                        createdWhen,
                         uploadedWhen: '$now',
                         updatedWhen: '$now',
                         creator: params.creator.id,

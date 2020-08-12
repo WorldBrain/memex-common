@@ -117,7 +117,7 @@ export class ContentSharingClientStorage extends StorageModule {
 
     async getRemoteAnnotationIds(params: {
         localIds: string[]
-    }): Promise<{ [localId: string]: string }> {
+    }): Promise<{ [localId: string]: string | number }> {
         const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
         return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
     }
