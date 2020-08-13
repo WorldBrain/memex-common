@@ -4,6 +4,7 @@ export type ContentSharingAction =
     | ChangeSharedListTitleAction
     | ChangeSharedListDescriptionAction
     | ShareAnnotationsAction
+    | AddAnnotationEntries
     | UpdateAnnotationComment
 
 export interface AddSharedListEntriesAction {
@@ -50,6 +51,12 @@ export interface ShareAnnotationsAction {
             selector?: string
         }>
     }
+}
+
+export interface AddAnnotationEntries {
+    type: 'add-annotation-entries'
+    remoteListIds: string[],
+    remoteAnnotations: Array<{ remoteId: string, normalizedPageUrl: string, createdWhen: number }>
 }
 
 export interface UpdateAnnotationComment {
