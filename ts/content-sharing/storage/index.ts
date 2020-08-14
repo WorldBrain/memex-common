@@ -186,6 +186,10 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'executeBatch',
                 args: ['$batch'],
             },
+            deleteAnnotations: {
+                operation: 'executeBatch',
+                args: ['$batch'],
+            },
             updateAnnotationComment: {
                 operation: 'updateObjects',
                 collection: 'sharedAnnotation',
@@ -537,13 +541,15 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async removeAnnotationsFromLists(params: {
-        sharedListReferences: SharedListReference[],
+        sharedListReferences?: SharedListReference[],
         sharedAnnotationReferences: Array<SharedAnnotationReference>
     }) {
         const batch: OperationBatch = []
         let placeholderCount = 0
 
-        const listIds = new Set(params.sharedListReferences.map(reference => this._idFromReference(reference as StoredSharedListReference)))
+        const listIds = params.sharedListReferences && new Set(params.sharedListReferences.map(
+            reference => this._idFromReference(reference as StoredSharedListReference)
+        ))
         for (const sharedAnnotationChuck of chunk(params.sharedAnnotationReferences, 10)) {
             const annotationEntries: Array<{ id: string | number, sharedList: string | number }> =
                 await this.operation('findAnnotationEntriesForAnnotations', {
@@ -553,21 +559,41 @@ export default class ContentSharingStorage extends StorageModule {
                         ))
                 })
 
-            batch.push(...annotationEntries
-                .filter(annotationEntry => listIds.has(annotationEntry.sharedList))
-                .map(annotationEntry => ({
-                    placeholder: `deletion-${placeholderCount++}`,
-                    operation: 'deleteObjects' as 'deleteObjects',
-                    collection: 'sharedAnnotationListEntry',
-                    where: {
-                        id: annotationEntry.id,
-                    }
-                }))
-            )
+            const filtered = listIds ? annotationEntries.filter(
+                annotationEntry => !listIds || listIds.has(annotationEntry.sharedList)
+            ) : annotationEntries
+            batch.push(...filtered.map(annotationEntry => ({
+                placeholder: `deletion-${placeholderCount++}`,
+                operation: 'deleteObjects' as 'deleteObjects',
+                collection: 'sharedAnnotationListEntry',
+                where: {
+                    id: annotationEntry.id,
+                }
+            })))
         }
 
         for (const batchChuck of chunk(batch, 400)) {
             await this.operation('deleteAnnotationEntries', { batch: batchChuck })
+        }
+    }
+
+    async removeAnnotations(params: {
+        sharedAnnotationReferences: Array<SharedAnnotationReference>
+    }) {
+        await this.removeAnnotationsFromLists(params)
+
+        let placeholderCount = 0
+        const batch: OperationBatch = params.sharedAnnotationReferences.map(reference => ({
+            placeholder: `deletion-${placeholderCount++}`,
+            operation: 'deleteObjects' as 'deleteObjects',
+            collection: 'sharedAnnotation',
+            where: {
+                id: this._idFromReference(reference as StoredSharedAnnotationReference),
+            }
+        }))
+
+        for (const batchChuck of chunk(batch, 400)) {
+            await this.operation('deleteAnnotations', { batch: batchChuck })
         }
     }
 
