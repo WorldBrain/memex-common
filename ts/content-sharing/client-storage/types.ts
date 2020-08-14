@@ -4,6 +4,7 @@ export type ContentSharingAction =
     | ChangeSharedListTitleAction
     | ChangeSharedListDescriptionAction
     | ShareAnnotationsAction
+    | UnshareAnnotationsAction
     | AddAnnotationEntries
     | UpdateAnnotationComment
 
@@ -51,6 +52,11 @@ export interface ShareAnnotationsAction {
             selector?: string
         }>
     }
+}
+
+export interface UnshareAnnotationsAction {
+    type: 'unshare-annotations'
+    remoteAnnotationIds: Array<string>
 }
 
 export interface AddAnnotationEntries {

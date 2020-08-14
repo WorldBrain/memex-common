@@ -23,6 +23,7 @@ export class ContentSharingClientStorage extends StorageModule {
                     fields: {
                         localId: { type: 'string' },
                         remoteId: { type: 'string' },
+                        excludeFromLists: { type: 'boolean', optional: true },
                     },
                     indices: [{ field: 'localId', pk: true }],
                 },
@@ -50,7 +51,7 @@ export class ContentSharingClientStorage extends StorageModule {
                 getMetadataForLists: {
                     operation: 'findObjects',
                     collection: 'sharedListMetadata',
-                    args: { localId: { $in: '$localIds' } },
+                    args: { localId: { $in: '$localIds:array:pk' } },
                 },
 
                 createAnnotationMetadata: {
@@ -65,7 +66,12 @@ export class ContentSharingClientStorage extends StorageModule {
                 getMetadataForAnnotations: {
                     operation: 'findObjects',
                     collection: 'sharedAnnotationMetadata',
-                    args: { localId: { $in: '$localIds' } },
+                    args: { localId: { $in: '$localIds:array:pk' } },
+                },
+                deleteAnnotationMetadata: {
+                    operation: 'deleteObjects',
+                    collection: 'sharedAnnotationMetadata',
+                    args: { localId: { $in: '$localIds:array:pk' } }
                 },
 
                 getPages: {
@@ -115,9 +121,15 @@ export class ContentSharingClientStorage extends StorageModule {
         }
     }
 
+    async deleteAnnotationMetadata(params: {
+        localIds: string[]
+    }) {
+        await this.operation('deleteAnnotationMetadata', params)
+    }
+
     async getRemoteAnnotationIds(params: {
         localIds: string[]
-    }): Promise<{ [localId: string]: string | number }> {
+    }): Promise<{ [localId: string]: string }> {
         const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
         return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
     }
