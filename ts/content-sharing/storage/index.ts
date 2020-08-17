@@ -213,11 +213,21 @@ export default class ContentSharingStorage extends StorageModule {
                     field: 'creator',
                     access: ['create', 'update', 'delete'],
                 },
+                sharedAnnotation: {
+                    field: 'creator',
+                    access: ['create', 'update', 'delete'],
+                },
+                sharedAnnotationListEntry: {
+                    field: 'creator',
+                    access: ['create', 'update', 'delete'],
+                },
             },
             permissions: {
                 sharedList: { list: { rule: true }, read: { rule: true } },
                 sharedListCreatorInfo: { list: { rule: true }, read: { rule: true } },
                 sharedListEntry: { list: { rule: true }, read: { rule: true } },
+                sharedAnnotation: { list: { rule: true }, read: { rule: true } },
+                sharedAnnotationListEntry: { list: { rule: true }, read: { rule: true } },
             }
         }
     })
