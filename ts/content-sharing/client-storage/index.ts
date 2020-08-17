@@ -25,7 +25,10 @@ export class ContentSharingClientStorage extends StorageModule {
                         remoteId: { type: 'string' },
                         excludeFromLists: { type: 'boolean', optional: true },
                     },
-                    indices: [{ field: 'localId', pk: true }],
+                    indices: [
+                        { field: 'localId', pk: true },
+                        { field: 'remoteId' }
+                    ],
                 },
                 contentSharingAction: {
                     version: STORAGE_VERSIONS[20].version,
