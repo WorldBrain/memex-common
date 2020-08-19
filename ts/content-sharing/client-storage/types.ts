@@ -1,6 +1,7 @@
 export type ContentSharingAction =
     | AddSharedListEntriesAction
     | RemoveSharedListEntryAction
+    | RemoveSharedAnnotationListEntriesAction
     | ChangeSharedListTitleAction
     | ChangeSharedListDescriptionAction
     | ShareAnnotationsAction
@@ -24,6 +25,11 @@ export interface RemoveSharedListEntryAction {
     localListId: number
     remoteListId: string
     normalizedUrl: string
+}
+
+export interface RemoveSharedAnnotationListEntriesAction {
+    type: 'remove-shared-annotation-list-entries'
+    remoteAnnotationIds: string[]
 }
 
 export interface ChangeSharedListTitleAction {
@@ -61,8 +67,12 @@ export interface UnshareAnnotationsAction {
 
 export interface AddAnnotationEntries {
     type: 'add-annotation-entries'
-    remoteListIds: string[],
-    remoteAnnotations: Array<{ remoteId: string, normalizedPageUrl: string, createdWhen: number }>
+    remoteListIds: string[]
+    remoteAnnotations: Array<{
+        remoteId: string
+        normalizedPageUrl: string
+        createdWhen: number
+    }>
 }
 
 export interface UpdateAnnotationComment {
