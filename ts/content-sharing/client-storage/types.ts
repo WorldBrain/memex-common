@@ -30,6 +30,7 @@ export interface RemoveSharedListEntryAction {
 export interface RemoveSharedAnnotationListEntriesAction {
     type: 'remove-shared-annotation-list-entries'
     remoteAnnotationIds: Array<string | number>
+    remoteListId: string
 }
 
 export interface ChangeSharedListTitleAction {
