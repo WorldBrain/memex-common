@@ -303,7 +303,7 @@ export default class ContentSharingStorage extends StorageModule {
         return typeof id === "string" ? id : id.toString()
     }
 
-    getSharedAnnotationReferenceFromLinkID(id: string): SharedAnnotationReference {
+    getSharedAnnotationReferenceFromLinkID(id: string | number): SharedAnnotationReference {
         const reference: StoredSharedAnnotationReference = { type: 'shared-annotation-reference', id }
         return reference
     }

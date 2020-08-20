@@ -29,7 +29,7 @@ export interface RemoveSharedListEntryAction {
 
 export interface RemoveSharedAnnotationListEntriesAction {
     type: 'remove-shared-annotation-list-entries'
-    remoteAnnotationIds: string[]
+    remoteAnnotationIds: Array<string | number>
 }
 
 export interface ChangeSharedListTitleAction {
@@ -62,14 +62,14 @@ export interface ShareAnnotationsAction {
 
 export interface UnshareAnnotationsAction {
     type: 'unshare-annotations'
-    remoteAnnotationIds: Array<string>
+    remoteAnnotationIds: Array<string | number>
 }
 
 export interface AddAnnotationEntries {
     type: 'add-annotation-entries'
     remoteListIds: string[]
     remoteAnnotations: Array<{
-        remoteId: string
+        remoteId: string | number
         normalizedPageUrl: string
         createdWhen: number
     }>
@@ -78,6 +78,6 @@ export interface AddAnnotationEntries {
 export interface UpdateAnnotationComment {
     type: 'update-annotation-comment'
     localAnnotationId: string
-    remoteAnnotationId: string
+    remoteAnnotationId: string | number
     updatedComment: string
 }
