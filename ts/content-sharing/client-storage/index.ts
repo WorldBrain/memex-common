@@ -7,7 +7,7 @@ import { STORAGE_VERSIONS } from '../../browser-extension/storage/versions'
 import { ContentSharingAction } from './types'
 
 export class ContentSharingClientStorage extends StorageModule {
-    getConfig(): StorageModuleConfig {
+    getConfig = (): StorageModuleConfig => {
         const config: StorageModuleConfig = {
             collections: {
                 sharedListMetadata: {
