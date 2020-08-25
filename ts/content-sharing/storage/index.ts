@@ -175,6 +175,13 @@ export default class ContentSharingStorage extends StorageModule {
                     id: { $in: '$ids:array:pk' }
                 }
             },
+            findAnnotationById: {
+                operation: 'findObject',
+                collection: 'sharedAnnotation',
+                args: {
+                    id: '$id:pk'
+                }
+            },
             findAnnotationEntriesForAnnotations: {
                 operation: 'findObjects',
                 collection: 'sharedAnnotationListEntry',
@@ -519,6 +526,24 @@ export default class ContentSharingStorage extends StorageModule {
             }
         }
         return returned
+    }
+
+    async getAnnotation(params: {
+        reference: SharedAnnotationReference
+    }): Promise<{ annotation: SharedAnnotation, creator: UserReference } | null> {
+        const id = this._idFromReference(params.reference as StoredSharedAnnotationReference)
+        const retrievedAnnotation: null | (SharedAnnotation & { id: string | number, creator: string | number }) =
+            await this.operation('findAnnotationById', { id })
+        if (!retrievedAnnotation) {
+            return null
+        }
+        const creator: UserReference = { type: 'user-reference', id: retrievedAnnotation.creator }
+        delete retrievedAnnotation.id
+        delete retrievedAnnotation.creator
+        return {
+            annotation: retrievedAnnotation,
+            creator,
+        }
     }
 
     async addAnnotationsToLists(params: {
