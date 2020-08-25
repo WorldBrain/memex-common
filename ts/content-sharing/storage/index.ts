@@ -126,6 +126,17 @@ export default class ContentSharingStorage extends StorageModule {
                     normalizedUrl: '$normalizedUrl:string'
                 }
             },
+            findSingleEntryByUserAndUrl: {
+                operation: 'findObject',
+                collection: 'sharedListEntry',
+                args: [
+                    {
+                        creator: '$creator:pk',
+                        normalizedUrl: '$normalizedUrl:string'
+                    },
+                    { limit: 1 }
+                ]
+            },
             deleteListEntriesByIds: {
                 operation: 'deleteObjects',
                 collection: 'sharedListEntry',
@@ -343,6 +354,24 @@ export default class ContentSharingStorage extends StorageModule {
         })
     }
 
+    async getRandomUserListEntryForUrl(params: {
+        creatorReference: UserReference,
+        normalizedUrl: string
+    }) {
+        const retrievedEntry: null | SharedListEntry & {
+            id: number | string,
+            creator: number | string,
+            sharedList: number | string,
+        } = await this.operation('findSingleEntryByUserAndUrl', {
+            creator: this._idFromReference(params.creatorReference),
+            normalizedUrl: params.normalizedUrl
+        })
+        delete retrievedEntry.id
+        delete retrievedEntry.creator
+        delete retrievedEntry.sharedList
+        return { entry: retrievedEntry as SharedListEntry }
+    }
+
     async createAnnotations(params: {
         annotationsByPage: {
             [normalizedPageUrl: string]: Array<
@@ -541,7 +570,7 @@ export default class ContentSharingStorage extends StorageModule {
         delete retrievedAnnotation.id
         delete retrievedAnnotation.creator
         return {
-            annotation: retrievedAnnotation,
+            annotation: retrievedAnnotation as SharedAnnotation,
             creator,
         }
     }
