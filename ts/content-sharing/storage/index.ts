@@ -357,7 +357,7 @@ export default class ContentSharingStorage extends StorageModule {
     async getRandomUserListEntryForUrl(params: {
         creatorReference: UserReference,
         normalizedUrl: string
-    }) {
+    }): Promise<{ entry: SharedListEntry } | null> {
         const retrievedEntry: null | SharedListEntry & {
             id: number | string,
             creator: number | string,
@@ -366,6 +366,10 @@ export default class ContentSharingStorage extends StorageModule {
             creator: this._idFromReference(params.creatorReference),
             normalizedUrl: params.normalizedUrl
         })
+        if (!retrievedEntry) {
+            return null
+        }
+
         delete retrievedEntry.id
         delete retrievedEntry.creator
         delete retrievedEntry.sharedList
