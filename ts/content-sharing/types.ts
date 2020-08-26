@@ -1,9 +1,14 @@
 import * as storexGenerated from '../web-interface/types/storex-generated/content-sharing'
 
 export type SharedList = storexGenerated.SharedList
-export type SharedListEntry = storexGenerated.SharedListEntry
 export interface SharedListReference {
     type: 'shared-list-reference'
+}
+export type SharedListEntry = storexGenerated.SharedListEntry
+
+export type SharedPageInfo = storexGenerated.SharedPageInfo
+export interface SharedPageInfoReference {
+    type: 'shared-page-info-reference'
 }
 
 export type SharedAnnotation = storexGenerated.SharedAnnotation

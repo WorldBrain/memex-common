@@ -20,6 +20,15 @@ export type SharedListEntry =
         originalUrl: string
     }
 
+export type SharedPageInfo =
+    {
+        createdWhen: number
+        updatedWhen: number
+        normalizedUrl: string
+        originalUrl: string
+        fullTitle: string
+    }
+
 export type SharedAnnotation =
     {
         normalizedPageUrl: string

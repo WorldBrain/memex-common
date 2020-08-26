@@ -3,14 +3,15 @@ import orderBy from 'lodash/orderBy'
 import { OperationBatch, StorageBackend } from '@worldbrain/storex'
 import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
-import { SharedList, SharedListEntry, SharedListReference, SharedAnnotation, SharedAnnotationListEntry, SharedAnnotationReference, SharedAnnotationListEntryReference } from '../types'
+import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
 import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
 
 type StorexReference<Type> = Type & { id: string | number }
-type StoredSharedListReference = StorexReference<SharedListReference>
-type StoredSharedAnnotationReference = StorexReference<SharedAnnotationReference>
-type StoredSharedAnnotationListEntryReference = StorexReference<SharedAnnotationListEntryReference>
+type StoredSharedListReference = StorexReference<types.SharedListReference>
+type StoredSharedPageInfoReference = StorexReference<types.SharedPageInfoReference>
+type StoredSharedAnnotationReference = StorexReference<types.SharedAnnotationReference>
+type StoredSharedAnnotationListEntryReference = StorexReference<types.SharedAnnotationListEntryReference>
 
 const PAGE_LIST_ENTRY_ORDER = 'desc'
 const ANNOTATION_LIST_ENTRY_ORDER = 'asc'
@@ -62,6 +63,19 @@ export default class ContentSharingStorage extends StorageModule {
                     { childOf: 'sharedList' },
                     { alias: 'creator', childOf: 'user' }
                 ],
+            },
+            sharedPageInfo: {
+                version: STORAGE_VERSIONS[2].date,
+                fields: {
+                    createdWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    normalizedUrl: { type: 'string' },
+                    originalUrl: { type: 'string' },
+                    fullTitle: { type: 'string' },
+                },
+                relationships: [
+                    { alias: 'creator', childOf: 'user' }
+                ]
             },
             sharedAnnotation: {
                 version: STORAGE_VERSIONS[1].date,
@@ -149,6 +163,18 @@ export default class ContentSharingStorage extends StorageModule {
                     { id: '$id' },
                     { title: '$newTitle' }
                 ]
+            },
+            createPageInfo: {
+                operation: 'createObject',
+                collection: 'sharedPageInfo',
+            },
+            findPageInfoByCreatorAndUrl: {
+                operation: 'findObject',
+                collection: 'sharedPageInfo',
+                args: {
+                    normalizedUrl: '$normalizedUrl:string',
+                    creator: '$creator:pk'
+                }
             },
             createAnnotationsAndEntries: {
                 operation: 'executeBatch',
@@ -244,17 +270,48 @@ export default class ContentSharingStorage extends StorageModule {
                 sharedList: { list: { rule: true }, read: { rule: true } },
                 sharedListCreatorInfo: { list: { rule: true }, read: { rule: true } },
                 sharedListEntry: { list: { rule: true }, read: { rule: true } },
+                sharedPageInfo: { list: { rule: true }, read: { rule: true } },
                 sharedAnnotation: { list: { rule: true }, read: { rule: true } },
                 sharedAnnotationListEntry: { list: { rule: true }, read: { rule: true } },
             }
         }
     })
 
+    getSharedListLinkID(reference: types.SharedListReference): string {
+        const id = (reference as StoredSharedListReference).id
+        return typeof id === "string" ? id : id.toString()
+    }
+
+    getSharedListReferenceFromLinkID(id: string): types.SharedListReference {
+        const reference: StoredSharedListReference = { type: 'shared-list-reference', id }
+        return reference
+    }
+
+    getSharedPageInfoLinkID(reference: types.SharedPageInfoReference): string {
+        const id = (reference as StoredSharedPageInfoReference).id
+        return typeof id === "string" ? id : id.toString()
+    }
+
+    getSharedPageInfoReferenceFromLinkID(id: string): types.SharedPageInfoReference {
+        const reference: StoredSharedPageInfoReference = this._referenceFromLinkId('shared-page-info-reference', id)
+        return reference
+    }
+
+    getSharedAnnotationLinkID(reference: types.SharedAnnotationReference): string {
+        const id = (reference as StoredSharedAnnotationReference).id
+        return typeof id === "string" ? id : id.toString()
+    }
+
+    getSharedAnnotationReferenceFromLinkID(id: string | number): types.SharedAnnotationReference {
+        const reference: StoredSharedAnnotationReference = { type: 'shared-annotation-reference', id }
+        return reference
+    }
+
     async createSharedList(options: {
-        listData: Omit<SharedList, 'createdWhen' | 'updatedWhen'>
+        listData: Omit<types.SharedList, 'createdWhen' | 'updatedWhen'>
         localListId: number,
         userReference: UserReference
-    }): Promise<SharedListReference> {
+    }): Promise<types.SharedListReference> {
         const sharedList = (await this.operation('createSharedList', {
             ...options.listData,
             creator: options.userReference.id,
@@ -272,8 +329,8 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async createListEntries(options: {
-        listReference: SharedListReference,
-        listEntries: Array<Omit<SharedListEntry, 'createdWhen' | 'updatedWhen'> & { createdWhen?: number | '$now' }>,
+        listReference: types.SharedListReference,
+        listEntries: Array<Omit<types.SharedListEntry, 'createdWhen' | 'updatedWhen'> & { createdWhen?: number | '$now' }>,
         userReference: UserReference
     }) {
         await this.operation('createListEntries', {
@@ -292,7 +349,7 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async removeListEntries(options: {
-        listReference: SharedListReference,
+        listReference: types.SharedListReference,
         normalizedUrl: string
     }) {
         const entries: Array<{ id: string | number }> = await this.operation('findListEntriesByUrl', {
@@ -306,40 +363,20 @@ export default class ContentSharingStorage extends StorageModule {
         await this.operation('deleteListEntriesByIds', { ids })
     }
 
-    getSharedListLinkID(reference: SharedListReference): string {
-        const id = (reference as StoredSharedListReference).id
-        return typeof id === "string" ? id : id.toString()
-    }
-
-    getSharedListReferenceFromLinkID(id: string): SharedListReference {
-        const reference: StoredSharedListReference = { type: 'shared-list-reference', id }
-        return reference
-    }
-
-    getSharedAnnotationLinkID(reference: SharedAnnotationReference): string {
-        const id = (reference as StoredSharedAnnotationReference).id
-        return typeof id === "string" ? id : id.toString()
-    }
-
-    getSharedAnnotationReferenceFromLinkID(id: string | number): SharedAnnotationReference {
-        const reference: StoredSharedAnnotationReference = { type: 'shared-annotation-reference', id }
-        return reference
-    }
-
-    async retrieveList(listReference: SharedListReference): Promise<{
-        sharedList: SharedList,
-        entries: Array<SharedListEntry & { sharedList: SharedListReference }>,
+    async retrieveList(listReference: types.SharedListReference): Promise<{
+        sharedList: types.SharedList,
+        entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }>,
         creator: UserReference
     } | null> {
         const id = this._idFromReference(listReference as StoredSharedListReference)
-        const sharedList: SharedList & { creator: string } = await this.operation('findListByID', { id })
+        const sharedList: types.SharedList & { creator: string } = await this.operation('findListByID', { id })
         if (!sharedList) {
             return null
         }
 
         const rawEntries = await this.operation('findListEntriesByList', { sharedListID: id })
-        const entries: Array<SharedListEntry & { sharedList: SharedListReference }> = rawEntries.map(
-            (entry: SharedListEntry & { sharedList: string | number }) => ({
+        const entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }> = rawEntries.map(
+            (entry: types.SharedListEntry & { sharedList: string | number }) => ({
                 ...entry,
                 sharedList: { type: 'shared-list-reference', id: entry.sharedList } as StoredSharedListReference
             })
@@ -347,7 +384,7 @@ export default class ContentSharingStorage extends StorageModule {
         return { sharedList, entries, creator: { type: 'user-reference', id: sharedList.creator } }
     }
 
-    async updateListTitle(listReference: SharedListReference, newTitle: string) {
+    async updateListTitle(listReference: types.SharedListReference, newTitle: string) {
         await this.operation('updateListTitle', {
             id: this._idFromReference(listReference as StoredSharedListReference),
             newTitle
@@ -357,8 +394,8 @@ export default class ContentSharingStorage extends StorageModule {
     async getRandomUserListEntryForUrl(params: {
         creatorReference: UserReference,
         normalizedUrl: string
-    }): Promise<{ entry: SharedListEntry } | null> {
-        const retrievedEntry: null | SharedListEntry & {
+    }): Promise<{ entry: types.SharedListEntry } | null> {
+        const retrievedEntry: null | types.SharedListEntry & {
             id: number | string,
             creator: number | string,
             sharedList: number | string,
@@ -373,18 +410,70 @@ export default class ContentSharingStorage extends StorageModule {
         delete retrievedEntry.id
         delete retrievedEntry.creator
         delete retrievedEntry.sharedList
-        return { entry: retrievedEntry as SharedListEntry }
+        return { entry: retrievedEntry as types.SharedListEntry }
+    }
+
+    async createPageInfo(params: {
+        pageInfo: Omit<types.SharedPageInfo, 'createdWhen' | 'updatedWhen'>,
+        creatorReference: UserReference
+    }): Promise<types.SharedPageInfoReference> {
+        const pageInfo = (await this.operation('createPageInfo', {
+            ...params.pageInfo,
+            createdWhen: '$now',
+            updatedWhen: '$now',
+            creator: this._idFromReference(params.creatorReference)
+        })).object
+        const reference: StoredSharedPageInfoReference = { type: 'shared-page-info-reference', id: pageInfo.id }
+        return reference
+    }
+
+    async ensurePageInfo(params: {
+        pageInfo: Omit<types.SharedPageInfo, 'createdWhen' | 'updatedWhen'>,
+        creatorReference: UserReference
+    }) {
+        const existing = await this.getPageInfo({
+            normalizedUrl: params.pageInfo.normalizedUrl,
+            creatorReference: params.creatorReference
+        })
+        if (existing) {
+            return existing.reference
+        }
+        const reference = await this.createPageInfo(params)
+        return reference
+    }
+
+    async getPageInfo(params: {
+        normalizedUrl: string,
+        creatorReference: UserReference
+    }): Promise<{ reference: types.SharedPageInfoReference, pageInfo: types.SharedPageInfo } | null> {
+        const rawPageInfo: types.SharedPageInfo & {
+            id: number | string,
+            creator: number | string
+        } = await this.operation('findPageInfoByCreatorAndUrl', {
+            normalizedUrl: params.normalizedUrl,
+            creator: this._idFromReference(params.creatorReference)
+        })
+        if (!rawPageInfo) {
+            return null
+        }
+        const reference: StoredSharedPageInfoReference = {
+            type: 'shared-page-info-reference',
+            id: rawPageInfo.id
+        }
+        delete rawPageInfo.id
+        delete rawPageInfo.creator
+        return { reference, pageInfo: rawPageInfo as types.SharedPageInfo }
     }
 
     async createAnnotations(params: {
         annotationsByPage: {
             [normalizedPageUrl: string]: Array<
-                Omit<SharedAnnotation, 'normalizedPageUrl' | 'updatedWhen' | 'uploadedWhen'> & { localId: string }
+                Omit<types.SharedAnnotation, 'normalizedPageUrl' | 'updatedWhen' | 'uploadedWhen'> & { localId: string }
             >
         }
-        listReferences: SharedListReference[]
+        listReferences: types.SharedListReference[]
         creator: UserReference
-    }): Promise<{ sharedAnnotationReferences: { [localId: string]: SharedAnnotationReference } }> {
+    }): Promise<{ sharedAnnotationReferences: { [localId: string]: types.SharedAnnotationReference } }> {
         const batch: OperationBatch = []
         const annotationPlaceholders: { [localId: string]: string } = {}
         const objectCounts = { annotations: 0, entries: 0 }
@@ -431,7 +520,7 @@ export default class ContentSharingStorage extends StorageModule {
         }
 
         const batchResult = await this.operation('createAnnotationsAndEntries', { batch })
-        const result: { sharedAnnotationReferences: { [localId: string]: SharedAnnotationReference } } = { sharedAnnotationReferences: {} }
+        const result: { sharedAnnotationReferences: { [localId: string]: types.SharedAnnotationReference } } = { sharedAnnotationReferences: {} }
         for (const [localId, annotationPlaceholder] of Object.entries(annotationPlaceholders)) {
             result.sharedAnnotationReferences[localId] = {
                 type: 'shared-annotation-reference',
@@ -442,7 +531,7 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getAnnotationsForPagesInList(params: {
-        listReference: SharedListReference,
+        listReference: types.SharedListReference,
         normalizedPageUrls: string[]
     }) {
         if (!params.normalizedPageUrls.length) {
@@ -454,7 +543,7 @@ export default class ContentSharingStorage extends StorageModule {
         }
 
         const annotationEntries: Array<
-            SharedAnnotationListEntry & { creator: number | string, sharedAnnotation: number | string }
+            types.SharedAnnotationListEntry & { creator: number | string, sharedAnnotation: number | string }
         > = await this.operation('findAnnotationEntriesByListPages', {
             sharedList: this._idFromReference(params.listReference as StoredSharedListReference),
             normalizedPageUrls: params.normalizedPageUrls,
@@ -464,11 +553,11 @@ export default class ContentSharingStorage extends StorageModule {
 
         const result: {
             [normalizedPageUrl: string]: Array<{
-                // entry: SharedAnnotationListEntry
-                annotation: SharedAnnotation,
+                // entry: types.SharedAnnotationListEntry
+                annotation: types.SharedAnnotation,
             }>
         } = {}
-        const annotationChunks: Array<Array<SharedAnnotation>> = await Promise.all(chunkedEntries.map(
+        const annotationChunks: Array<Array<types.SharedAnnotation>> = await Promise.all(chunkedEntries.map(
             chunk => this.operation('findAnnotationsByIds', {
                 ids: chunk.map(entry => entry.sharedAnnotation)
             })
@@ -489,10 +578,10 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getAnnotationListEntries(params: {
-        listReference: SharedListReference,
+        listReference: types.SharedListReference,
     }) {
         const annotationEntries: Array<
-            SharedAnnotationListEntry & {
+            types.SharedAnnotationListEntry & {
                 id: number | string,
                 creator: number | string,
                 sharedAnnotation: number | string,
@@ -534,9 +623,9 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getAnnotations(params: {
-        references: SharedAnnotationReference[]
+        references: types.SharedAnnotationReference[]
     }) {
-        const annotations: Array<SharedAnnotation & {
+        const annotations: Array<types.SharedAnnotation & {
             id: number | string
             creator: number | string,
         }> = await this.operation('findAnnotationsByIds', {
@@ -562,10 +651,10 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getAnnotation(params: {
-        reference: SharedAnnotationReference
-    }): Promise<{ annotation: SharedAnnotation, creator: UserReference } | null> {
+        reference: types.SharedAnnotationReference
+    }): Promise<{ annotation: types.SharedAnnotation, creator: UserReference } | null> {
         const id = this._idFromReference(params.reference as StoredSharedAnnotationReference)
-        const retrievedAnnotation: null | (SharedAnnotation & { id: string | number, creator: string | number }) =
+        const retrievedAnnotation: null | (types.SharedAnnotation & { id: string | number, creator: string | number }) =
             await this.operation('findAnnotationById', { id })
         if (!retrievedAnnotation) {
             return null
@@ -574,15 +663,15 @@ export default class ContentSharingStorage extends StorageModule {
         delete retrievedAnnotation.id
         delete retrievedAnnotation.creator
         return {
-            annotation: retrievedAnnotation as SharedAnnotation,
+            annotation: retrievedAnnotation as types.SharedAnnotation,
             creator,
         }
     }
 
     async addAnnotationsToLists(params: {
         creator: UserReference,
-        sharedListReferences: SharedListReference[],
-        sharedAnnotations: Array<{ reference: SharedAnnotationReference, normalizedPageUrl: string, createdWhen: number }>
+        sharedListReferences: types.SharedListReference[],
+        sharedAnnotations: Array<{ reference: types.SharedAnnotationReference, normalizedPageUrl: string, createdWhen: number }>
     }) {
         const batch: OperationBatch = []
         const objectCounts = { entries: 0 }
@@ -609,8 +698,8 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async removeAnnotationsFromLists(params: {
-        sharedListReferences?: SharedListReference[],
-        sharedAnnotationReferences: Array<SharedAnnotationReference>
+        sharedListReferences?: types.SharedListReference[],
+        sharedAnnotationReferences: Array<types.SharedAnnotationReference>
     }) {
         const batch: OperationBatch = []
         let placeholderCount = 0
@@ -646,7 +735,7 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async removeAnnotations(params: {
-        sharedAnnotationReferences: Array<SharedAnnotationReference>
+        sharedAnnotationReferences: Array<types.SharedAnnotationReference>
     }) {
         await this.removeAnnotationsFromLists(params)
 
@@ -666,7 +755,7 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async updateAnnotationComment(params: {
-        sharedAnnotationReference: SharedAnnotationReference,
+        sharedAnnotationReference: types.SharedAnnotationReference,
         updatedComment: string
     }) {
         await this.operation('updateAnnotationComment', {
@@ -684,5 +773,13 @@ export default class ContentSharingStorage extends StorageModule {
             }
         }
         return id
+    }
+
+    _referenceFromLinkId<Type extends string>(type: Type, id: string) {
+        const reference: { type: Type, id: number | string } = {
+            type,
+            id: this.options.autoPkType === 'string' ? id : parseInt(id)
+        }
+        return reference
     }
 }
