@@ -846,9 +846,17 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     _referenceFromLinkId<Type extends string>(type: Type, id: string) {
+        let parsedId: string | number = id
+        if (this.options.autoPkType === 'number') {
+            parsedId = parseInt(parsedId)
+            if (isNaN(parsedId)) {
+                parsedId = id
+            }
+        }
+
         const reference: { type: Type, id: number | string } = {
             type,
-            id: this.options.autoPkType === 'string' ? id : parseInt(id)
+            id: parsedId
         }
         return reference
     }
