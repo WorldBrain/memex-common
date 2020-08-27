@@ -168,6 +168,13 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'createObject',
                 collection: 'sharedPageInfo',
             },
+            findPageInfoById: {
+                operation: 'findObject',
+                collection: 'sharedPageInfo',
+                args: {
+                    id: '$id:pk'
+                }
+            },
             findPageInfoByCreatorAndUrl: {
                 operation: 'findObject',
                 collection: 'sharedPageInfo',
@@ -219,6 +226,14 @@ export default class ContentSharingStorage extends StorageModule {
                     id: '$id:pk'
                 }
             },
+            findAnnotationsByCreatorAndPageUrl: {
+                operation: 'findObjects',
+                collection: 'sharedAnnotation',
+                args: {
+                    creator: '$creator:pk',
+                    normalizedPageUrl: '$normalizedPageUrl:pk',
+                }
+            },
             findAnnotationEntriesForAnnotations: {
                 operation: 'findObjects',
                 collection: 'sharedAnnotationListEntry',
@@ -254,6 +269,10 @@ export default class ContentSharingStorage extends StorageModule {
                     access: ['create', 'update', 'delete'],
                 },
                 sharedListEntry: {
+                    field: 'creator',
+                    access: ['create', 'update', 'delete'],
+                },
+                sharedPageInfo: {
                     field: 'creator',
                     access: ['create', 'update', 'delete'],
                 },
@@ -431,7 +450,7 @@ export default class ContentSharingStorage extends StorageModule {
         pageInfo: Omit<types.SharedPageInfo, 'createdWhen' | 'updatedWhen'>,
         creatorReference: UserReference
     }) {
-        const existing = await this.getPageInfo({
+        const existing = await this.getPageInfoByCreatorAndUrl({
             normalizedUrl: params.pageInfo.normalizedUrl,
             creatorReference: params.creatorReference
         })
@@ -442,17 +461,34 @@ export default class ContentSharingStorage extends StorageModule {
         return reference
     }
 
-    async getPageInfo(params: {
-        normalizedUrl: string,
-        creatorReference: UserReference
-    }): Promise<{ reference: types.SharedPageInfoReference, pageInfo: types.SharedPageInfo } | null> {
+    async getPageInfo(reference: types.SharedPageInfoReference) {
         const rawPageInfo: types.SharedPageInfo & {
             id: number | string,
             creator: number | string
-        } = await this.operation('findPageInfoByCreatorAndUrl', {
+        } = await this.operation('findPageInfoById', {
+            id: this._idFromReference(reference as StoredSharedPageInfoReference)
+        })
+        return this._preparePageInfoForUser(rawPageInfo)
+    }
+
+    async getPageInfoByCreatorAndUrl(params: {
+        normalizedUrl: string,
+        creatorReference: UserReference
+    }): Promise<{ reference: types.SharedPageInfoReference, pageInfo: types.SharedPageInfo } | null> {
+        const rawPageInfo: null | (types.SharedPageInfo & {
+            id: number | string,
+            creator: number | string
+        }) = await this.operation('findPageInfoByCreatorAndUrl', {
             normalizedUrl: params.normalizedUrl,
             creator: this._idFromReference(params.creatorReference)
         })
+        return this._preparePageInfoForUser(rawPageInfo)
+    }
+
+    _preparePageInfoForUser(rawPageInfo: null | (types.SharedPageInfo & {
+        id: number | string,
+        creator: number | string
+    })) {
         if (!rawPageInfo) {
             return null
         }
@@ -460,9 +496,13 @@ export default class ContentSharingStorage extends StorageModule {
             type: 'shared-page-info-reference',
             id: rawPageInfo.id
         }
+        const creatorReference: UserReference = {
+            type: 'user-reference',
+            id: rawPageInfo.creator
+        }
         delete rawPageInfo.id
         delete rawPageInfo.creator
-        return { reference, pageInfo: rawPageInfo as types.SharedPageInfo }
+        return { reference, pageInfo: rawPageInfo as types.SharedPageInfo, creatorReference }
     }
 
     async createAnnotations(params: {
@@ -634,37 +674,67 @@ export default class ContentSharingStorage extends StorageModule {
 
         const returned: GetAnnotationsResult = {}
         for (const annotation of annotations) {
-            const reference: StoredSharedAnnotationReference = {
-                type: 'shared-annotation-reference',
-                id: annotation.id
-            }
-
             const id = annotation.id
-            delete annotation.id
-            returned[id] = {
-                ...annotation,
-                creator: { type: 'user-reference', id: annotation.creator },
-                reference,
-            }
+            returned[id] = this._prepareAnnotationForUser(annotation)
         }
         return returned
     }
 
+    async getAnnotationsByCreatorAndPageUrl(params: {
+        creatorReference: UserReference,
+        normalizedPageUrl: string
+    }): Promise<Array<types.SharedAnnotation & {
+        reference: types.SharedAnnotationReference
+        creator: UserReference
+    }>> {
+        const annotations: Array<types.SharedAnnotation & {
+            id: number | string
+            creator: number | string,
+        }> = await this.operation('findAnnotationsByCreatorAndPageUrl', {
+            creator: this._idFromReference(params.creatorReference),
+            normalizedPageUrl: params.normalizedPageUrl
+        })
+
+        const returned: Array<types.SharedAnnotation & {
+            reference: types.SharedAnnotationReference
+            creator: UserReference
+        }> = annotations.map(annotation => this._prepareAnnotationForUser(annotation))
+        return returned
+    }
+
+    _prepareAnnotationForUser(rawAnnotation: types.SharedAnnotation & {
+        id: number | string
+        creator: number | string,
+    }) {
+        const reference: StoredSharedAnnotationReference = {
+            type: 'shared-annotation-reference',
+            id: rawAnnotation.id
+        }
+
+        delete rawAnnotation.id
+        const creatorReference: UserReference = { type: 'user-reference', id: rawAnnotation.creator }
+        return {
+            ...rawAnnotation,
+            creator: creatorReference,
+            reference,
+        }
+    }
+
     async getAnnotation(params: {
         reference: types.SharedAnnotationReference
-    }): Promise<{ annotation: types.SharedAnnotation, creator: UserReference } | null> {
+    }): Promise<{ annotation: types.SharedAnnotation, creatorReference: UserReference } | null> {
         const id = this._idFromReference(params.reference as StoredSharedAnnotationReference)
         const retrievedAnnotation: null | (types.SharedAnnotation & { id: string | number, creator: string | number }) =
             await this.operation('findAnnotationById', { id })
         if (!retrievedAnnotation) {
             return null
         }
-        const creator: UserReference = { type: 'user-reference', id: retrievedAnnotation.creator }
+        const creatorReference: UserReference = { type: 'user-reference', id: retrievedAnnotation.creator }
         delete retrievedAnnotation.id
         delete retrievedAnnotation.creator
         return {
             annotation: retrievedAnnotation as types.SharedAnnotation,
-            creator,
+            creatorReference,
         }
     }
 
