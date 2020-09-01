@@ -76,6 +76,14 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'sharedAnnotationMetadata',
                     args: { localId: { $in: '$localIds:array:pk' } }
                 },
+                updateAnnotationsExcludedFromLists: {
+                    operation: 'updateObjects',
+                    collection: 'sharedAnnotationMetadata',
+                    args: [
+                        { id: { $in: '$localIds:array:pk' } },
+                        { excludeFromLists: '$excludeFromLists:boolean' }
+                    ]
+                },
 
                 getPages: {
                     // TODO: Doesn't belong here
@@ -118,10 +126,19 @@ export class ContentSharingClientStorage extends StorageModule {
         return existing?.remoteId ?? null
     }
 
-    async storeAnnotationIds(params: { remoteIds: { [localId: string]: string } }) {
-        for (const [localId, remoteId] of Object.entries(params.remoteIds)) {
-            await this.operation('createAnnotationMetadata', { localId, remoteId })
+    async getRemoteListIds(params: { localIds: number[] }): Promise<{ [localId: number]: string }> {
+        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForLists', params)
+        return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
+    }
+
+    async storeAnnotationMetadata(annotationMetadataList: Array<{ localId: string, remoteId: string, excludeFromLists: boolean }>) {
+        for (const annotationMetadata of annotationMetadataList) {
+            await this.operation('createAnnotationMetadata', annotationMetadata)
         }
+    }
+
+    async setAnnotationsExcludedFromLists(params: { localIds: string[], excludeFromLists: boolean }) {
+        await this.operation('updateAnnotationsExcludedFromLists', params)
     }
 
     async deleteAnnotationMetadata(params: {
