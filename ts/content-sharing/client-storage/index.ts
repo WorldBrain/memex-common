@@ -127,7 +127,7 @@ export class ContentSharingClientStorage extends StorageModule {
     }
 
     async getRemoteListIds(params: { localIds: number[] }): Promise<{ [localId: number]: string }> {
-        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForLists', params)
+        const metadataObjects: Array<{ localId: string, remoteId: string }> = await this.operation('getMetadataForLists', params)
         return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
     }
 
