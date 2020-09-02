@@ -6,8 +6,9 @@ export type ContentSharingAction =
     | ChangeSharedListDescriptionAction
     | ShareAnnotationsAction
     | UnshareAnnotationsAction
-    | AddAnnotationEntries
-    | UpdateAnnotationComment
+    | AddAnnotationEntriesAction
+    | UpdateAnnotationCommentAction
+    | EnsurePageInfoAction
 
 export interface AddSharedListEntriesAction {
     type: 'add-shared-list-entries'
@@ -66,7 +67,7 @@ export interface UnshareAnnotationsAction {
     remoteAnnotationIds: Array<string | number>
 }
 
-export interface AddAnnotationEntries {
+export interface AddAnnotationEntriesAction {
     type: 'add-annotation-entries'
     remoteListIds: string[]
     remoteAnnotations: Array<{
@@ -76,9 +77,19 @@ export interface AddAnnotationEntries {
     }>
 }
 
-export interface UpdateAnnotationComment {
+export interface UpdateAnnotationCommentAction {
     type: 'update-annotation-comment'
     localAnnotationId: string
     remoteAnnotationId: string | number
     updatedComment: string
+}
+
+export interface EnsurePageInfoAction {
+    type: 'ensure-page-info'
+    data: Array<{
+        createdWhen: number | '$now'
+        fullTitle: string
+        originalUrl: string
+        normalizedUrl: string
+    }>
 }

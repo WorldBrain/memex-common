@@ -154,6 +154,13 @@ export class ContentSharingClientStorage extends StorageModule {
         return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
     }
 
+    async getRemoteAnnotationMetadata(params: {
+        localIds: string[]
+    }): Promise<{ [localId: string]: { localId: string, remoteId: string | number, excludeFromLists?: boolean } }> {
+        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
+        return fromPairs(metadataObjects.map(object => [object.localId, object]))
+    }
+
     async getPageTitles(params: { normalizedPageUrls: string[] }) {
         // TODO: Doesn't belong here
         const titles: { [pageUrl: string]: string } = {}
@@ -161,6 +168,19 @@ export class ContentSharingClientStorage extends StorageModule {
             titles[page.url] = page.fullTitle
         }
         return titles
+    }
+
+    async getPages(params: { normalizedPageUrls: string[] }) {
+        // TODO: Doesn't belong here
+        const pages: { [pageUrl: string]: { normalizedUrl: string, originalUrl: string, fullTitle: string } } = {}
+        for (const page of await this.operation('getPages', params)) {
+            pages[page.url] = {
+                normalizedUrl: page.url,
+                originalUrl: page.fullUrl,
+                fullTitle: page.fullTitle,
+            }
+        }
+        return pages
     }
 
     async areListsShared(params: { localIds: number[] }) {
