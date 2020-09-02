@@ -80,7 +80,7 @@ export class ContentSharingClientStorage extends StorageModule {
                     operation: 'updateObjects',
                     collection: 'sharedAnnotationMetadata',
                     args: [
-                        { id: { $in: '$localIds:array:pk' } },
+                        { localId: { $in: '$localIds:array:pk' } },
                         { excludeFromLists: '$excludeFromLists:boolean' }
                     ]
                 },
