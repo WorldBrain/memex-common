@@ -91,6 +91,12 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'pages',
                     args: { url: { $in: '$normalizedPageUrls' } },
                 },
+                getPage: {
+                    // TODO: Doesn't belong here
+                    operation: 'findObject',
+                    collection: 'pages',
+                    args: { url: '$normalizedPageUrl' },
+                },
 
                 createAction: {
                     operation: 'createObject',
@@ -161,10 +167,17 @@ export class ContentSharingClientStorage extends StorageModule {
         return fromPairs(metadataObjects.map(object => [object.localId, object]))
     }
 
+    async _getPages(params: { normalizedPageUrls: string[] }) {
+        const foundPages = await Promise.all(params.normalizedPageUrls.map(
+            normalizedPageUrl => this.operation('getPage', { normalizedPageUrl })
+        )) as Array<{ url: string, fullUrl: string, fullTitle: string }>
+        return foundPages.filter(page => !!page)
+    }
+
     async getPageTitles(params: { normalizedPageUrls: string[] }) {
         // TODO: Doesn't belong here
         const titles: { [pageUrl: string]: string } = {}
-        for (const page of await this.operation('getPages', params)) {
+        for (const page of await this._getPages(params)) {
             titles[page.url] = page.fullTitle
         }
         return titles
@@ -173,7 +186,7 @@ export class ContentSharingClientStorage extends StorageModule {
     async getPages(params: { normalizedPageUrls: string[] }) {
         // TODO: Doesn't belong here
         const pages: { [pageUrl: string]: { normalizedUrl: string, originalUrl: string, fullTitle: string } } = {}
-        for (const page of await this.operation('getPages', params)) {
+        for (const page of await this._getPages(params)) {
             pages[page.url] = {
                 normalizedUrl: page.url,
                 originalUrl: page.fullUrl,
