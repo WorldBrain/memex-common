@@ -8,8 +8,11 @@ export type ActionQueueInteraction =
     | 'skip-queue'
 
 export type ActionExecutor<Action> = (params: { action: Action }) => Promise<void>
-export type ActionValidator<Action> = (params: { action: Action }) => ActionValidatorResult
-export type ActionValidatorResult = {
-    valid: boolean
-    message?: string
+export type ActionPreprocessor<Action> = (params: { action: Action }) => ActionPreprocessorResult<Action>
+export type ActionPreprocessorResult<Action> = {
+    valid: false
+    validationError: string
+} | {
+    valid: true,
+    processed?: Action
 }

@@ -1,7 +1,7 @@
 import StorageManager from '@worldbrain/storex'
 import { ActionQueueStorage } from './storage'
 import createResolvable, { Resolvable } from '@josephg/resolvable'
-import { ActionQueueInteraction, ActionQueueStorageVersions, ActionValidator, ActionExecutor } from './types'
+import { ActionQueueInteraction, ActionQueueStorageVersions, ActionExecutor, ActionPreprocessor } from './types'
 
 export default class ActionQueue<Action extends { type: string }> {
     storage: ActionQueueStorage<Action>
@@ -21,7 +21,7 @@ export default class ActionQueue<Action extends { type: string }> {
             retryIntervalInMs: number
             versions: ActionQueueStorageVersions
             executeAction: ActionExecutor<Action>
-            validateAction?: ActionValidator<Action>
+            preprocessAction?: ActionPreprocessor<Action>
         },
     ) {
         this.storage = new ActionQueueStorage<Action>(options)
@@ -47,9 +47,14 @@ export default class ActionQueue<Action extends { type: string }> {
             queueInteraction: ActionQueueInteraction
         },
     ) {
-        const validationResult = this.options.validateAction?.({ action })
-        if (validationResult && !validationResult.valid) {
-            throw new Error(`Tried to queue invalid action (${action.type}): ${validationResult.message}`)
+        const preprocessingResult = this.options.preprocessAction?.({ action })
+        if (preprocessingResult) {
+            if (preprocessingResult.valid === false) {
+                throw new Error(`Tried to queue invalid action (${action.type}): ${preprocessingResult.validationError}`)
+            }
+            if (preprocessingResult.processed) {
+                action = preprocessingResult.processed
+            }
         }
 
         await this._queingAction
