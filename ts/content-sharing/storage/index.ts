@@ -6,12 +6,12 @@ import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
 import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
+import { AutoPkStorageReference, idFromAutoPkReference, autoPkReferenceFromLinkId } from '../../storage/references'
 
-type StorexReference<Type> = Type & { id: string | number }
-type StoredSharedListReference = StorexReference<types.SharedListReference>
-type StoredSharedPageInfoReference = StorexReference<types.SharedPageInfoReference>
-type StoredSharedAnnotationReference = StorexReference<types.SharedAnnotationReference>
-type StoredSharedAnnotationListEntryReference = StorexReference<types.SharedAnnotationListEntryReference>
+type StoredSharedListReference = AutoPkStorageReference<types.SharedListReference>
+type StoredSharedPageInfoReference = AutoPkStorageReference<types.SharedPageInfoReference>
+type StoredSharedAnnotationReference = AutoPkStorageReference<types.SharedAnnotationReference>
+type StoredSharedAnnotationListEntryReference = AutoPkStorageReference<types.SharedAnnotationListEntryReference>
 
 const PAGE_LIST_ENTRY_ORDER = 'desc'
 const ANNOTATION_LIST_ENTRY_ORDER = 'asc'
@@ -717,6 +717,7 @@ export default class ContentSharingStorage extends StorageModule {
             ...rawAnnotation,
             creator: creatorReference,
             reference,
+            linkId: this.getSharedAnnotationLinkID(reference)
         }
     }
 
@@ -835,29 +836,10 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     _idFromReference(reference: { id: number | string }): number | string {
-        let id = reference.id
-        if (this.options.autoPkType === 'number' && typeof id === 'string') {
-            id = parseInt(id)
-            if (isNaN(id)) {
-                id = reference.id
-            }
-        }
-        return id
+        return idFromAutoPkReference(reference, this.options)
     }
 
     _referenceFromLinkId<Type extends string>(type: Type, id: string) {
-        let parsedId: string | number = id
-        if (this.options.autoPkType === 'number') {
-            parsedId = parseInt(parsedId)
-            if (isNaN(parsedId)) {
-                parsedId = id
-            }
-        }
-
-        const reference: { type: Type, id: number | string } = {
-            type,
-            id: parsedId
-        }
-        return reference
+        return autoPkReferenceFromLinkId(type, id, this.options)
     }
 }

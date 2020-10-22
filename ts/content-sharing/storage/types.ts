@@ -14,5 +14,6 @@ export type GetAnnotationsResult = {
     [linkId: string]: SharedAnnotation & {
         reference: SharedAnnotationReference
         creator: UserReference
+        linkId: string
     }
 }
