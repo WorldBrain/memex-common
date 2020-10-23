@@ -1,8 +1,7 @@
-export type StorageReference<ReferenceType extends string> = {
+export type AutoPkStorageReference<ReferenceType extends string> = {
     type: ReferenceType
+    id: number | string
 }
-
-export type AutoPkStorageReference<Type> = Type & { id: string | number }
 
 export function idFromAutoPkReference(reference: { id: number | string }, options: { autoPkType: 'number' | 'string' }): number | string {
     let id = reference.id
@@ -15,7 +14,9 @@ export function idFromAutoPkReference(reference: { id: number | string }, option
     return id
 }
 
-export function autoPkReferenceFromLinkId<ReferenceType extends string>(type: ReferenceType, id: string, options: { autoPkType: 'number' | 'string' }): AutoPkStorageReference<StorageReference<ReferenceType>> {
+export function autoPkReferenceFromLinkId<ReferenceType extends string>(
+    type: ReferenceType, id: string, options: { autoPkType: 'number' | 'string' }
+): AutoPkStorageReference<ReferenceType> {
     let parsedId: string | number = id
     if (options.autoPkType === 'number') {
         parsedId = parseInt(parsedId)
