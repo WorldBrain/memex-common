@@ -1,6 +1,6 @@
 export type ConversationThread =
     {
-        createdWhen: number
+        updatedWhen: number
         normalizedPageUrl: string
     }
 
