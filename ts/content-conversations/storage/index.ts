@@ -8,6 +8,7 @@ import { SharedAnnotationReference, SharedPageInfoReference } from '../../conten
 import { ConversationReply } from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
 import { ConversationReplyReference } from '../types'
+import { CreateConversationReplyParams } from './types'
 
 interface PreparedReply {
     reference: ConversationReplyReference
@@ -40,7 +41,7 @@ export default class ContentConversationStorage extends StorageModule {
                     normalizedPageUrl: { type: 'string' },
                 },
                 relationships: [
-                    { childOf: 'sharedPageInfo' },
+                    { childOf: 'user', alias: 'pageCreator' },
                     { childOf: 'sharedAnnotation' },
                 ],
             },
@@ -53,7 +54,7 @@ export default class ContentConversationStorage extends StorageModule {
                 },
                 relationships: [
                     { childOf: 'user' },
-                    { childOf: 'sharedPageInfo' },
+                    { childOf: 'user', alias: 'pageCreator' },
                     { childOf: 'sharedAnnotation' },
                 ],
                 groupBy: [
@@ -66,11 +67,12 @@ export default class ContentConversationStorage extends StorageModule {
                 operation: 'executeBatch',
                 args: ['$batch'],
             },
-            findRepliesByPageInfo: {
+            findRepliesByCreatorAndPageUrl: {
                 operation: 'findObjects',
                 collection: 'conversationReply',
                 args: {
-                    sharedPageInfo: '$sharedPageInfo:pk',
+                    pageCreator: '$pageCreator:pk',
+                    normalizedPageUrl: '$normalizedPageUrl:string',
                 }
             },
             findRepliesByAnnotation: {
@@ -94,22 +96,16 @@ export default class ContentConversationStorage extends StorageModule {
         }
     })
 
-    async createReply(params: {
-        userReference: UserReference,
-        pageInfoReference: SharedPageInfoReference,
-        annotationReference: SharedAnnotationReference,
-        normalizedPageUrl: string,
-        reply: Omit<ConversationReply, 'createdWhen' | 'normalizedPageUrl'>
-    }): Promise<{ reference: ConversationReplyReference }> {
+    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference }> {
         const batch: OperationBatch = [
             {
                 placeholder: 'thread',
                 operation: 'createObject',
                 collection: 'conversationThread',
                 args: {
-                    sharedPageInfo: this.options.contentSharing._idFromReference(params.pageInfoReference),
                     sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
                     updatedWhen: Date.now(),
+                    pageCreator: params.pageCreatorReference.id,
                     normalizedPageUrl: params.normalizedPageUrl,
                 }
             },
@@ -119,9 +115,9 @@ export default class ContentConversationStorage extends StorageModule {
                 collection: 'conversationReply',
                 args: {
                     user: params.userReference.id,
-                    sharedPageInfo: this.options.contentSharing._idFromReference(params.pageInfoReference),
                     sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
                     createdWhen: Date.now(),
+                    pageCreator: params.pageCreatorReference.id,
                     normalizedPageUrl: params.normalizedPageUrl,
                     ...params.reply
                 }
@@ -131,16 +127,18 @@ export default class ContentConversationStorage extends StorageModule {
         return {
             reference: {
                 type: 'conversation-reply-reference',
-                id: result.info.reply.id,
+                id: result.info.reply.object.id,
             }
         }
     }
 
-    async getRepliesByPageInfo(params: {
-        pageInfoReference: SharedPageInfoReference,
+    async getRepliesByCreatorPage(params: {
+        pageCreatorReference: UserReference,
+        normalizedPageUrl: string
     }) {
-        const stored: Array<RawReply> = await this.operation('findRepliesByPageInfo', {
-            sharedPageInfo: this.options.contentSharing._idFromReference(params.pageInfoReference)
+        const stored: Array<RawReply> = await this.operation('findRepliesByCreatorAndPageUrl', {
+            pageCreator: this.options.contentSharing._idFromReference(params.pageCreatorReference),
+            normalizedPageUrl: params.normalizedPageUrl,
         })
 
         const grouped: {
