@@ -82,7 +82,6 @@ export default class ContentSharingStorage extends StorageModule {
                     body: { type: 'string', optional: true },
                     comment: { type: 'string', optional: true },
                     selector: { type: 'string', optional: true },
-                    hasConversation: { type: 'boolean', optional: true },
                 },
                 relationships: [
                     { alias: 'creator', childOf: 'user' }

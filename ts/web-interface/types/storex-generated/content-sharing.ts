@@ -38,7 +38,6 @@ export type SharedAnnotation =
         body?: string
         comment?: string
         selector?: string
-        hasConversation?: boolean
     }
 
 export type SharedAnnotationListEntry =

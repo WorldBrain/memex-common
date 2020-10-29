@@ -5,7 +5,7 @@ import { StorageModule, StorageModuleConfig, StorageModuleConstructorArgs } from
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { UserReference } from '../../web-interface/types/users'
 import { SharedAnnotationReference, SharedPageInfoReference } from '../../content-sharing/types'
-import { ConversationReply } from '../../web-interface/types/storex-generated/content-conversations'
+import { ConversationReply, ConversationThread } from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
 import { ConversationReplyReference } from '../types'
 import { CreateConversationReplyParams } from './types'
@@ -22,6 +22,17 @@ type RawReply = ConversationReply & {
     sharedPageInfo: number | string
     sharedAnnotation: number | string
     user: number | string
+}
+
+interface PreparedThread {
+    thread: ConversationThread
+    sharedAnnotation: SharedAnnotationReference
+}
+
+type RawThread = ConversationThread & {
+    id: number | string
+    sharedAnnotation: number | string
+    pageCreator: number | string
 }
 
 export default class ContentConversationStorage extends StorageModule {
@@ -80,6 +91,13 @@ export default class ContentConversationStorage extends StorageModule {
                 collection: 'conversationReply',
                 args: {
                     sharedAnnotation: '$sharedAnnotation:pk',
+                }
+            },
+            findThreadsByPages: {
+                operation: 'findObjects',
+                collection: 'conversationThread',
+                args: {
+                    normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
                 }
             },
         },
@@ -159,12 +177,26 @@ export default class ContentConversationStorage extends StorageModule {
         return stored.map(reply => this._prepareReply(reply))
     }
 
-    _prepareReply(reply: RawReply): PreparedReply {
+    _prepareReply(rawReply: RawReply): PreparedReply {
         return {
-            reference: { type: 'conversation-reply-reference', id: reply.id },
-            reply: omit(reply, 'sharedPageInfo', 'sharedAnnotation', 'user'),
-            sharedAnnotation: { type: 'shared-annotation-reference', id: reply.sharedAnnotation },
-            userReference: { type: 'user-reference', id: reply.user }
+            reference: { type: 'conversation-reply-reference', id: rawReply.id },
+            reply: omit(rawReply, 'sharedPageInfo', 'sharedAnnotation', 'user'),
+            sharedAnnotation: { type: 'shared-annotation-reference', id: rawReply.sharedAnnotation },
+            userReference: { type: 'user-reference', id: rawReply.user }
+        }
+    }
+
+    async getThreadsForPages(params: {
+        normalizedPageUrls: string[]
+    }): Promise<Array<PreparedThread>> {
+        const rawThreads: RawThread[] = await this.operation('findThreadsByPages', params)
+        return rawThreads.map(rawThread => this._prepareThread(rawThread))
+    }
+
+    _prepareThread(rawThread: RawThread): PreparedThread {
+        return {
+            thread: omit(rawThread, 'id', 'sharedAnnotation', 'pageCreator'),
+            sharedAnnotation: { type: 'shared-annotation-reference', id: rawThread.sharedAnnotation },
         }
     }
 }
