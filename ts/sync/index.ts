@@ -86,7 +86,11 @@ export default class SyncService {
             downloadBatchSize: options.continuousSyncBatchSize,
             singleBatch: options.continuousSyncSingleBatch,
             processTermsFields: options.productType === 'ext',
-            toggleSyncLogging: (enabled: boolean, deviceId?: string | number) => {
+            executeReconciliationOperation: this.getReconciliationOperationExecutor(),
+            toggleSyncLogging: (
+                enabled: boolean,
+                deviceId?: string | number,
+            ) => {
                 if (this.syncLoggingMiddleware) {
                     if (enabled && deviceId) {
                         this.syncLoggingMiddleware.enable(deviceId!)
@@ -97,13 +101,6 @@ export default class SyncService {
                     throw new Error(
                         `Tried to toggle sync logging before logging middleware was created`,
                     )
-                }
-            },
-            executeReconciliationOperation: async (name, ...operation) => {
-                if (this.executeReconciliationOperation) {
-                    return this.executeReconciliationOperation(name, ...operation)
-                } else {
-                    return options.storageManager.operation(name, ...operation)
                 }
             },
         })
@@ -119,6 +116,7 @@ export default class SyncService {
             productType: options.productType,
             devicePlatform: options.devicePlatform,
             getIceServers: options.getIceServers,
+            executeReconciliationOperation: this.getReconciliationOperationExecutor(),
             generateLoginToken: async () =>
                 (await options.auth.generateLoginToken()).token,
             loginWithToken: async (token: string) => options.auth.loginWithToken(token),
@@ -133,5 +131,16 @@ export default class SyncService {
             mergeModifications: true,
         })
         return this.syncLoggingMiddleware
+    }
+
+    private getReconciliationOperationExecutor = () => async (
+        name,
+        ...operation
+    ) => {
+        if (this.executeReconciliationOperation) {
+            return this.executeReconciliationOperation(name, ...operation)
+        } else {
+            return this.options.storageManager.operation(name, ...operation)
+        }
     }
 }
