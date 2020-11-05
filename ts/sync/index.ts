@@ -140,7 +140,7 @@ export default class SyncService {
         if (this.executeReconciliationOperation) {
             return this.executeReconciliationOperation(name, ...operation)
         } else {
-            return this.options.storageManager.operation(name, ...operation)
+            return this.options.storageManager.backend.operation(name, ...operation)
         }
     }
 }
