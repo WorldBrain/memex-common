@@ -48,3 +48,24 @@ export function activityStreamFunction(options: {
         return activityStreams[options.method as string](data)
     })
 }
+
+export function activityStreamFunctions(options: {
+    firebase: typeof firebaseModule,
+    functions: typeof functionsModule
+}) {
+    function activityStreamFunctionWithKey(method: ActivityStreamServiceMethod) {
+        return {
+            [method]: activityStreamFunction({
+                firebase: options.firebase,
+                functions: options.functions,
+                method,
+            })
+        }
+    }
+
+    return {
+        ...activityStreamFunctionWithKey('addActivity'),
+        ...activityStreamFunctionWithKey('followEntity'),
+        ...activityStreamFunctionWithKey('getNotifications'),
+    }
+}
