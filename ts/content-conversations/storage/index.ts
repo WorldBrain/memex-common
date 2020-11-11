@@ -9,6 +9,7 @@ import { ConversationReply, ConversationThread } from '../../web-interface/types
 import ContentSharingStorage from '../../content-sharing/storage'
 import { ConversationReplyReference } from '../types'
 import { CreateConversationReplyParams } from './types'
+import orderBy from 'lodash/orderBy'
 
 interface PreparedReply {
     reference: ConversationReplyReference
@@ -155,16 +156,14 @@ export default class ContentConversationStorage extends StorageModule {
         pageCreatorReference: UserReference,
         normalizedPageUrl: string
     }) {
-        const stored: Array<RawReply> = await this.operation('findRepliesByCreatorAndPageUrl', {
+        const rawReplies: Array<RawReply> = await this.operation('findRepliesByCreatorAndPageUrl', {
             pageCreator: this.options.contentSharing._idFromReference(params.pageCreatorReference),
             normalizedPageUrl: params.normalizedPageUrl,
         })
 
         const grouped: {
             [annotationId: string]: Array<PreparedReply>
-        } = groupBy(stored.map(reply => {
-            return this._prepareReply(reply)
-        }), (reply => reply.sharedAnnotation.id))
+        } = groupBy(this._prepareReplies(rawReplies), (reply => reply.sharedAnnotation.id))
 
         return grouped
     }
@@ -172,10 +171,18 @@ export default class ContentConversationStorage extends StorageModule {
     async getRepliesByAnnotation(params: {
         annotationReference: SharedAnnotationReference
     }) {
-        const stored: Array<RawReply> = await this.operation('findRepliesByAnnotation', {
+        const rawReplies: Array<RawReply> = await this.operation('findRepliesByAnnotation', {
             sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference)
         })
-        return stored.map(reply => this._prepareReply(reply))
+        return this._prepareReplies(rawReplies)
+    }
+
+    _prepareReplies(rawReplies: Array<RawReply>) {
+        return orderBy(
+            rawReplies.map(rawReply => this._prepareReply(rawReply)),
+            preparedReply => preparedReply.reply.createdWhen,
+            'asc'
+        )
     }
 
     _prepareReply(rawReply: RawReply): PreparedReply {
