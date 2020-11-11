@@ -1,7 +1,7 @@
 import { StreamClient, NotificationActivity } from 'getstream'
+import ContentSharingStorage from '../content-sharing/storage';
+import ContentConversationStorage from '../content-conversations/storage';
 import { ActivityStream, NotificationStreamResult, ActivityStreamsService, ActivityRequest, EntitityActivities, AnnotationReplyActivity, ActivityResult } from "./types";
-import ContentSharingStorage from 'src/content-sharing/storage';
-import ContentConversationStorage from 'src/content-conversations/storage';
 
 export default class GetStreamActivityStreamService {
     client: StreamClient;

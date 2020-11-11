@@ -102,15 +102,16 @@ export default class ContentConversationStorage extends StorageModule {
             },
         },
         accessRules: {
-            // ownership: {
-            //     sharedList: {
-            //         field: 'creator',
-            //         access: ['create', 'update', 'delete'],
-            //     },
-            // },
-            // permissions: {
-            //     sharedList: { list: { rule: true }, read: { rule: true } },
-            // }
+            ownership: {
+                conversationReply: {
+                    field: 'user',
+                    access: ['create'],
+                },
+            },
+            permissions: {
+                conversationThread: { list: { rule: true }, read: { rule: true }, create: { rule: true } },
+                conversationReply: { list: { rule: true }, read: { rule: true } },
+            }
         }
     })
 
