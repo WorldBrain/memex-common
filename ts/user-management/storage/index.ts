@@ -105,7 +105,7 @@ export default class UserStorage extends StorageModule {
 
         return (await this.operation('createUser', {
             id: userReference.id,
-            ...user
+            displayName: user.displayName ?? null
         })).object
     }
 
