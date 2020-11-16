@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import ReactMarkdown from "react-markdown";
 
-export default function Markdown(props: { children: React.ReactNode }) {
+export default function Markdown(props: { children: ReactMarkdown.ReactMarkdownProps['children'] }) {
   // Don't render images until a secure solution is agreed on:
   // https://security.stackexchange.com/questions/36447/img-tag-vulnerability
   const imageRenderer = (imageProps: { src: string; alt: string }) => (
