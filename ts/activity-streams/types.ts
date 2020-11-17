@@ -1,5 +1,6 @@
 import { SharedAnnotationReference, SharedListReference } from "../content-sharing/types";
 import { ConversationReplyReference } from "../content-conversations/types";
+import { UserReference } from "src/web-interface/types/users";
 
 export interface ActivityStreamsService {
     followEntity<EntityType extends keyof ActivityStream>(params: {
@@ -67,7 +68,12 @@ export interface AnnotationReplyActivity {
         replyReference: ConversationReplyReference;
     };
     result: {
+        replyCreatorRefence: UserReference;
         replyReference: ConversationReplyReference;
+        replyContent: string;
+        annotationReference: SharedAnnotationReference;
+        annotationCreatorReference: UserReference;
+        annotationComment: string;
     };
 }
 
@@ -86,12 +92,4 @@ export type ListActivityStream = ActivityStreamDefinition<'list', {
 // Workaround for:
 // https://stackoverflow.com/questions/64699531/indexing-a-nested-object-with-two-dependent-type-parameters-fails-in-typescript/64700607
 type IndexType<Type, Key extends string | number | symbol> = Extract<Type, { [K in Key]: unknown }>[Key]
-
-const x: ActivityStreamsService = {} as any
-x.addActivity({
-    entityType: 'list',
-    entity: { type: 'shared-list-reference', id: 5 },
-    activityType: 'newEntry',
-    activity: { normalizedPageUrl: 'test' },
-})
 

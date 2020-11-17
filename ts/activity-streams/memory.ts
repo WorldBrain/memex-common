@@ -1,4 +1,6 @@
 import { ActivityStreamsService, ActivityStream, NotificationStreamResult, ActivityRequest, EntitityActivities } from "./types";
+import ContentConversationStorage from "src/content-conversations/storage";
+import ContentSharingStorage from "src/content-sharing/storage";
 
 export interface MemoryFollow {
     source: { type: string, id: string | number }
@@ -39,5 +41,15 @@ export default class MemoryStreamsService {
 
     async getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
         return []
+    }
+}
+
+async function concretizeActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
+    storage: { contentSharing: ContentSharingStorage, contentConversations: ContentConversationStorage }
+    entityType: EntityType
+    entity: ActivityStream[EntityType]['entity'],
+} & ActivityRequest<EntityType, ActivityType>) {
+    if (params.entityType === 'annotation' && params.activityType === 'reply') {
+
     }
 }
