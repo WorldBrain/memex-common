@@ -11,7 +11,7 @@ export default function Markdown(props: { children: ReactMarkdown.ReactMarkdownP
 
   return (
     <Container>
-      <ReactMarkdown renderers={{ image: imageRenderer }} {...props} />
+      <ReactMarkdown linkTarget={'_blank'} renderers={{ image: imageRenderer }} {...props} />
     </Container>
   );
 }
