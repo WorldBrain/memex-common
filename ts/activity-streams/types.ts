@@ -1,5 +1,5 @@
-import { SharedAnnotationReference, SharedListReference } from "../content-sharing/types";
-import { ConversationReplyReference } from "../content-conversations/types";
+import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo } from "../content-sharing/types";
+import { ConversationReplyReference, ConversationReply } from "../content-conversations/types";
 import { UserReference } from "src/web-interface/types/users";
 
 export interface ActivityStreamsService {
@@ -12,10 +12,12 @@ export interface ActivityStreamsService {
         entityType: EntityType
         entity: ActivityStream[EntityType]['entity'],
     } & ActivityRequest<EntityType, ActivityType>): Promise<void>
-    getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>>
+    getNotifications(): Promise<NotificationStream>
 }
 
 export type ActivityStream = AnnotationActivityStream & ListActivityStream
+
+export type NotificationStream = Array<NotificationStreamResult<keyof ActivityStream>>;
 export type NotificationStreamResult<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
     ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>> =
@@ -68,12 +70,14 @@ export interface AnnotationReplyActivity {
         replyReference: ConversationReplyReference;
     };
     result: {
-        replyCreatorRefence: UserReference;
+        normalizedPageUrl: string;
+        pageInfo: Pick<SharedPageInfo, 'fullTitle' | 'originalUrl' | 'updatedWhen'>
+        replyCreator: UserReference;
         replyReference: ConversationReplyReference;
-        replyContent: string;
+        reply: Pick<ConversationReply, 'content' | 'createdWhen'>;
         annotationReference: SharedAnnotationReference;
-        annotationCreatorReference: UserReference;
-        annotationComment: string;
+        annotationCreator: UserReference;
+        annotation: Pick<SharedAnnotation, 'body' | 'comment' | 'updatedWhen'>;
     };
 }
 

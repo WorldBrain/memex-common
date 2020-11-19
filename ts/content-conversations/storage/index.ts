@@ -94,6 +94,13 @@ export default class ContentConversationStorage extends StorageModule {
                     sharedAnnotation: '$sharedAnnotation:pk',
                 }
             },
+            findReplyById: {
+                operation: 'findObject',
+                collection: 'conversationReply',
+                args: {
+                    id: '$id:pk',
+                }
+            },
             findThreadsByPages: {
                 operation: 'findObjects',
                 collection: 'conversationThread',
@@ -175,6 +182,15 @@ export default class ContentConversationStorage extends StorageModule {
             sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference)
         })
         return this._prepareReplies(rawReplies)
+    }
+
+    async getReply(params: {
+        replyReference: ConversationReplyReference
+    }) {
+        const rawReply: RawReply | null = await this.operation('findReplyById', {
+            id: params.replyReference.id,
+        })
+        return rawReply && this._prepareReply(rawReply)
     }
 
     _prepareReplies(rawReplies: Array<RawReply>) {
