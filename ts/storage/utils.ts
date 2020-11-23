@@ -29,8 +29,8 @@ export function removeTermFieldsFromObject(
     }
 }
 
-export function getTermsField(collection: 'pages', fieldName: string) {
-    if (collection !== 'pages') {
+export function getTermsField(collection: string, fieldName: string) {
+    if (!['pages', 'customLists'].includes(collection)) {
         return null
     }
 
@@ -44,6 +44,10 @@ export function getTermsField(collection: 'pages', fieldName: string) {
 
     if (fieldName === 'fullUrl') {
         return 'urlTerms'
+    }
+
+    if (fieldName === 'searchableName') {
+        return 'nameTerms'
     }
 
     return null
