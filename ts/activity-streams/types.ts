@@ -1,6 +1,6 @@
-import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo } from "../content-sharing/types";
+import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo, SharedPageInfoReference } from "../content-sharing/types";
 import { ConversationReplyReference, ConversationReply } from "../content-conversations/types";
-import { UserReference } from "src/web-interface/types/users";
+import { UserReference, User } from "../web-interface/types/users";
 
 export interface ActivityStreamsService {
     followEntity<EntityType extends keyof ActivityStream>(params: {
@@ -13,6 +13,7 @@ export interface ActivityStreamsService {
         entity: ActivityStream[EntityType]['entity'],
     } & ActivityRequest<EntityType, ActivityType>): Promise<void>
     getNotifications(): Promise<NotificationStream>
+    markNotifications(params: { ids: Array<number | string>, seen: boolean, read: boolean }): Promise<void>
 }
 
 export type ActivityStream = AnnotationActivityStream & ListActivityStream
@@ -27,6 +28,7 @@ export type NotificationStreamResult<
         read: boolean
     }
 export type ActivityStreamResult<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>> = {
+    id: number | string
     entityType: EntityType,
     entity: ActivityStream[EntityType]['entity'],
 } & ActivityResult<EntityType, ActivityType>
@@ -58,10 +60,10 @@ export type ActivityStreamDefinition<EntityName extends string, Definition exten
     }
 }
 
-export type AnnotationActivityStream = ActivityStreamDefinition<'annotation', {
+export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotation', {
     entity: SharedAnnotationReference
     activities: {
-        reply: AnnotationReplyActivity
+        conversationReply: AnnotationReplyActivity
     }
 }>
 
@@ -71,13 +73,21 @@ export interface AnnotationReplyActivity {
     };
     result: {
         normalizedPageUrl: string;
-        pageInfo: Pick<SharedPageInfo, 'fullTitle' | 'originalUrl' | 'updatedWhen'>
-        replyCreator: UserReference;
-        replyReference: ConversationReplyReference;
-        reply: Pick<ConversationReply, 'content' | 'createdWhen'>;
-        annotationReference: SharedAnnotationReference;
-        annotationCreator: UserReference;
-        annotation: Pick<SharedAnnotation, 'body' | 'comment' | 'updatedWhen'>;
+        pageInfo: {
+            reference: SharedPageInfoReference
+        } & SharedPageInfo
+        replyCreator: {
+            reference: UserReference;
+        } & User
+        reply: {
+            reference: ConversationReplyReference;
+        } & ConversationReply
+        annotationCreator: {
+            reference: UserReference
+        } & User
+        annotation: {
+            reference: SharedAnnotationReference;
+        } & SharedAnnotation
     };
 }
 

@@ -1,7 +1,8 @@
-import pick from 'lodash/pick'
-import { ActivityStreamsService, ActivityStream, NotificationStreamResult, ActivityRequest, EntitityActivities, ActivityResult, AnnotationReplyActivity } from "./types";
-import ContentConversationStorage from "src/content-conversations/storage";
-import ContentSharingStorage from "src/content-sharing/storage";
+import ContentConversationStorage from "../content-conversations/storage";
+import ContentSharingStorage from "../content-sharing/storage";
+import UserStorage from "../user-management/storage";
+import { ActivityStreamsService, ActivityStream, NotificationStreamResult, ActivityRequest, EntitityActivities } from "./types";
+import { concretizeActivity } from "./utils";
 
 export interface MemoryFollow {
     createdWhen: number
@@ -34,6 +35,7 @@ export default class MemoryStreamsService {
         storage: {
             contentSharing: ContentSharingStorage,
             contentConversations: ContentConversationStorage,
+            users: UserStorage
         }
         getCurrentUserId(): Promise<number | string | null | undefined>
     }) { }
@@ -100,6 +102,7 @@ export default class MemoryStreamsService {
             const read = userNotficationState.read.has(activity.id)
             // TODO: TypeScript doesn't want to strongly type this
             return {
+                id: activity.id,
                 entityType: activity.entity.type,
                 entity: activity.entity,
                 activityType: activity.type,
@@ -109,50 +112,24 @@ export default class MemoryStreamsService {
             } as any
         })
     }
-}
 
-async function concretizeActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
-    storage: { contentSharing: ContentSharingStorage, contentConversations: ContentConversationStorage }
-    entityType: EntityType
-    entity: ActivityStream[EntityType]['entity'],
-} & ActivityRequest<EntityType, ActivityType>): Promise<ActivityResult<EntityType, ActivityType>> {
-    if (params.entityType === 'annotation' && params.activityType === 'reply') {
-        const activityRequest = params.activity as AnnotationReplyActivity['request']
-        const replyData = await params.storage.contentConversations.getReply({
-            replyReference: activityRequest.replyReference,
-        })
-        if (!replyData) {
-            throw new Error(`Could not concrectize annotation reply activity: reply not found`)
-        }
-        const annotation = await params.storage.contentSharing.getAnnotation({
-            reference: replyData.sharedAnnotation,
-        })
-        if (!annotation) {
-            throw new Error(`Could not concrectize annotation reply activity: annotation not found`)
-        }
-        const { pageInfo } = await params.storage.contentSharing.getPageInfoByCreatorAndUrl({
-            normalizedUrl: replyData.reply.normalizedPageUrl,
-            creatorReference: annotation.creatorReference,
-        })
-        if (!pageInfo) {
-            throw new Error(`Could not concrectize annotation reply activity: page info not found`)
+    async markNotifications(params: { ids: Array<number | string>, seen: boolean, read: boolean }): Promise<void> {
+        const userId = await this.options.getCurrentUserId()
+        if (!userId) {
+            throw new Error(`Tried to mark notification(s) as read wtihout being authenticated: ${params.ids.join(', ')}`)
         }
 
-        const activity: AnnotationReplyActivity['result'] = {
-            normalizedPageUrl: replyData.reply.normalizedPageUrl,
-            pageInfo: pick(pageInfo, 'fullTitle', 'originalUrl', 'updatedWhen'),
-            replyCreator: replyData.userReference,
-            replyReference: replyData.reference,
-            reply: pick(replyData.reply, 'content', 'createdWhen'),
-            annotationReference: replyData.sharedAnnotation,
-            annotationCreator: annotation.creatorReference,
-            annotation: pick(annotation.annotation, 'body', 'comment', 'updatedWhen'),
+        const ids = params.ids as number[]
+        const addIds = (set: Set<number>) => {
+            for (const id of ids) {
+                set.add(id)
+            }
         }
-        return {
-            activityType: params.activityType,
-            activity,
+        if (params.seen) {
+            addIds(this.notificationStates[userId].seen)
+        }
+        if (params.read) {
+            addIds(this.notificationStates[userId].read)
         }
     }
-
-    throw new Error(`Tried to concretize unknow activity: ${params.entityType}, ${params.activityType}`)
 }

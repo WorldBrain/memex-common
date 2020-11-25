@@ -24,4 +24,8 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
     async getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
         return this.options.executeCall('activityStreams-getNotifications', {})
     }
+
+    async markNotifications(params: { ids: Array<number | string>, seen: boolean, read: boolean }): Promise<void> {
+        return this.options.executeCall('activityStreams-markNotifications', params)
+    }
 }

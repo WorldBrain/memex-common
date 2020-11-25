@@ -42,6 +42,7 @@ export function activityStreamFunction(options: {
             storage: {
                 contentSharing,
                 contentConversations,
+                users,
             }
         })
 
@@ -67,5 +68,6 @@ export function activityStreamFunctions(options: {
         ...activityStreamFunctionWithKey('addActivity'),
         ...activityStreamFunctionWithKey('followEntity'),
         ...activityStreamFunctionWithKey('getNotifications'),
+        ...activityStreamFunctionWithKey('markNotifications'),
     }
 }
