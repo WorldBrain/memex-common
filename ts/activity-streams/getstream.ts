@@ -8,7 +8,7 @@ import { ActivityStream, NotificationStreamResult, ActivityStreamsService, Activ
 import { concretizeActivity } from './utils';
 import UserStorage from '../user-management/storage';
 import omit from 'lodash/omit';
-import { AutoPkStorageReference } from 'src/storage/references';
+import { AutoPkStorageReference } from '../storage/references';
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
     client: StreamClient;

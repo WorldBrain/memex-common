@@ -3,7 +3,7 @@ import expect from 'expect'
 import { concretizeActivity } from "./utils"
 import { SharedAnnotationReference, SharedPageInfoReference } from "../content-sharing/types"
 import { ConversationReplyReference } from "../content-conversations/types"
-import { UserReference } from 'src/web-interface/types/users'
+import { UserReference } from '../web-interface/types/users'
 import { prepareActivityForStreamIO } from './getstream'
 
 describe('Activity stream utils', () => {
