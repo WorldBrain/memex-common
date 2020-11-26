@@ -79,14 +79,21 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
     }
 
-    async getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
+    async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
         const userIdString = coerceToString(await this._getCurrentUserId())
         const notifcations = this.client.feed('notification', userIdString)
-        const activities = await notifcations.get({ enrich: true })
+        const activities = await notifcations.get({ enrich: false })
+        return { unseenCount: activities.unseen!, unreadCount: activities.unread! }
+    }
+
+    async getNotifications(params?: { markAsSeen?: boolean }): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
+        const userIdString = coerceToString(await this._getCurrentUserId())
+        const notifcations = this.client.feed('notification', userIdString)
+        const activities = await notifcations.get({ enrich: true, mark_seen: params?.markAsSeen ?? undefined })
         return prepareActivitiesFromStreamIO(activities.results) as any
     }
 
-    async markNotifications(params: { ids: Array<number | string>, seen: boolean, read: boolean }): Promise<void> {
+    async markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void> {
         const ids = params.ids as string[]
         const userIdString = coerceToString(await this._getCurrentUserId())
         const feed = this.client.feed('notification', userIdString)

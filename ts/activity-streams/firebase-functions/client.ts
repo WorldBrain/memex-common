@@ -21,6 +21,10 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
         return this.options.executeCall('activityStreams-addActivity', params)
     }
 
+    async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
+        return this.options.executeCall('activityStreams-getNotifcationInfo', {})
+    }
+
     async getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
         return this.options.executeCall('activityStreams-getNotifications', {})
     }

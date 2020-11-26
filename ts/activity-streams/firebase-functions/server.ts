@@ -67,6 +67,7 @@ export function activityStreamFunctions(options: {
     return {
         ...activityStreamFunctionWithKey('addActivity'),
         ...activityStreamFunctionWithKey('followEntity'),
+        ...activityStreamFunctionWithKey('getNotifcationInfo'),
         ...activityStreamFunctionWithKey('getNotifications'),
         ...activityStreamFunctionWithKey('markNotifications'),
     }
