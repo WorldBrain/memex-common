@@ -45,7 +45,7 @@
     "firebase": "^7.21.1",
     "firebase-admin": "^9.2.0",
     "firebase-functions": "^3.11.0",
-    "react": "^16.13.1"
+    "react": "^17.0.1"
   },
   "repository": {
     "type": "git",

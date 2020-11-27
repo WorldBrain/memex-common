@@ -124,17 +124,23 @@ export function prepareActivityForStreamIO(concretized: { activity: any }, optio
 } {
     const activity: { [key: string]: any } = {}
     const objects: { [collectionName: string]: Array<{ id: string | number, reference: any, data: { [key: string]: any } }> } = {}
+    const seen: { [collectionName: string]: Set<string | number> } = {}
 
     for (const [topKey, topValue] of Object.entries(concretized.activity)) {
         const reference = isPlainObject(topValue) && topValue['reference'] as AutoPkStorageReference<string>
         if (reference) {
             const type = referenceCollectionType(reference)
-            objects[type] = objects[type] ?? []
-            objects[type].push({
-                id: reference.id,
-                reference: options.makeReference(type, reference.id),
-                data: omit(topValue as any, 'reference')
-            })
+            seen[type] = seen[type] ?? new Set()
+            if (!seen[type].has(reference.id)) {
+                objects[type] = objects[type] ?? []
+                objects[type].push({
+                    id: reference.id,
+                    reference: options.makeReference(type, reference.id),
+                    data: omit(topValue as any, 'reference')
+                })
+                seen[type].add(reference.id)
+            }
+
             activity['data_' + topKey] = options.makeReference(type, reference.id)
         } else {
             activity['data_' + topKey] = topValue
