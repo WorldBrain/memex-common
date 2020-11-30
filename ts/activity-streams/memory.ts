@@ -1,7 +1,7 @@
 import ContentConversationStorage from "../content-conversations/storage";
 import ContentSharingStorage from "../content-sharing/storage";
 import UserStorage from "../user-management/storage";
-import { ActivityStreamsService, ActivityStream, NotificationStreamResult, ActivityRequest, EntitityActivities } from "./types";
+import { ActivityStreamsService, ActivityStream, ActivityRequest, EntitityActivities, GetNotificationsResults, GetNotificationsParams, AddActivityParams } from "./types";
 import { concretizeActivity } from "./utils";
 
 export interface MemoryFollow {
@@ -53,10 +53,9 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
     }
 
-    addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity'],
-    } & ActivityRequest<EntityType, ActivityType>): Promise<void> => {
+    addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
+        params: AddActivityParams<EntityType, ActivityType>
+    ): Promise<void> => {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to add new activity wtihout being authenticated: ${params.entityType}, ${params.activityType}`)
@@ -75,6 +74,14 @@ export default class MemoryStreamsService implements ActivityStreamsService {
             type: params.activityType as string,
             data: activity,
         })
+
+        if (params.follow) {
+            await this.followEntity({
+                entityType: params.entityType,
+                entity: params.entity,
+                feeds: params.follow,
+            })
+        }
     }
 
     _getFollow(userId: number | string, entity: { type: string, id: string | number }) {
@@ -93,7 +100,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
     }
 
-    async getNotifications(params?: { markAsSeen?: boolean }): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
+    async getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults> {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to get notifications wtihout being authenticated`)
@@ -101,25 +108,28 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
         this.notificationStates[userId] = userNotficationState
 
-        return this._followedActivities(userId).map(activity => {
-            const seen = userNotficationState.seen.has(activity.id)
-            const read = userNotficationState.read.has(activity.id)
+        return {
+            hasMore: false,
+            activities: this._followedActivities(userId).map(activity => {
+                const seen = userNotficationState.seen.has(activity.id)
+                const read = userNotficationState.read.has(activity.id)
 
-            if (params?.markAsSeen) {
-                userNotficationState.seen.add(activity.id)
-            }
+                if (params?.markAsSeen) {
+                    userNotficationState.seen.add(activity.id)
+                }
 
-            // TODO: TypeScript doesn't want to strongly type this
-            return {
-                id: activity.id,
-                entityType: activity.entity.type,
-                entity: activity.entity,
-                activityType: activity.type,
-                activity: activity.data,
-                seen,
-                read,
-            } as any
-        })
+                // TODO: TypeScript doesn't want to strongly type this
+                return {
+                    id: activity.id,
+                    entityType: activity.entity.type,
+                    entity: activity.entity,
+                    activityType: activity.type,
+                    activity: activity.data,
+                    seen,
+                    read,
+                } as any
+            }).slice(params.offset, params.offset + params.limit)
+        }
     }
 
     async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {

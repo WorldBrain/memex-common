@@ -1,4 +1,4 @@
-import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, NotificationStreamResult } from "../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, GetNotificationsResults } from "../types";
 
 export default class FirebaseFunctionsActivityStreamsService implements ActivityStreamsService {
     constructor(private options: {
@@ -25,7 +25,7 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
         return this.options.executeCall('activityStreams-getNotifcationInfo', {})
     }
 
-    async getNotifications(): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
+    async getNotifications(): Promise<GetNotificationsResults> {
         return this.options.executeCall('activityStreams-getNotifications', {})
     }
 

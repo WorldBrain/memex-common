@@ -1,4 +1,3 @@
-import pick from 'lodash/pick'
 import { ActivityStream, ActivityRequest, EntitityActivities, ActivityResult, AnnotationReplyActivity } from "./types";
 import ContentConversationStorage from "../content-conversations/storage";
 import ContentSharingStorage from "../content-sharing/storage";

@@ -8,13 +8,28 @@ export interface ActivityStreamsService {
         entity: ActivityStream[EntityType]['entity']
         feeds: { user: boolean, notification: boolean }
     }): Promise<void>
-    addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity'],
-    } & ActivityRequest<EntityType, ActivityType>): Promise<void>
+    addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
+        params: AddActivityParams<EntityType, ActivityType>
+    ): Promise<void>
     getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }>
-    getNotifications(params?: { markAsSeen?: boolean, limit?: number, offset?: number }): Promise<NotificationStream>
+    getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults>
     markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void>
+}
+
+export type AddActivityParams<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
+    entityType: EntityType
+    entity: ActivityStream[EntityType]['entity'],
+    follow?: { user: boolean, notification: boolean }
+} & ActivityRequest<EntityType, ActivityType>
+
+export interface GetNotificationsParams {
+    markAsSeen?: boolean;
+    limit: number;
+    offset: number;
+}
+export interface GetNotificationsResults {
+    activities: NotificationStream
+    hasMore: boolean
 }
 
 export type ActivityStream = AnnotationActivityStream & ListActivityStream

@@ -1,14 +1,19 @@
+import omit from 'lodash/omit';
 import camelCase from 'lodash/camelCase'
 import kebabCase from 'lodash/kebabCase'
 import isPlainObject from 'lodash/isPlainObject'
 import { StreamClient } from 'getstream'
 import ContentSharingStorage from '../content-sharing/storage';
 import ContentConversationStorage from '../content-conversations/storage';
-import { ActivityStream, NotificationStreamResult, ActivityStreamsService, ActivityRequest, EntitityActivities, AnnotationReplyActivity, ActivityResult } from "./types";
-import { concretizeActivity } from './utils';
-import UserStorage from '../user-management/storage';
-import omit from 'lodash/omit';
 import { AutoPkStorageReference } from '../storage/references';
+import UserStorage from '../user-management/storage';
+import { concretizeActivity } from './utils';
+import {
+    ActivityStream, ActivityStreamsService, ActivityRequest, EntitityActivities,
+    GetNotificationsParams, GetNotificationsResults,
+    AnnotationReplyActivity,
+    AddActivityParams,
+} from "./types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
     client: StreamClient;
@@ -46,10 +51,9 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
     }
 
-    addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity'],
-    } & ActivityRequest<EntityType, ActivityType>): Promise<void> => {
+    addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
+        params: AddActivityParams<EntityType, ActivityType>
+    ): Promise<void> => {
         const userIdString = coerceToString(await this._getCurrentUserId())
         if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
             const annotationFeed = this.client.feed(params.entityType, coerceToString(params.entity.id));
@@ -77,6 +81,14 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
                 ...prepared.activity,
             })
         }
+
+        if (params.follow) {
+            await this.followEntity({
+                entityType: params.entityType,
+                entity: params.entity,
+                feeds: params.follow,
+            })
+        }
     }
 
     async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
@@ -86,11 +98,14 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         return { unseenCount: activities.unseen!, unreadCount: activities.unread! }
     }
 
-    async getNotifications(params?: { markAsSeen?: boolean }): Promise<Array<NotificationStreamResult<keyof ActivityStream>>> {
+    async getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults> {
         const userIdString = coerceToString(await this._getCurrentUserId())
         const notifcations = this.client.feed('notification', userIdString)
         const activities = await notifcations.get({ enrich: true, mark_seen: params?.markAsSeen ?? undefined })
-        return prepareActivitiesFromStreamIO(activities.results) as any
+        return {
+            hasMore: activities.results.length < params.limit,
+            activities: prepareActivitiesFromStreamIO(activities.results) as any
+        }
     }
 
     async markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void> {
