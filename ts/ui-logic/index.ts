@@ -1,40 +1,44 @@
-import { UILogic, UIEvent } from 'ui-logic-core'
+import { UILogic, UIEvent, UIEventHandlers } from 'ui-logic-core'
 
-interface MixinEntryBase {
+interface UILogicStructureBase<MixinKeys extends number | string | symbol> {
+    state: {}
+    event: UIEvent<{}>
+    mixins: { [K in MixinKeys]: UIMixinStructureBase }
+}
+
+export type UILogicStructure<Structure extends UILogicStructureBase<keyof Structure['mixins']>> = {
+    state: Structure['state']
+    event: Structure['event']
+    mixins: Structure['mixins']
+}
+
+export abstract class MemexUILogic<Structure extends UILogicStructure<UILogicStructureBase<keyof Structure['mixins']>>>
+    extends UILogic<Structure['state'], Structure['event']>
+{
+    mixins?: { [K in keyof Structure['mixins']]: UIMixin<Structure['mixins'][K]> }
+
+    useMixins(
+        mixins: { [K in keyof Structure['mixins']]: UIMixin<Structure['mixins'][K]> },
+        // options: {
+        //     mapHandlers: { [K in keyof Structure['mixins'][keyof Structure['mixins']]['event']] }
+        // }
+    ) {
+        for (const mixin of Object.values(mixins)) {
+            Object.assign(this as any, (mixin as any).getHandlers())
+        }
+    }
+}
+
+interface UIMixinStructureBase {
     state: {}
     event: UIEvent<{}>
 }
 
-export type UILogicStructure<Structure extends {
-    ownState: {},
-    ownEvent: UIEvent<{}>,
-    mixins: { [K in keyof Structure['mixins']]: MixinEntryBase }
-}> = {
-    ownState: Structure['ownState'],
-    ownEvent: Structure['ownEvent'],
-    state: Structure['ownState'] & (Structure extends { mixins: {} } ? Structure['mixins'][keyof Structure['mixins']]['state'] : {})
-    event: Structure['ownEvent'] & (Structure extends { mixins: {} } ? Structure['mixins'][keyof Structure['mixins']]['event'] : {})
-    mixins?: Structure['mixins']
+export type UIMixinStructure<Structure extends UIMixinStructureBase> = {
+    state: Structure['state']
+    event: Structure['event']
 }
-
-type MixinObjects<Mixins extends { [K in keyof Mixins]: MixinEntryBase }> = {
-    [K in keyof Mixins]: MemexUILogic<UILogicStructure<{ ownState: Mixins[K]['state'], ownEvent: Mixins[K]['event'], mixins: {} }>>
-}
-
-export abstract class MemexUILogic<Structure extends UILogicStructure<{
-    ownState: {},
-    ownEvent: UIEvent<{}>,
-    mixins: {}
-}>> extends UILogic<Structure['state'], Structure['event']> {
-    mixins?: Structure['mixins']
-
-    useMixins(
-        mixins: MixinObjects<Structure['mixins']>
-    ) {
-
-    }
-
-    getInitialMixinState(): Structure['mixins'][keyof Structure['mixins']]['state'] {
-        return Object.assign({}, ...Object.values(this.mixins!).map(mixin => (mixin as MemexUILogic<{ state: {}, event: UIEvent<{}> }>).getInitialState()))
-    }
+export abstract class UIMixin<Structure extends UIMixinStructure<UIMixinStructureBase>> {
+    abstract getInitialState(): Structure['state']
+    abstract getHandlers(): UIEventHandlers<Structure['state'], Structure['event']>
 }
