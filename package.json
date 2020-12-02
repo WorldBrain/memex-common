@@ -21,13 +21,14 @@
     "@worldbrain/storex-sync": "^0.1.1",
     "getstream": "^7.0.0",
     "json-date-parser": "^1.0.1",
+    "openpgp": "^4.10.4",
     "react-markdown": "^5.0.2",
     "styled-components": "^5.2.0",
     "traverse": "^0.6.6",
     "tweetnacl-async": "^2.0.0",
     "tweetnacl-util": "^0.15.1",
     "typed-emitter": "^1.2.0",
-    "openpgp": "^4.10.4"
+    "ui-logic-core": "^0.2.0"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.7",
