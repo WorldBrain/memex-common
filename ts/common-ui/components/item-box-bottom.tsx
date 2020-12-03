@@ -28,7 +28,11 @@ export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
     actions?: Array<
-        | { key: string; image: string; onClick?(): void }
+        | {
+              key: string
+              image: string
+              onClick?: React.MouseEventHandler<HTMLDivElement>
+          }
         | null
         | false
         | undefined
