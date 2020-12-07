@@ -36,11 +36,16 @@ export interface CreationInfoProps {
 export default function CreationInfo(props: CreationInfoProps) {
     return (
         <StyledCreationInfo>
-            <AvatarHolder>
-                <Margin right="small">
-                    <UserAvatar user={props.creator} loading={!props.creator} />
-                </Margin>
-            </AvatarHolder>
+            {props.creator != null && (
+                <AvatarHolder>
+                    <Margin right="small">
+                        <UserAvatar
+                            user={props.creator}
+                            loading={!props.creator}
+                        />
+                    </Margin>
+                </AvatarHolder>
+            )}
             <Details>
                 <Creator>
                     {props.creator?.displayName ?? <span>&nbsp;</span>}
