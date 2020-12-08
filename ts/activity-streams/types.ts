@@ -3,57 +3,62 @@ import { ConversationReplyReference, ConversationReply } from "../content-conver
 import { UserReference, User } from "../web-interface/types/users";
 
 export interface ActivityStreamsService {
-    followEntity<EntityType extends keyof ActivityStream>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity']
-        feeds: { user: boolean, notification: boolean }
-    }): Promise<void>
+    followEntity<EntityType extends keyof ActivityStream>(params: FollowEntityParams<EntityType>): Promise<void>
     addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void>
-    getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }>
-    getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults>
-    markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void>
+    getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult>
+}
+
+export interface FollowEntityParams<EntityType extends keyof ActivityStream> {
+    entityType: EntityType
+    entity: ActivityStream[EntityType]['entity']
+    feeds: { [K in FeedType]: boolean }
 }
 
 export type AddActivityParams<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
     entityType: EntityType
     entity: ActivityStream[EntityType]['entity'],
-    follow?: { user: boolean, notification: boolean }
+    follow?: { [K in FeedType]: boolean }
 } & ActivityRequest<EntityType, ActivityType>
 
-export interface GetNotificationsParams {
-    markAsSeen?: boolean;
+export interface GetActivitiesParams {
     limit: number;
     offset: number;
 }
-export interface GetNotificationsResults {
-    activities: NotificationStream
+export interface GetHomeActivitiesResult {
+    activityGroups: Array<ActivityStreamResultGroup<keyof ActivityStream>>
     hasMore: boolean
 }
 
+export type FeedType = 'home'
+
 export type ActivityStream = AnnotationActivityStream & ListActivityStream
 
-export type NotificationStream = Array<NotificationStreamResult<keyof ActivityStream>>;
-export type NotificationStreamResult<
+export interface ActivityStreamResultGroup<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
-    ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>> =
-    ActivityStreamResult<EntityType, ActivityType> &
-    {
-        seen: boolean
-        read: boolean
-    }
+    ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>
+    > {
+    entityType: EntityType
+    entity: ActivityStream[EntityType]['entity'],
+    activityType: keyof ActivityStream[EntityType]['activities']
+    activities: ActivitiyStreamResults<EntityType, ActivityType>
+}
+export type ActivitiyStreamResults<
+    EntityType extends keyof ActivityStream = keyof ActivityStream,
+    ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>
+    > = Array<ActivityStreamResult<EntityType, ActivityType>>;
 export type ActivityStreamResult<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>> = {
     id: number | string
-    entityType: EntityType,
-    entity: ActivityStream[EntityType]['entity'],
+    // entityType: EntityType,
+    // entity: ActivityStream[EntityType]['entity'],
 } & ActivityResult<EntityType, ActivityType>
 export type ActivityRequest<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
     activityType: ActivityType,
     activity: IndexType<IndexType<EntitityActivities<EntityType>, ActivityType>, 'request'>
 }
 export type ActivityResult<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
-    activityType: ActivityType,
+    // activityType: ActivityType,
     activity: IndexType<IndexType<EntitityActivities<EntityType>, ActivityType>, 'result'>
 }
 export type EntitityActivities<EntityType extends keyof ActivityStream> = IndexType<IndexType<ActivityStream, EntityType>, 'activities'>

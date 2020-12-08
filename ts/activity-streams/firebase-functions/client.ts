@@ -1,4 +1,4 @@
-import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, GetNotificationsResults } from "../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, FollowEntityParams, GetHomeActivitiesResult, GetActivitiesParams } from "../types";
 
 export default class FirebaseFunctionsActivityStreamsService implements ActivityStreamsService {
     constructor(private options: {
@@ -6,11 +6,9 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
     }) {
     }
 
-    followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity']
-        feeds: { user: boolean, notification: boolean }
-    }): Promise<void> => {
+    followEntity: ActivityStreamsService['followEntity'] = <EntityType extends keyof ActivityStream>(
+        params: FollowEntityParams<EntityType>
+    ): Promise<void> => {
         return this.options.executeCall('activityStreams-followEntity', params)
     }
 
@@ -21,15 +19,7 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
         return this.options.executeCall('activityStreams-addActivity', params)
     }
 
-    async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
-        return this.options.executeCall('activityStreams-getNotifcationInfo', {})
-    }
-
-    async getNotifications(): Promise<GetNotificationsResults> {
-        return this.options.executeCall('activityStreams-getNotifications', {})
-    }
-
-    async markNotifications(params: { ids: Array<number | string>, seen: boolean, read: boolean }): Promise<void> {
-        return this.options.executeCall('activityStreams-markNotifications', params)
+    async getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+        return this.options.executeCall('activityStreams-getHomeActivities', {})
     }
 }

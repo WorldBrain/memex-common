@@ -9,10 +9,13 @@ import { AutoPkStorageReference } from '../storage/references';
 import UserStorage from '../user-management/storage';
 import { concretizeActivity } from './utils';
 import {
-    ActivityStream, ActivityStreamsService, ActivityRequest, EntitityActivities,
-    GetNotificationsParams, GetNotificationsResults,
+    ActivityStream, ActivityStreamsService, EntitityActivities,
     AnnotationReplyActivity,
     AddActivityParams,
+    GetHomeActivitiesResult,
+    GetActivitiesParams,
+    FollowEntityParams,
+    FeedType,
 } from "./types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
@@ -32,22 +35,17 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
     }
 
 
-    followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity']
-        feeds: { user: boolean, notification: boolean }
-    }): Promise<void> => {
+    followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(
+        params: FollowEntityParams<EntityType>
+    ): Promise<void> => {
         const userIdString = coerceToString(await this._getCurrentUserId())
-        const follow = async (feedType: 'user' | 'notification') => {
+        const follow = async (feedType: FeedType) => {
             const feed = this.client.feed(feedType, userIdString);
             console.log('follow', feedType, params.entityType, params.entity)
             await feed.follow(params.entityType, coerceToString(params.entity.id))
         }
-        if (params.feeds.user) {
-            await follow('user')
-        }
-        if (params.feeds.notification) {
-            await follow('notification')
+        if (params.feeds.home) {
+            await follow('home')
         }
     }
 
@@ -91,31 +89,14 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
     }
 
-    async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
+    async getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
         const userIdString = coerceToString(await this._getCurrentUserId())
-        const notifcations = this.client.feed('notification', userIdString)
-        const activities = await notifcations.get({ enrich: false })
-        return { unseenCount: activities.unseen!, unreadCount: activities.unread! }
-    }
-
-    async getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults> {
-        const userIdString = coerceToString(await this._getCurrentUserId())
-        const notifcations = this.client.feed('notification', userIdString)
-        const activities = await notifcations.get({ enrich: true, mark_seen: params?.markAsSeen ?? undefined })
+        const notifcations = this.client.feed('home', userIdString)
+        const activities = await notifcations.get({ enrich: true })
         return {
-            hasMore: activities.results.length < params.limit,
-            activities: prepareActivitiesFromStreamIO(activities.results) as any
+            hasMore: !!activities.next,
+            activityGroups: prepareActivitiesFromStreamIO(activities.results) as any
         }
-    }
-
-    async markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void> {
-        const ids = params.ids as string[]
-        const userIdString = coerceToString(await this._getCurrentUserId())
-        const feed = this.client.feed('notification', userIdString)
-        await feed.get({
-            mark_read: params.read ? ids : undefined,
-            mark_seen: params.seen ? ids : undefined,
-        })
     }
 
     async _getCurrentUserId() {
@@ -200,12 +181,15 @@ export function prepareActivityFromStreamIO(activity: { [key: string]: any }) {
 }
 
 export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: any }>) {
-    return results.map(result => ({
-        id: result.id,
-        seen: result.is_seen,
-        read: result.is_read,
-        ...prepareActivityFromStreamIO(result.activities[0])
-    }))
+    return results.map(result => {
+        const activities = result.activities.map(prepareActivityFromStreamIO)
+        return {
+            entityType: activities[0].entityType,
+            entity: activities[0].entity,
+            activityType: activities[0].activityType,
+            activities: activities.map(activity => omit(activity, 'entityType', 'entity', 'activityType')),
+        }
+    })
 }
 
 export function referenceCollectionType(reference: AutoPkStorageReference<string>) {

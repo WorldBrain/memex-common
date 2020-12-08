@@ -62,7 +62,6 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
             },
         }
         return {
-            activityType: params.activityType,
             activity,
         }
     }

@@ -69,7 +69,6 @@ describe('Activity stream utils', () => {
             ...activityBase,
         })
         expect(concretized).toEqual({
-            activityType: activityBase.activityType,
             activity: {
                 normalizedPageUrl,
                 pageInfo: {

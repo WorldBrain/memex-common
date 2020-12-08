@@ -1,14 +1,14 @@
 import ContentConversationStorage from "../content-conversations/storage";
 import ContentSharingStorage from "../content-sharing/storage";
 import UserStorage from "../user-management/storage";
-import { ActivityStreamsService, ActivityStream, ActivityRequest, EntitityActivities, GetNotificationsResults, GetNotificationsParams, AddActivityParams } from "./types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams } from "./types";
 import { concretizeActivity } from "./utils";
 
 export interface MemoryFollow {
     createdWhen: number
     sourceEntity: { type: string, id: string | number }
     targetEntitity: { type: string, id: string | number }
-    feeds: { user: boolean, notification: boolean }
+    feeds: { [K in FeedType]: boolean }
 }
 export interface MemoryActivity {
     id: number
@@ -40,11 +40,9 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         getCurrentUserId(): Promise<number | string | null | undefined>
     }) { }
 
-    followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(params: {
-        entityType: EntityType
-        entity: ActivityStream[EntityType]['entity']
-        feeds: { user: boolean, notification: boolean }
-    }): Promise<void> => {
+    followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(
+        params: FollowEntityParams<EntityType>
+    ): Promise<void> => {
         this.follows.push({
             createdWhen: Date.now(),
             sourceEntity: { type: 'user', id: await this.options.getCurrentUserId()! },
@@ -100,7 +98,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
     }
 
-    async getNotifications(params: GetNotificationsParams): Promise<GetNotificationsResults> {
+    async getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to get notifications wtihout being authenticated`)
@@ -110,58 +108,35 @@ export default class MemoryStreamsService implements ActivityStreamsService {
 
         return {
             hasMore: false,
-            activities: this._followedActivities(userId).map(activity => {
-                const seen = userNotficationState.seen.has(activity.id)
-                const read = userNotficationState.read.has(activity.id)
-
-                if (params?.markAsSeen) {
-                    userNotficationState.seen.add(activity.id)
-                }
-
-                // TODO: TypeScript doesn't want to strongly type this
-                return {
-                    id: activity.id,
-                    entityType: activity.entity.type,
-                    entity: activity.entity,
-                    activityType: activity.type,
-                    activity: activity.data,
-                    seen,
-                    read,
-                } as any
-            }).slice(params.offset, params.offset + params.limit)
+            activityGroups: aggregate(
+                this._followedActivities(userId).map(activity => {
+                    // TODO: TypeScript doesn't want to strongly type this
+                    return {
+                        id: activity.id,
+                        entityType: activity.entity.type,
+                        entity: activity.entity,
+                        activityType: activity.type,
+                        activity: activity.data,
+                    }
+                }),
+                value => `${value.entity.type}${value.entity.id}${value.activityType}`
+            ).slice(params.offset, params.offset + params.limit)
+                .map(group => ({ entityType: group[0].entityType, entity: group[0].entity, activityType: group[0].activityType, activities: group })) as any[]
         }
     }
+}
 
-    async getNotifcationInfo(): Promise<{ unseenCount: number, unreadCount: number }> {
-        const userId = await this.options.getCurrentUserId()
-        if (!userId) {
-            throw new Error(`Tried to get notification info wtihout being authenticated`)
+function aggregate<T>(array: Array<T>, key: (value: T) => string) {
+    let lastKey: string | null = null
+    const aggregated: Array<T[]> = []
+    for (const value of array) {
+        const currentKey = key(value);
+        if (currentKey !== lastKey) {
+            aggregated.push([])
+            lastKey = currentKey
         }
-
-        const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
-        return {
-            unseenCount: this._followedActivities(userId).filter(activity => !userNotficationState.seen.has(activity.id)).length,
-            unreadCount: this._followedActivities(userId).filter(activity => !userNotficationState.read.has(activity.id)).length,
-        }
+        const last = aggregated[aggregated.length - 1]
+        last.push(value)
     }
-
-    async markNotifications(params: { ids: Array<number | string>, seen?: boolean, read?: boolean }): Promise<void> {
-        const userId = await this.options.getCurrentUserId()
-        if (!userId) {
-            throw new Error(`Tried to mark notification(s) as read wtihout being authenticated: ${params.ids.join(', ')}`)
-        }
-
-        const ids = params.ids as number[]
-        const addIds = (set: Set<number>) => {
-            for (const id of ids) {
-                set.add(id)
-            }
-        }
-        if (params.seen) {
-            addIds(this.notificationStates[userId].seen)
-        }
-        if (params.read) {
-            addIds(this.notificationStates[userId].read)
-        }
-    }
+    return aggregated
 }
