@@ -1,8 +1,8 @@
-import ContentConversationStorage from "../content-conversations/storage";
-import ContentSharingStorage from "../content-sharing/storage";
-import UserStorage from "../user-management/storage";
-import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams } from "./types";
-import { concretizeActivity } from "./utils";
+import ContentConversationStorage from "../../content-conversations/storage";
+import ContentSharingStorage from "../../content-sharing/storage";
+import UserStorage from "../../user-management/storage";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams } from "./../types";
+import { concretizeActivity } from "../utils";
 
 export interface MemoryFollow {
     createdWhen: number
@@ -106,22 +106,28 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
         this.notificationStates[userId] = userNotficationState
 
+        const aggregatedActivities = aggregate(this._followedActivities(userId).map(activity => {
+            // TODO: TypeScript doesn't want to strongly type this
+            return {
+                id: activity.id,
+                entityType: activity.entity.type,
+                entity: activity.entity,
+                activityType: activity.type,
+                activity: activity.data,
+            };
+        }), value => `${value.entity.type}${value.entity.id}${value.activityType}`);
+
+        const activityGroups = aggregatedActivities
+            .reverse() // mutates the array, but that's OK in this case
+            .slice(params.offset, params.offset + params.limit)
+            .map(group => ({
+                entityType: group[0].entityType,
+                entity: group[0].entity,
+                activityType: group[0].activityType, activities: group
+            }));
         return {
             hasMore: false,
-            activityGroups: aggregate(
-                this._followedActivities(userId).map(activity => {
-                    // TODO: TypeScript doesn't want to strongly type this
-                    return {
-                        id: activity.id,
-                        entityType: activity.entity.type,
-                        entity: activity.entity,
-                        activityType: activity.type,
-                        activity: activity.data,
-                    }
-                }),
-                value => `${value.entity.type}${value.entity.id}${value.activityType}`
-            ).slice(params.offset, params.offset + params.limit)
-                .map(group => ({ entityType: group[0].entityType, entity: group[0].entity, activityType: group[0].activityType, activities: group })) as any[]
+            activityGroups: activityGroups as any[],
         }
     }
 }

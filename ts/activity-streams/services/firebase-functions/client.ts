@@ -1,4 +1,4 @@
-import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, FollowEntityParams, GetHomeActivitiesResult, GetActivitiesParams } from "../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, FollowEntityParams, GetHomeActivitiesResult, GetActivitiesParams } from "../../types";
 
 export default class FirebaseFunctionsActivityStreamsService implements ActivityStreamsService {
     constructor(private options: {

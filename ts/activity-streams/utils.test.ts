@@ -1,10 +1,9 @@
-import omit from 'lodash/omit'
 import expect from 'expect'
 import { concretizeActivity } from "./utils"
 import { SharedAnnotationReference, SharedPageInfoReference } from "../content-sharing/types"
 import { ConversationReplyReference } from "../content-conversations/types"
 import { UserReference } from '../web-interface/types/users'
-import { prepareActivityForStreamIO } from './getstream'
+import { prepareActivityForStreamIO } from './services/getstream'
 
 describe('Activity stream utils', () => {
     it('should correctly concretize annotation reply activities', async () => {

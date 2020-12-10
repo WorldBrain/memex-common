@@ -3,11 +3,11 @@ import camelCase from 'lodash/camelCase'
 import kebabCase from 'lodash/kebabCase'
 import isPlainObject from 'lodash/isPlainObject'
 import { StreamClient } from 'getstream'
-import ContentSharingStorage from '../content-sharing/storage';
-import ContentConversationStorage from '../content-conversations/storage';
-import { AutoPkStorageReference } from '../storage/references';
-import UserStorage from '../user-management/storage';
-import { concretizeActivity } from './utils';
+import ContentSharingStorage from '../../content-sharing/storage';
+import ContentConversationStorage from '../../content-conversations/storage';
+import { AutoPkStorageReference } from '../../storage/references';
+import UserStorage from '../../user-management/storage';
+import { concretizeActivity } from '../utils';
 import {
     ActivityStream, ActivityStreamsService, EntitityActivities,
     AnnotationReplyActivity,
@@ -16,7 +16,7 @@ import {
     GetActivitiesParams,
     FollowEntityParams,
     FeedType,
-} from "./types";
+} from "../types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
     client: StreamClient;

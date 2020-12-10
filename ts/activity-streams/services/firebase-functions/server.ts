@@ -4,11 +4,11 @@ import { CallableContext } from 'firebase-functions/lib/providers/https'
 import StorageManager from '@worldbrain/storex'
 import { FirestoreStorageBackend } from '@worldbrain/storex-backend-firestore'
 import { registerModuleMapCollections } from '@worldbrain/storex-pattern-modules'
-import ContentConversationStorage from '../../content-conversations/storage'
-import ContentSharingStorage from '../../content-sharing/storage'
-import UserStorage from '../../user-management/storage'
+import ContentConversationStorage from '../../../content-conversations/storage'
+import ContentSharingStorage from '../../../content-sharing/storage'
+import UserStorage from '../../../user-management/storage'
 import GetStreamActivityStreamService from '../getstream'
-import { ActivityStreamsService } from '../types'
+import { ActivityStreamsService } from '../../types'
 
 export type ActivityStreamServiceMethod = keyof ActivityStreamsService
 
