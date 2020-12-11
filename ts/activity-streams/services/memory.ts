@@ -1,7 +1,7 @@
 import ContentConversationStorage from "../../content-conversations/storage";
 import ContentSharingStorage from "../../content-sharing/storage";
 import UserStorage from "../../user-management/storage";
-import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams } from "./../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult } from "./../types";
 import { concretizeActivity } from "../utils";
 
 export interface MemoryFollow {
@@ -98,7 +98,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
     }
 
-    async getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to get notifications wtihout being authenticated`)
@@ -128,6 +128,18 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         return {
             hasMore: false,
             activityGroups: activityGroups as any[],
+        }
+    }
+
+    async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
+        const activities = await this.getHomeFeedActivities({
+            offset: 0,
+            limit: 1
+        });
+        return {
+            latestActivityTimestamp: activities.activityGroups.length
+                ? (activities.activityGroups[0].activities[0].activity as any).reply.createdWhen
+                : null
         }
     }
 }

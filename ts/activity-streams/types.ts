@@ -7,7 +7,8 @@ export interface ActivityStreamsService {
     addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void>
-    getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult>
+    getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult>
+    getHomeFeedInfo(): Promise<GetHomeFeedInfoResult>
 }
 
 export interface FollowEntityParams<EntityType extends keyof ActivityStream> {
@@ -29,6 +30,9 @@ export interface GetActivitiesParams {
 export interface GetHomeActivitiesResult {
     activityGroups: Array<ActivityStreamResultGroup<keyof ActivityStream>>
     hasMore: boolean
+}
+export interface GetHomeFeedInfoResult {
+    latestActivityTimestamp: number | null
 }
 
 export type FeedType = 'home'

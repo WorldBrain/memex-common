@@ -16,6 +16,7 @@ import {
     GetActivitiesParams,
     FollowEntityParams,
     FeedType,
+    GetHomeFeedInfoResult,
 } from "../types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
@@ -89,14 +90,25 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
     }
 
-    async getHomeActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
         const userIdString = coerceToString(await this._getCurrentUserId())
-        const notifcations = this.client.feed('home', userIdString)
-        const activities = await notifcations.get({ enrich: true })
+        const homeFeed = this.client.feed('home', userIdString)
+        const activities = await homeFeed.get({ enrich: true, offset: params.offset, limit: params.limit })
         return {
             hasMore: !!activities.next,
             activityGroups: prepareActivitiesFromStreamIO(activities.results) as any
         }
+    }
+
+    async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
+        const userIdString = coerceToString(await this._getCurrentUserId())
+        const homeFeed = this.client.feed('home', userIdString)
+        const activities = homeFeed.get({ offset: 0, limit: 1 })
+        const firstActivity = activities[0]
+        if (!firstActivity) {
+            return { latestActivityTimestamp: null }
+        }
+        return { latestActivityTimestamp: new Date(firstActivity.time).getTime() }
     }
 
     async _getCurrentUserId() {
