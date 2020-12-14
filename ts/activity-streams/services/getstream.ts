@@ -103,12 +103,12 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
     async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
         const userIdString = coerceToString(await this._getCurrentUserId())
         const homeFeed = this.client.feed('home', userIdString)
-        const activities = homeFeed.get({ offset: 0, limit: 1 })
-        const firstActivity = activities[0]
+        const activities = await homeFeed.get({ offset: 0, limit: 1 })
+        const firstActivity = activities.results[0]
         if (!firstActivity) {
             return { latestActivityTimestamp: null }
         }
-        return { latestActivityTimestamp: new Date(firstActivity.time).getTime() }
+        return { latestActivityTimestamp: new Date((firstActivity as any).updated_at).getTime() }
     }
 
     async _getCurrentUserId() {
