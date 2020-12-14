@@ -42,7 +42,7 @@ export default class StorexActivityStreamsStorage extends StorageModule implemen
         },
         accessRules: {
             ownership: {
-                conversationReply: {
+                homeFeedInfo: {
                     field: 'user',
                     access: ['create', 'update', 'read'],
                 },
