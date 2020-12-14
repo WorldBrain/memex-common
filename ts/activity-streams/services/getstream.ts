@@ -42,7 +42,6 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         const userIdString = coerceToString(await this._getCurrentUserId())
         const follow = async (feedType: FeedType) => {
             const feed = this.client.feed(feedType, userIdString);
-            console.log('follow', feedType, params.entityType, params.entity)
             await feed.follow(params.entityType, coerceToString(params.entity.id))
         }
         if (params.feeds.home) {
@@ -61,6 +60,7 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
                 storage: this.options.storage,
                 ...params,
             })
+            const activityResult = data.activity as AnnotationReplyActivity['result']
             const prepared = prepareActivityForStreamIO(data, {
                 makeReference: (collection, id) => this.client.collections.entry(collection, coerceToString(id), null)
             })
@@ -71,8 +71,8 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
                 }))
             }))
 
-            // Add an Activity; message is a custom field - tip: you can add unlimited custom fields!
             await annotationFeed.addActivity({
+                to: [`sharedPage:${activityResult.pageInfo.reference.id}`],
                 actor: `user:${userIdString}`,
                 verb: params.activityType as string,
                 object: `${params.entityType}:${params.entity.id}`,

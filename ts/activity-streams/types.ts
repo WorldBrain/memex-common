@@ -37,7 +37,7 @@ export interface GetHomeFeedInfoResult {
 
 export type FeedType = 'home'
 
-export type ActivityStream = AnnotationActivityStream & ListActivityStream
+export type ActivityStream = AnnotationActivityStream & PageActivityStream & ListActivityStream
 
 export interface ActivityStreamResultGroup<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
@@ -116,7 +116,14 @@ export interface AnnotationReplyActivity {
     };
 }
 
-export type ListActivityStream = ActivityStreamDefinition<'list', {
+export type PageActivityStream = ActivityStreamDefinition<'sharedPage', {
+    entity: SharedPageInfoReference,
+    activities: {
+        conversationReply: AnnotationReplyActivity
+    }
+}>
+
+export type ListActivityStream = ActivityStreamDefinition<'sharedList', {
     entity: SharedListReference
     activities: {
         newEntry: {
