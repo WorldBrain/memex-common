@@ -62,6 +62,6 @@ export default class StorexActivityStreamsStorage extends StorageModule implemen
 
     async retrieveHomeFeedTimestamp(params: { user: UserReference }): Promise<{ timestamp: number } | null> {
         const existing = await this.operation('findHomeFeedInfoByUser', { user: params.user.id })
-        return existing?.lastSeen ?? null
+        return existing?.lastSeen ? { timestamp: existing.lastSeen } : null
     }
 }
