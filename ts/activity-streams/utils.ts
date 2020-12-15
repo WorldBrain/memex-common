@@ -3,6 +3,50 @@ import ContentConversationStorage from "../content-conversations/storage";
 import ContentSharingStorage from "../content-sharing/storage";
 import { SharedAnnotationReference } from '../content-sharing/types';
 import UserStorage from '../user-management/storage';
+import { UserReference } from "../web-interface/types/users";
+
+export class UnseenActivityTracker {
+    _user: UserReference | null = null
+
+    constructor(private options: {
+        getLatestActivityTimestamp(): Promise<number | null>
+        getHomeFeedTimestamp(user: UserReference): Promise<number | null>
+    }) {
+
+    }
+
+    needsUpdate(newUser: UserReference | null) {
+        return !(this._user?.id === newUser?.id)
+    }
+
+    async update(newUser: UserReference | null): Promise<{ hasUnseen: boolean }> {
+        if (!newUser) {
+            delete this._user
+            return { hasUnseen: false }
+        }
+        this._user = newUser
+
+        const [latestActivityTimestamp, homeFeedTimestamp] = await Promise.all([
+            this.options.getLatestActivityTimestamp(),
+            this.options.getHomeFeedTimestamp(newUser)
+        ])
+
+        return { hasUnseen: hasUnseenActivities({ latestActivityTimestamp, homeFeedTimestamp }) }
+    }
+}
+
+export function hasUnseenActivities(params: {
+    latestActivityTimestamp: number | null,
+    homeFeedTimestamp: number | null,
+}) {
+    if (!params.latestActivityTimestamp) {
+        return false
+    }
+    if (!params.homeFeedTimestamp) {
+        return true
+    }
+    return params.latestActivityTimestamp > params.homeFeedTimestamp
+}
 
 export async function concretizeActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
     storage: {
