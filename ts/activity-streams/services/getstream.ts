@@ -72,7 +72,7 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
             }))
 
             await annotationFeed.addActivity({
-                to: [`sharedPage:${activityResult.pageInfo.reference.id}`],
+                to: [`sharedPageInfo:${activityResult.pageInfo.reference.id}`],
                 actor: `user:${userIdString}`,
                 verb: params.activityType as string,
                 object: `${params.entityType}:${params.entity.id}`,

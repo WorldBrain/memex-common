@@ -116,7 +116,7 @@ export interface AnnotationReplyActivity {
     };
 }
 
-export type PageActivityStream = ActivityStreamDefinition<'sharedPage', {
+export type PageActivityStream = ActivityStreamDefinition<'sharedPageInfo', {
     entity: SharedPageInfoReference,
     activities: {
         conversationReply: AnnotationReplyActivity
