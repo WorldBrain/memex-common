@@ -24,18 +24,21 @@ const Action = styled.div<{ image: string }>`
   background-repeat: no-repeat;
 `
 
+interface ActionCustomRenderProps {
+    key: string
+    render?: () => JSX.Element
+}
+interface ActionStandardProps {
+    key: string
+    image: string
+    onClick?: React.MouseEventHandler<HTMLDivElement>
+}
+
 export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
     actions?: Array<
-        | {
-              key: string
-              image: string
-              onClick?: React.MouseEventHandler<HTMLDivElement>
-          }
-        | null
-        | false
-        | undefined
+        ActionStandardProps | ActionCustomRenderProps | null | false | undefined
     >
 }) {
     return (
@@ -46,7 +49,12 @@ export default function ItemBoxBottom(props: {
                     (actionProps) =>
                         actionProps && (
                             <Margin key={actionProps.key} left="small">
-                                <Action {...actionProps} />
+                                {(actionProps as ActionCustomRenderProps)
+                                    .render != null ? (
+                                    (actionProps as ActionCustomRenderProps).render()
+                                ) : (
+                                    <Action {...actionProps} />
+                                )}
                             </Margin>
                         ),
                 )}
