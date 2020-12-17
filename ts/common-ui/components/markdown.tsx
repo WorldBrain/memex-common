@@ -37,7 +37,7 @@ const Container = styled.div`
         margin-bottom: -5px;
     }
     & blockquote {
-        border-left: 4px solid #5cd9a6
+        border-left: 4px solid #5cd9a6;
         margin: 0px;
         padding: 5px 5px 5px 15px;
         font-style: italic;
