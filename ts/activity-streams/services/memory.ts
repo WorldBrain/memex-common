@@ -11,7 +11,7 @@ export interface MemoryFollow {
     feeds: { [K in FeedType]: boolean }
 }
 export interface MemoryActivity {
-    id: number
+    id: string
     createdWhen: number
     userId: string | number
     entity: { type: string, id: string | number }
@@ -65,7 +65,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
 
         this.activities.push({
-            id: ++this.activityCounter,
+            id: `act-${++this.activityCounter}`,
             createdWhen: Date.now(),
             entity: { type: params.entityType, id: params.entity.id },
             userId,
@@ -121,6 +121,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
             .reverse() // mutates the array, but that's OK in this case
             .slice(params.offset, params.offset + params.limit)
             .map(group => ({
+                id: group.map(activity => activity.id).join(':'),
                 entityType: group[0].entityType,
                 entity: group[0].entity,
                 activityType: group[0].activityType, activities: group

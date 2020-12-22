@@ -105,6 +105,9 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
                 ...annotation.annotation,
             },
         }
+        if (activityRequest.isFirstReply) {
+            activity.isFirstReply = true
+        }
         return {
             activity,
         }

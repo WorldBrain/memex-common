@@ -15,7 +15,7 @@ export default class StorexActivityStreamsStorage extends StorageModule implemen
                     { childOf: 'user' },
                 ],
                 indices: [
-                    { field: 'user', pk: true }
+                    { field: { relationship: 'user' }, pk: true }
                 ]
             },
         },

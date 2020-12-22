@@ -196,6 +196,7 @@ export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: an
     return results.map(result => {
         const activities = result.activities.map(prepareActivityFromStreamIO)
         return {
+            id: result.group,
             entityType: activities[0].entityType,
             entity: activities[0].entity,
             activityType: activities[0].activityType,

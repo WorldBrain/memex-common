@@ -43,6 +43,7 @@ export interface ActivityStreamResultGroup<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
     ActivityType extends keyof EntitityActivities<EntityType> = keyof EntitityActivities<EntityType>
     > {
+    id: string
     entityType: EntityType
     entity: ActivityStream[EntityType]['entity'],
     activityType: keyof ActivityStream[EntityType]['activities']
@@ -95,8 +96,10 @@ export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotatio
 export interface AnnotationReplyActivity {
     request: {
         replyReference: ConversationReplyReference;
+        isFirstReply: boolean
     };
     result: {
+        isFirstReply?: boolean // WARNING: This field is supplied by the user and not checked, so is only meant to be used where tampering has a low impact
         normalizedPageUrl: string;
         pageInfo: {
             reference: SharedPageInfoReference
