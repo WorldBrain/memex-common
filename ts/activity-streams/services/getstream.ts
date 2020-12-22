@@ -94,9 +94,12 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         const userIdString = coerceToString(await this._getCurrentUserId())
         const homeFeed = this.client.feed('home', userIdString)
         const activities = await homeFeed.get({ enrich: true, offset: params.offset, limit: params.limit })
+        const activityGroups = prepareActivitiesFromStreamIO(activities.results, {
+            userIdString
+        }).filter(({ activities }) => !!activities.length)
         return {
             hasMore: !!activities.next,
-            activityGroups: prepareActivitiesFromStreamIO(activities.results) as any
+            activityGroups: activityGroups as any
         }
     }
 
@@ -192,9 +195,14 @@ export function prepareActivityFromStreamIO(activity: { [key: string]: any }) {
     return preparedActivity
 }
 
-export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: any }>) {
+export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: any }>, options: {
+    userIdString: string
+}) {
     return results.map(result => {
-        const activities = result.activities.map(prepareActivityFromStreamIO)
+        const activities = result.activities.filter(activity => {
+            const [_, userIdString] = activity.actor.split(':')
+            return userIdString !== options.userIdString
+        }).map(prepareActivityFromStreamIO)
         return {
             id: result.group,
             entityType: activities[0].entityType,

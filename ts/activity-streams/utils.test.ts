@@ -14,7 +14,8 @@ describe('Activity stream utils', () => {
             entity: annotationReference,
             activityType: 'conversationReply' as 'conversationReply',
             activity: {
-                replyReference
+                replyReference,
+                isFirstReply: true,
             }
         }
         const normalizedPageUrl = 'ccc.com'

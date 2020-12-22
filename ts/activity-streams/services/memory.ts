@@ -93,6 +93,9 @@ export default class MemoryStreamsService implements ActivityStreamsService {
 
     _followedActivities(userId: number | string) {
         return this.activities.filter(activity => {
+            if (activity.userId === userId) {
+                return false
+            }
             const follow = this._getFollow(userId, activity.entity)
             return follow && follow.createdWhen <= activity.createdWhen
         })

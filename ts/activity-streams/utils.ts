@@ -4,6 +4,7 @@ import ContentSharingStorage from "../content-sharing/storage";
 import { SharedAnnotationReference } from '../content-sharing/types';
 import UserStorage from '../user-management/storage';
 import { UserReference } from "../web-interface/types/users";
+import omit from "lodash/omit";
 
 export class UnseenActivityTracker {
     _user: UserReference | null = null
@@ -102,7 +103,7 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
             },
             annotation: {
                 reference: replyData.sharedAnnotation,
-                ...annotation.annotation,
+                ...omit(annotation.annotation, 'selector'),
             },
         }
         if (activityRequest.isFirstReply) {

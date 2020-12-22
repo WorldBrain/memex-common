@@ -31,7 +31,7 @@ describe('Getstream.io integration', () => {
                 "time": "2020-11-25T11:45:00.884852",
                 "verb": "reply"
             }]
-        }])).toEqual([{
+        }], { userIdString: 'xxx' })).toEqual([{
             entityType: 'sharedAnnotation',
             entity: { type: 'shared-annotation-reference', id: 'GNe8TuZn4OXLqDLvWqAj' },
             activityType: 'reply',
