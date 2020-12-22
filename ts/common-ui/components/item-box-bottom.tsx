@@ -13,15 +13,15 @@ const Actions = styled.div`
     align-items: flex-end;
     justify-content: flex-end;
 `
-const Action = styled.div<{ image: string }>`
-  display: block;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  background-image: url("${(props) => props.image}");
-  background-size: contain;
-  background-position: center center;
-  background-repeat: no-repeat;
+const Action = styled.div<{ image: string; isDisabled?: boolean }>`
+    display: block;
+    width: 20px;
+    height: 20px;
+    cursor: ${(props) => (!props.isDisabled ? 'pointer' : 'default')};
+    background-image: url("${(props) => props.image}");
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
 `
 
 export default function ItemBoxBottom(props: {
@@ -31,6 +31,8 @@ export default function ItemBoxBottom(props: {
         | {
               key: string
               image: string
+              isDisabled?: boolean
+              tooltipText?: string
               onClick?: React.MouseEventHandler<HTMLDivElement>
           }
         | null
