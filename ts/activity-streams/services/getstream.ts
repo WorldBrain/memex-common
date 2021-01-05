@@ -203,6 +203,9 @@ export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: an
             const [_, userIdString] = activity.actor.split(':')
             return userIdString !== options.userIdString
         }).map(prepareActivityFromStreamIO)
+        if (!activities.length) {
+            return null
+        }
         return {
             id: result.group,
             entityType: activities[0].entityType,
@@ -210,7 +213,7 @@ export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: an
             activityType: activities[0].activityType,
             activities: activities.map(activity => omit(activity, 'entityType', 'entity', 'activityType')),
         }
-    })
+    }).filter(group => !!group)
 }
 
 export function referenceCollectionType(reference: AutoPkStorageReference<string>) {
