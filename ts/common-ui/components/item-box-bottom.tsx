@@ -2,6 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { Margin } from 'styled-components-spacing'
 import CreationInfo, { CreationInfoProps } from './creation-info'
+import ButtonTooltip from './button-tooltip'
 
 const Bottom = styled.div`
     display: flex;
@@ -48,7 +49,16 @@ export default function ItemBoxBottom(props: {
                     (actionProps) =>
                         actionProps && (
                             <Margin key={actionProps.key} left="small">
-                                <Action {...actionProps} />
+                                {actionProps.tooltipText ? (
+                                    <ButtonTooltip
+                                        position="bottom"
+                                        tooltipText={actionProps.tooltipText}
+                                    >
+                                        <Action {...actionProps} />
+                                    </ButtonTooltip>
+                                ) : (
+                                    <Action {...actionProps} />
+                                )}
                             </Margin>
                         ),
                 )}
