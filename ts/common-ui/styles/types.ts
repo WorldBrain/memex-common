@@ -14,6 +14,8 @@ export type FontThemeKeys = 'primary' | 'secondary'
 export type FontSizeThemeKeys = 'listTitle' | 'url'
 
 export interface MemexTheme {
+  // NOTE(vincent): This is intentionally written in singular, not plural, becaused its used by the `styled-components-spacing` library.
+  // Renaming it breaks spacing through that library.
   spacing: { [Key in SpacingValue]: string }
   colors: { [Key in ColorThemeKeys]: string } & {
     overlay: { [Key in 'background' | 'dialog']: string }
