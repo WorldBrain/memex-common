@@ -14,7 +14,7 @@ export type FontThemeKeys = 'primary' | 'secondary'
 export type FontSizeThemeKeys = 'listTitle' | 'url'
 
 export interface MemexTheme {
-  spacings: { [Key in SpacingValue]: string }
+  spacing: { [Key in SpacingValue]: string }
   colors: { [Key in ColorThemeKeys]: string } & {
     overlay: { [Key in 'background' | 'dialog']: string }
   }
