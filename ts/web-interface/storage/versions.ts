@@ -8,4 +8,5 @@ export const STORAGE_VERSIONS: { [version: number]: Version } = {
     2: { date: new Date('2020-08-26') },
     3: { date: new Date('2020-10-21') },
     4: { date: new Date('2020-12-10') },
+    5: { date: new Date('2021-01-15') },
 }
