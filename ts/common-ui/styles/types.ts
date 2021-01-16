@@ -9,7 +9,7 @@ export type ColorThemeKeys =
   | 'grey'
   | 'black'
 
-export type FontThemeKeys = 'primary' | 'secondary'
+export type FontThemeKeys = 'primary' | 'secondary' | 'content'
 
 export type FontSizeThemeKeys = 'listTitle' | 'url'
 
