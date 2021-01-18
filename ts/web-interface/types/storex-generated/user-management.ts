@@ -9,3 +9,14 @@ export type UserEmail =
         isPrimary: boolean
         isActive: boolean
     }
+
+export type UserPublicProfile =
+    {
+        websiteURL: string
+        mediumURL: string
+        twitterURL: string
+        subStackURL: string
+        bio: string
+        avatarId: string
+        paymentPointer: string
+    }
