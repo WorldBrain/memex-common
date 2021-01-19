@@ -10,8 +10,6 @@ export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
         userField: 'user',
         numberOfGroups: 1,
         function: async context => {
-            console.log(context)
-            if (1) { return }
             try {
                 const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: context.objectId }
                 const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: context.objectId }
