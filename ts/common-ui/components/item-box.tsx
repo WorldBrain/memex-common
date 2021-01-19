@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
+import Margin from '../components/Margin'
 
 export type ItemBoxVariant = 'new-item'
 
