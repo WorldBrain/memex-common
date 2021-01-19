@@ -10,8 +10,9 @@ import UserStorage from '../user-management/storage'
 import GetStreamActivityStreamService from '../activity-streams/services/getstream'
 import { FunctionsBackendStorage, FunctionsBackendServices } from './types'
 import { STORAGE_HOOKS } from '../storage/hooks'
-import { StorageHook } from 'src/storage/hooks/types';
+import { StorageHook } from '../storage/hooks/types';
 import { QueryDocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
+import { UserReference } from 'src/web-interface/types/users';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
@@ -74,8 +75,10 @@ export function createFirestoreTrigger(params: {
     const { hook, functions } = params
 
     async function callHook(snapshot: QueryDocumentSnapshot, context: EventContext) {
+        const userReference: UserReference | undefined = hook.userField && { type: 'user-reference', id: snapshot.data()[hook.userField] };
+
         const storage = await params.getStorage()
-        const services = await createServices({ functions: params.functions, storage, getCurrentUserId: async () => context.auth?.uid ?? null })
+        const services = await createServices({ functions: params.functions, storage, getCurrentUserId: async () => userReference?.id })
 
         await hook.function({
             operation: hook.operation,
@@ -90,7 +93,7 @@ export function createFirestoreTrigger(params: {
                 return object
             },
             services,
-            userReference: context.auth && { type: 'user-reference', id: context.auth.uid },
+            userReference,
         })
     }
 
@@ -109,6 +112,7 @@ export function createFirestoreTrigger(params: {
 }
 
 export function createFirestoreTriggers(options: {
+    firebase: typeof firebaseModule,
     functions: typeof functionsModule,
 }) {
     let storage: FunctionsBackendStorage
@@ -120,9 +124,7 @@ export function createFirestoreTriggers(options: {
             hook,
             getStorage: async () => {
                 if (!storage) {
-                    storage = await createStorage({
-                        firebase: admin as any,
-                    })
+                    storage = await createStorage(options)
                 }
                 return storage
             }

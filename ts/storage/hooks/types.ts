@@ -6,6 +6,7 @@ export type StorageHookOperation = 'create' | 'delete';
 export interface StorageHook {
     collection: string
     operation: StorageHookOperation
+    userField: string
     numberOfGroups: number
     function: (context: StorageHookContext) => Promise<void>
 }
