@@ -346,6 +346,7 @@ export default class ContentSharingStorage extends StorageModule {
     }) {
         await this.operation('createListEntries', {
             batch: options.listEntries.map(entry => ({
+                placeholder: entry.normalizedUrl,
                 operation: 'createObject',
                 collection: 'sharedListEntry',
                 args: {
