@@ -1,7 +1,7 @@
 import expect from 'expect'
 import { concretizeActivity } from "./utils"
-import { SharedAnnotationReference, SharedPageInfoReference } from "../content-sharing/types"
-import { ConversationReplyReference } from "../content-conversations/types"
+import { SharedAnnotationReference, SharedPageInfoReference, SharedListReference, SharedListEntryReference, SharedAnnotation, SharedPageInfo, SharedListEntry, SharedList } from "../content-sharing/types"
+import { ConversationReplyReference, ConversationReply } from "../content-conversations/types"
 import { UserReference } from '../web-interface/types/users'
 import { prepareActivityForStreamIO } from './services/getstream'
 
@@ -19,22 +19,21 @@ describe('Activity stream utils', () => {
             }
         }
         const normalizedPageUrl = 'ccc.com'
-        const annotation = {
+        const annotation: SharedAnnotation = {
             createdWhen: Date.now(),
             updatedWhen: Date.now(),
             uploadedWhen: Date.now(),
             body: 'body',
             normalizedPageUrl,
         }
-        const pageInfo = {
+        const pageInfo: SharedPageInfo = {
             createdWhen: Date.now(),
             updatedWhen: Date.now(),
-            uploadedWhen: Date.now(),
             fullTitle: 'full title',
             normalizedUrl: normalizedPageUrl,
             originalUrl: 'https://ccc.com'
         }
-        const reply = {
+        const reply: ConversationReply = {
             createdWhen: Date.now(),
             content: 'reply content',
             normalizedPageUrl
@@ -53,6 +52,8 @@ describe('Activity stream utils', () => {
                         reference: pageInfoReference,
                         pageInfo
                     }),
+                    getListByReference: async () => null,
+                    getListEntryByReference: async () => null,
                 },
                 contentConversations: {
                     getReply: async () => ({
@@ -71,6 +72,7 @@ describe('Activity stream utils', () => {
         expect(concretized).toEqual({
             activity: {
                 normalizedPageUrl,
+                isFirstReply: true,
                 pageInfo: {
                     reference: pageInfoReference,
                     ...pageInfo,
@@ -98,6 +100,7 @@ describe('Activity stream utils', () => {
         })).toEqual({
             "activity": {
                 "data_annotation": "ref:sharedAnnotation:sar5",
+                "data_isFirstReply": true,
                 "data_annotationCreator": "ref:user:annot-creator",
                 "data_normalizedPageUrl": "ccc.com",
                 "data_pageInfo": "ref:sharedPageInfo:the-page",
@@ -133,6 +136,124 @@ describe('Activity stream utils', () => {
                         reference: "ref:user:annot-creator",
                         data: {
                             "displayName": concretized.activity.annotationCreator.displayName,
+                        }
+                    },
+                ]
+            },
+        })
+    })
+
+    it('should correctly concretize list entry activities', async () => {
+        const listReference: SharedListReference = { type: 'shared-list-reference', id: 'shared-list-ref' }
+        const entryReference: SharedListEntryReference = { type: 'shared-list-entry-reference', id: 'entry-ref' }
+        const normalizedPageUrl = 'ccc.com'
+        const originalPageUrl = `https//www.${normalizedPageUrl}`
+        const activityBase = {
+            entityType: 'sharedList' as 'sharedList',
+            entity: listReference,
+            activityType: 'sharedListEntry' as 'sharedListEntry',
+            activity: {
+                entryReference,
+            }
+        }
+        const list: SharedList = {
+            createdWhen: Date.now(),
+            updatedWhen: Date.now(),
+            title: 'Some shared list',
+            description: 'List descr'
+        }
+        const listEntry: SharedListEntry = {
+            createdWhen: Date.now(),
+            updatedWhen: Date.now(),
+            normalizedUrl: normalizedPageUrl,
+            originalUrl: originalPageUrl,
+            entryTitle: 'Some new entry',
+        }
+        const listCreatorReference: UserReference = { type: 'user-reference', id: 'list-creator' }
+        const entryCreatorReference: UserReference = { type: 'user-reference', id: 'entry-creator' }
+        const concretized = await concretizeActivity({
+            storage: {
+                contentSharing: {
+                    getAnnotation: async () => null,
+                    getPageInfoByCreatorAndUrl: async () => null,
+                    getListByReference: async () => ({
+                        reference: listReference,
+                        creator: listCreatorReference,
+                        ...list
+                    }),
+                    getListEntryByReference: async () => ({
+                        reference: entryReference,
+                        creator: entryCreatorReference,
+                        sharedList: listReference,
+                        ...listEntry,
+                    })
+                },
+                contentConversations: {
+                    getReply: async () => null,
+                },
+                users: {
+                    getUser: async (reference) => ({ displayName: `Name: ${reference.id}` })
+                }
+            },
+            ...activityBase,
+        })
+        expect(concretized).toEqual({
+            activity: {
+                list: {
+                    reference: listReference,
+                    ...list,
+                },
+                listCreator: {
+                    reference: listCreatorReference,
+                    displayName: 'Name: list-creator'
+                },
+                entry: {
+                    reference: entryReference,
+                    ...listEntry,
+                },
+                entryCreator: {
+                    reference: entryCreatorReference,
+                    displayName: 'Name: entry-creator'
+                }
+            },
+        })
+        expect(prepareActivityForStreamIO(concretized as any, {
+            makeReference: (collection, id) => `ref:${collection}:${id}`
+        })).toEqual({
+            "activity": {
+                "data_entry": "ref:sharedListEntry:entry-ref",
+                "data_entryCreator": "ref:user:entry-creator",
+                "data_list": "ref:sharedList:shared-list-ref",
+                "data_listCreator": "ref:user:list-creator",
+            },
+            "objects": {
+                "sharedList": [
+                    {
+                        id: 'shared-list-ref',
+                        reference: "ref:sharedList:shared-list-ref",
+                        data: list,
+                    }
+                ],
+                "sharedListEntry": [
+                    {
+                        id: 'entry-ref',
+                        reference: "ref:sharedListEntry:entry-ref",
+                        data: listEntry,
+                    }
+                ],
+                "user": [
+                    {
+                        id: 'entry-creator',
+                        reference: "ref:user:entry-creator",
+                        data: {
+                            "displayName": concretized.activity.entryCreator.displayName,
+                        },
+                    },
+                    {
+                        id: 'list-creator',
+                        reference: "ref:user:list-creator",
+                        data: {
+                            "displayName": concretized.activity.listCreator.displayName,
                         }
                     },
                 ]

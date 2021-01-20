@@ -6,7 +6,7 @@ import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
 import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
-import { AutoPkStorageReference, idFromAutoPkReference, autoPkReferenceFromLinkId } from '../../storage/references'
+import { idFromAutoPkReference, autoPkReferenceFromLinkId, augmentObjectWithReferences } from '../../storage/references'
 
 const PAGE_LIST_ENTRY_ORDER = 'desc'
 const ANNOTATION_LIST_ENTRY_ORDER = 'asc'
@@ -133,6 +133,13 @@ export default class ContentSharingStorage extends StorageModule {
                 args: {
                     sharedList: '$sharedList:pk',
                     normalizedUrl: '$normalizedUrl:string'
+                }
+            },
+            findListEntryById: {
+                operation: 'findObjects',
+                collection: 'sharedListEntry',
+                args: {
+                    id: '$id:pk',
                 }
             },
             findSingleEntryByUserAndUrl: {
@@ -401,6 +408,31 @@ export default class ContentSharingStorage extends StorageModule {
             id: this._idFromReference(listReference),
             newTitle
         })
+    }
+
+    async getListByReference(reference: types.SharedListReference) {
+        const retrievedList = await this.operation('findListEntryById', {
+            id: reference.id,
+        })
+        const relations = {
+            creator: 'user-reference' as UserReference['type'],
+        }
+        return augmentObjectWithReferences<types.SharedList, types.SharedListReference, typeof relations>(
+            retrievedList, 'shared-list-reference', relations
+        )
+    }
+
+    async getListEntryByReference(reference: types.SharedListEntryReference) {
+        const retrievedEntry = await this.operation('findListEntryById', {
+            id: reference.id,
+        })
+        const relations = {
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+            creator: 'user-reference' as UserReference['type'],
+        }
+        return augmentObjectWithReferences<types.SharedListEntry, types.SharedListEntryReference, typeof relations>(
+            retrievedEntry, 'shared-list-entry-reference', relations
+        )
     }
 
     async getRandomUserListEntryForUrl(params: {
