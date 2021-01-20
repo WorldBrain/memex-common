@@ -15,8 +15,8 @@ export type UserPublicProfile =
         websiteURL: string
         mediumURL: string
         twitterURL: string
-        subStackURL: string
+        substackURL: string
         bio: string
-        avatarId: string
+        avatarURL: string
         paymentPointer: string
     }
