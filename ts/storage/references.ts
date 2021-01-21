@@ -1,3 +1,6 @@
+import camelCase from 'lodash/camelCase'
+import kebabCase from 'lodash/kebabCase'
+
 export type AutoPkStorageReference<ReferenceType extends string> = {
     type: ReferenceType
     id: number | string
@@ -47,4 +50,12 @@ export function augmentObjectWithReferences<
     const augmented = { reference: { type: referenceType, id: object.id }, ...object, ...relationReferences }
     delete augmented.id
     return augmented as any
+}
+
+export function getStorageReferenceCollection(reference: AutoPkStorageReference<string>) {
+    return camelCase(reference.type.replace(/-reference$/, ''))
+}
+
+export function makeStorageReference<Reference extends AutoPkStorageReference<string>>(collection: string, id: number | string): Reference {
+    return { type: kebabCase(collection) + '-reference', id } as any
 }

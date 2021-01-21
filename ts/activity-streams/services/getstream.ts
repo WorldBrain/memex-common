@@ -1,11 +1,9 @@
 import omit from 'lodash/omit';
-import camelCase from 'lodash/camelCase'
-import kebabCase from 'lodash/kebabCase'
 import isPlainObject from 'lodash/isPlainObject'
 import { StreamClient } from 'getstream'
 import ContentSharingStorage from '../../content-sharing/storage';
 import ContentConversationStorage from '../../content-conversations/storage';
-import { AutoPkStorageReference } from '../../storage/references';
+import { AutoPkStorageReference, makeStorageReference, getStorageReferenceCollection } from '../../storage/references';
 import UserStorage from '../../user-management/storage';
 import { concretizeActivity } from '../utils';
 import {
@@ -140,7 +138,7 @@ export function prepareActivityForStreamIO(concretized: { activity: any }, optio
     for (const [topKey, topValue] of Object.entries(concretized.activity)) {
         const reference = isPlainObject(topValue) && topValue['reference'] as AutoPkStorageReference<string>
         if (reference) {
-            const type = referenceCollectionType(reference)
+            const type = getStorageReferenceCollection(reference)
             seen[type] = seen[type] ?? new Set()
             if (!seen[type].has(reference.id)) {
                 objects[type] = objects[type] ?? []
@@ -173,7 +171,7 @@ export function prepareActivityFromStreamIO(activity: { [key: string]: any }) {
         activity: { [key: string]: any }
     } = {
         entityType: entityType,
-        entity: referenceFromCollectionId(entityType, entityId),
+        entity: makeStorageReference(entityType, entityId),
         activityType: activity.verb,
         activity: {}
     }
@@ -185,7 +183,7 @@ export function prepareActivityFromStreamIO(activity: { [key: string]: any }) {
 
         if (isPlainObject(value) && value['collection'] && value['id'] && value['data']) {
             const activity = value['data']
-            activity['reference'] = referenceFromCollectionId(value['collection'], value['id'])
+            activity['reference'] = makeStorageReference(value['collection'], value['id'])
             preparedActivity.activity[cleanKey] = value['data']
         } else {
             preparedActivity.activity[cleanKey] = value
@@ -216,10 +214,3 @@ export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: an
     }).filter(group => !!group)
 }
 
-export function referenceCollectionType(reference: AutoPkStorageReference<string>) {
-    return camelCase(reference.type.replace(/-reference$/, ''))
-}
-
-export function referenceFromCollectionId(collection: string, id: string) {
-    return { type: kebabCase(collection) + '-reference', id }
-}

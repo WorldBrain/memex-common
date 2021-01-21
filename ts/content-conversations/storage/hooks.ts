@@ -11,8 +11,9 @@ export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
         numberOfGroups: 1,
         function: async context => {
             try {
-                const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: context.objectId }
                 const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: context.objectId }
+                const reply: ConversationReply & { sharedAnnotation: number | string } = await context.getObject()
+                const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: reply.sharedAnnotation }
                 await context.services.activityStreams.addActivity({
                     entityType: 'sharedAnnotation',
                     entity: annotationReference,
