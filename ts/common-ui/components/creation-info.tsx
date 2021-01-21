@@ -52,9 +52,11 @@ export default function CreationInfo(props: CreationInfoProps) {
                 </AvatarHolder>
             )}
             <Details>
-                <Creator>
-                    {props.creator?.displayName ?? <span>&nbsp;</span>}
-                </Creator>
+                {props.creator?.displayName && (
+                    <Creator>
+                        {props.creator?.displayName ?? <span>&nbsp;</span>}
+                    </Creator>
+                )}
                 <CreationDate>
                     {props.lastEdited && <EditedText>Last Edit: </EditedText>}
                     {props.createdWhen || props.lastEdited ? (

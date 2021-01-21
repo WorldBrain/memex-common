@@ -27,3 +27,24 @@ export function autoPkReferenceFromLinkId<ReferenceType extends string>(
 
     return { type, id: parsedId }
 }
+
+export type ObjectWithReferences<Object, ObjectReference extends AutoPkStorageReference<string>, Relations extends {[FieldName: string]: string}> = (
+    Object &
+    { reference: ObjectReference } &
+    {[K in keyof Relations]: AutoPkStorageReference<Relations[K]>}
+)
+
+export function augmentObjectWithReferences<
+    Object, ObjectReference extends AutoPkStorageReference<string>, Relations extends {[FieldName: string]: string}
+>(object: (Object & {[RelationField in keyof Relations]: number | string}) | null, referenceType: ObjectReference['type'], relations: Relations): null | ObjectWithReferences<Object, ObjectReference, Relations> {
+    if (!object) {
+        return null
+    }
+    const relationReferences: {[FieldName in keyof Relations]: AutoPkStorageReference<Relations[FieldName]>} = {} as any
+    for (const [fieldName, referenceType] of Object.entries(relations)) {
+        relationReferences[fieldName as keyof Relations] = {type: referenceType, id: object[fieldName]} as any
+    }
+    const augmented = { reference: { type: referenceType, id: object.id }, ...object, ...relationReferences }
+    delete augmented.id
+    return augmented as any
+}

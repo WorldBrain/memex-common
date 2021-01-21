@@ -1,4 +1,4 @@
-import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo, SharedPageInfoReference } from "../content-sharing/types";
+import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo, SharedPageInfoReference, SharedListEntryReference, SharedList, SharedListEntry } from "../content-sharing/types";
 import { ConversationReplyReference, ConversationReply } from "../content-conversations/types";
 import { UserReference, User } from "../web-interface/types/users";
 
@@ -129,14 +129,21 @@ export type PageActivityStream = ActivityStreamDefinition<'sharedPageInfo', {
 export type ListActivityStream = ActivityStreamDefinition<'sharedList', {
     entity: SharedListReference
     activities: {
-        newEntry: {
-            request: {
-                normalizedPageUrl: string
-            },
-            result: {}
-        }
+        sharedListEntry: ListEntryActivity
     }
 }>
+
+export interface ListEntryActivity {
+    request: {
+        entryReference: SharedListEntryReference
+    },
+    result: {
+        entry: { reference: SharedListEntryReference } & SharedListEntry
+        entryCreator: { reference: UserReference } & User
+        list: { reference: SharedListReference } & SharedList
+        listCreator: { reference: UserReference } & User
+    }
+}
 
 // Workaround for:
 // https://stackoverflow.com/questions/64699531/indexing-a-nested-object-with-two-dependent-type-parameters-fails-in-typescript/64700607
