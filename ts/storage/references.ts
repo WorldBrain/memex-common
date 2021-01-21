@@ -56,6 +56,6 @@ export function getStorageReferenceCollection(reference: AutoPkStorageReference<
     return camelCase(reference.type.replace(/-reference$/, ''))
 }
 
-export function makeStorageReference<Reference extends AutoPkStorageReference<string>>(collection: string, id: number | string): Reference {
+export function makeStorageReference<Reference extends AutoPkStorageReference<string>>(collection: Reference['type'], id: number | string): Reference {
     return { type: kebabCase(collection) + '-reference', id } as any
 }

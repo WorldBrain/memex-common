@@ -136,7 +136,7 @@ export default class ContentSharingStorage extends StorageModule {
                 }
             },
             findListEntryById: {
-                operation: 'findObjects',
+                operation: 'findObject',
                 collection: 'sharedListEntry',
                 args: {
                     id: '$id:pk',
@@ -411,7 +411,7 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getListByReference(reference: types.SharedListReference) {
-        const retrievedList = await this.operation('findListEntryById', {
+        const retrievedList = await this.operation('findListByID', {
             id: reference.id,
         })
         const relations = {
