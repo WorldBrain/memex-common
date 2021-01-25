@@ -6,6 +6,8 @@ export type ColorThemeKeys =
   | 'primary'
   | 'secondary'
   | 'subText'
+  | 'purple'
+  | 'darkgrey'
   | 'grey'
   | 'black'
 
