@@ -200,6 +200,17 @@ export default class ContentSharingStorage extends StorageModule {
                 operation: 'executeBatch',
                 args: ['$batch'],
             },
+            findSingleAnnotationEntryByListPage: {
+                operation: 'findObject',
+                collection: 'sharedAnnotationListEntry',
+                args: [
+                    {
+                        sharedList: '$sharedList:pk',
+                        normalizedPageUrl: '$normalizedPageUrl:string',
+                    },
+                    { limit: 1 }
+                ]
+            },
             findAnnotationEntriesByListPages: {
                 operation: 'findObjects',
                 collection: 'sharedAnnotationListEntry',
@@ -611,6 +622,18 @@ export default class ContentSharingStorage extends StorageModule {
             }
         }
         return result
+    }
+
+    async doesAnnotationExistForPageInList(params: {
+        listReference: types.SharedListReference,
+        normalizedPageUrl: string
+    }): Promise<boolean> {
+        const annotation = await this.operation('findSingleAnnotationEntryByListPage', {
+            sharedList: this._idFromReference(params.listReference),
+            normalizedPageUrl: params.normalizedPageUrl,
+        })
+
+        return annotation != null
     }
 
     async getAnnotationsForPagesInList(params: {
