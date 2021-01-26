@@ -119,6 +119,13 @@ export default class ContentSharingStorage extends StorageModule {
                 collection: 'sharedList',
                 args: { id: '$id:pk' }
             },
+            findListsByIDs: {
+                operation: 'findObjects',
+                collection: 'sharedList',
+                args: {
+                    id: { $in: '$ids:pk[]' },
+                }
+            },
             findListEntriesByList: {
                 operation: 'findObjects',
                 collection: 'sharedListEntry',
@@ -420,6 +427,18 @@ export default class ContentSharingStorage extends StorageModule {
         return augmentObjectWithReferences<types.SharedList, types.SharedListReference, typeof relations>(
             retrievedList, 'shared-list-reference', relations
         )
+    }
+
+    async getListsByReferences(references: types.SharedListReference[]) {
+        const retrievedLists = await this.operation('findListsByIDs', {
+            ids: references.map(ref => ref.id),
+        })
+        const relations = {
+            creator: 'user-reference' as UserReference['type'],
+        }
+        return retrievedLists.map(retrievedList => augmentObjectWithReferences<types.SharedList, types.SharedListReference, typeof relations>(
+            retrievedList, 'shared-list-reference', relations
+        ))
     }
 
     async getListEntryByReference(reference: types.SharedListEntryReference) {
