@@ -98,6 +98,17 @@ export default class ActivityFollowsStorage extends StorageModule {
         },
       },
     },
+    accessRules: {
+      ownership: {
+        activityFollow: {
+          field: 'user',
+          access: ['create', 'delete'],
+        },
+      },
+      permissions: {
+        activityFollow: { list: { rule: true }, read: { rule: true } },
+      }
+    }
   });
 
   private static prepareFollow = ({

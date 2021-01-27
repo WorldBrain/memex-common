@@ -1,7 +1,7 @@
 import { StorageHooks } from "../../storage/hooks/types";
 import { ConversationReplyReference } from "../types";
 import { SharedAnnotationReference } from "../../content-sharing/types";
-import { ConversationReply } from "src/web-interface/types/storex-generated/content-conversations";
+import { ConversationReply } from "../../web-interface/types/storex-generated/content-conversations";
 
 export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
     processReplyCreation: {
