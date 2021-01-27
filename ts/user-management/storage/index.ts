@@ -111,6 +111,10 @@ export default class UserStorage extends StorageModule {
                         field: 'id',
                         access: ['create', 'update'],
                     },
+                    userPublicProfile: {
+                        field: 'user',
+                        access: ['create', 'update'],
+                    },
                 },
                 permissions: {
                     user: {
