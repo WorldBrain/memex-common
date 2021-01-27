@@ -10,6 +10,7 @@ export type ColorThemeKeys =
   | 'darkgrey'
   | 'grey'
   | 'black'
+  | 'lightblack'
 
 export type FontThemeKeys = 'primary' | 'secondary'
 
