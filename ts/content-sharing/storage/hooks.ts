@@ -8,7 +8,7 @@ export const CONTENT_SHARING_HOOKS: StorageHooks = {
         collection: 'sharedListEntry',
         operation: 'create',
         numberOfGroups: 0,
-        userField: 'user',
+        userField: 'creator',
         function: async context => {
             const listEntry: SharedListEntry & { id: number | string, sharedList: number | string } = await context.getObject()
             const listReference = makeStorageReference<SharedListReference>('shared-list-reference', listEntry.sharedList)
