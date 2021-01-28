@@ -7,13 +7,14 @@ export type ColorThemeKeys =
   | 'secondary'
   | 'subText'
   | 'purple'
-  | 'darkgrey'
+  | 'lightgrey'
   | 'grey'
+  | 'darkgrey'
   | 'black'
 
 export type FontThemeKeys = 'primary' | 'secondary'
 
-export declare type FontSizeThemeKeys = 'listTitle' | 'url' | 'text' | 'smallText'
+export declare type FontSizeThemeKeys = 'header' | 'listTitle' | 'url' | 'text' | 'smallText'
 
 export declare type LineHeightThemeKeys = FontSizeThemeKeys
 
@@ -25,6 +26,7 @@ export interface MemexTheme {
         overlay: { [Key in 'background' | 'dialog']: string }
     }
     fonts: { [Key in FontThemeKeys]: string }
+    fontWeights: { [Key in 'normal' | 'bold'] }
     fontSizes: { [Key in FontSizeThemeKeys]: string }
     lineHeights: {
         [Key in LineHeightThemeKeys]: string
