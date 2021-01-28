@@ -1,6 +1,7 @@
 import * as firebaseModule from 'firebase'
 import * as functionsModule from 'firebase-functions'
 import { EventContext } from 'firebase-functions';
+import { QueryDocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
 import StorageManager from '@worldbrain/storex'
 import { FirestoreStorageBackend } from '@worldbrain/storex-backend-firestore'
 import { registerModuleMapCollections } from '@worldbrain/storex-pattern-modules'
@@ -11,8 +12,9 @@ import GetStreamActivityStreamService from '../activity-streams/services/getstre
 import { FunctionsBackendStorage, FunctionsBackendServices } from './types'
 import { STORAGE_HOOKS } from '../storage/hooks'
 import { StorageHook } from '../storage/hooks/types';
-import { QueryDocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
-import { UserReference } from 'src/web-interface/types/users';
+import { UserReference } from '../web-interface/types/users';
+import ActivityFollowsStorage from '../activity-follows/storage';
+import StorexActivityStreamsStorage from '../activity-streams/storage';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
@@ -28,6 +30,8 @@ export async function createStorage(options: {
     const contentSharing = new ContentSharingStorage({ storageManager, autoPkType: 'string' })
     const modules = {
         users: new UserStorage({ storageManager }),
+        activityFollows: new ActivityFollowsStorage({ storageManager }),
+        activityStreams: new StorexActivityStreamsStorage({ storageManager }),
         contentSharing: contentSharing,
         contentConversations: new ContentConversationStorage({ storageManager, contentSharing, autoPkType: 'string' }),
     }
