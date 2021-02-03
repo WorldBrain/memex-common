@@ -7,8 +7,6 @@ import {
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { User, UserReference } from '../../web-interface/types/users'
 import { UserPublicProfile } from 'src/web-interface/types/storex-generated/user-management'
-// import { collectAccountCollections } from "../../utils";
-// import { ACCOUNT_COLLECTIONS } from "../../constants";
 
 export default class UserStorage extends StorageModule {
     private storageManager: StorageManager
@@ -95,7 +93,7 @@ export default class UserStorage extends StorageModule {
                     args: [{ id: '$id:pk' }, '$updates'],
                 },
                 findUserPublicProfileById: {
-                    operation: 'findOneObject',
+                    operation: 'findObject',
                     collection: 'userPublicProfile',
                     args: { id: '$id:pk' },
                 },
