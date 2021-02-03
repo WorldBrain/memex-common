@@ -109,15 +109,13 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
         this.notificationStates[userId] = userNotficationState
 
-        const aggregatedActivities = aggregate(this._followedActivities(userId), activity => {
-            return {
-                id: activity.id,
-                entityType: activity.entity.type,
-                entity: activity.entity,
-                activityType: activity.type,
-                activity: activity.data,
-            };
-        }, value => `${value.entity.type}${value.entity.id}${value.activityType}`);
+        const aggregatedActivities = aggregate(this._followedActivities(userId), activity => ({
+            id: activity.id,
+            entityType: activity.entity.type,
+            entity: activity.entity,
+            activityType: activity.type,
+            activity: activity.data
+        }), value => `${value.entity.type}${value.entity.id}${value.activityType}`);
 
         const activityGroups = aggregatedActivities
             .reverse() // mutates the array, but that's OK in this case
@@ -127,7 +125,13 @@ export default class MemoryStreamsService implements ActivityStreamsService {
                 entityType: group.key.entityType,
                 entity: group.key.entity,
                 activityType: group.key.activityType,
-                activities: group.items,
+                activities: group.items.map(activity => ({
+                    id: activity.id,
+                    entityType: activity.entity.type,
+                    entity: activity.entity,
+                    activityType: activity.type,
+                    activity: activity.data
+                })),
             }));
         return {
             hasMore: false,
