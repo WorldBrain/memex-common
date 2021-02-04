@@ -90,7 +90,7 @@ export default class UserStorage extends StorageModule {
                 updateUserPublicProfile: {
                     operation: 'updateObject',
                     collection: 'userPublicProfile',
-                    args: [{ id: '$id:pk' }, '$updates'],
+                    args: [{ id: '$id' }, '$updates'],
                 },
                 findUserPublicProfileById: {
                     operation: 'findObject',
