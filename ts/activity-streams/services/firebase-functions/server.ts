@@ -40,6 +40,7 @@ export function activityStreamFunctions(options: {
     return {
         ...activityStreamFunctionWithKey('addActivity'),
         ...activityStreamFunctionWithKey('followEntity'),
+        ...activityStreamFunctionWithKey('unfollowEntity'),
         ...activityStreamFunctionWithKey('getHomeFeedActivities'),
         ...activityStreamFunctionWithKey('getHomeFeedInfo'),
     }

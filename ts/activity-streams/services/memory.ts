@@ -1,7 +1,7 @@
 import ContentConversationStorage from "../../content-conversations/storage";
 import ContentSharingStorage from "../../content-sharing/storage";
 import UserStorage from "../../user-management/storage";
-import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult } from "./../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult, UnfollowEntityParams } from "./../types";
 import { concretizeActivity } from "../utils";
 
 export interface MemoryFollow {
@@ -43,21 +43,32 @@ export default class MemoryStreamsService implements ActivityStreamsService {
     followEntity: ActivityStreamsService['followEntity'] = async <EntityType extends keyof ActivityStream>(
         params: FollowEntityParams<EntityType>
     ): Promise<void> => {
-        this.follows.push({
-            createdWhen: Date.now(),
-            sourceEntity: { type: 'user', id: await this.options.getCurrentUserId()! },
-            targetEntitity: { type: params.entityType, id: params.entity.id },
-            feeds: params.feeds
-        })
+        const userId = await this._ensureUserId(`Tried to follow entity wtihout being authenticated: ${params.entityType}, ${params.entity.id}`)
+
+        if (!this._getFollow(userId, { type: params.entityType, id: params.entity.id })) {
+            this.follows.push({
+                createdWhen: Date.now(),
+                sourceEntity: { type: 'user', id: await this.options.getCurrentUserId()! },
+                targetEntitity: { type: params.entityType, id: params.entity.id },
+                feeds: params.feeds
+            })
+        }
+    }
+
+    unfollowEntity: ActivityStreamsService['unfollowEntity'] = async <EntityType extends keyof ActivityStream>(
+        params: UnfollowEntityParams<EntityType>
+    ): Promise<void> => {
+        const userId = await this._ensureUserId(`Tried to unfollow entity wtihout being authenticated: ${params.entityType}, ${params.entity.id}`)
+        const followIndex = this._getFollowIndex(userId, { type: params.entityType, id: params.entity.id })
+        if (followIndex >= 0) {
+            this.follows.splice(followIndex, 1)
+        }
     }
 
     addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void> => {
-        const userId = await this.options.getCurrentUserId()
-        if (!userId) {
-            throw new Error(`Tried to add new activity wtihout being authenticated: ${params.entityType}, ${params.activityType}`)
-        }
+        const userId = await this._ensureUserId(`Tried to add new activity wtihout being authenticated: ${params.entityType}, ${params.activityType}`)
 
         const { activity } = await concretizeActivity({
             storage: this.options.storage,
@@ -83,7 +94,12 @@ export default class MemoryStreamsService implements ActivityStreamsService {
     }
 
     _getFollow(userId: number | string, entity: { type: string, id: string | number }) {
-        return this.follows.find(follow =>
+        const followIndex = this._getFollowIndex(userId, entity)
+        return followIndex >= 0 ? this.follows[followIndex] : null
+    }
+
+    _getFollowIndex(userId: number | string, entity: { type: string, id: string | number }) {
+        return this.follows.findIndex(follow =>
             follow.sourceEntity.type === 'user' &&
             follow.sourceEntity.id == userId &&
             follow.targetEntitity.type === entity.type &&
@@ -101,11 +117,16 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         })
     }
 
-    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+    async _ensureUserId(unauthenticatedMessage: string) {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
-            throw new Error(`Tried to get notifications wtihout being authenticated`)
+            throw new Error(unauthenticatedMessage)
         }
+        return userId
+    }
+
+    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+        const userId = await this._ensureUserId(`Tried to get notifications wtihout being authenticated`)
         const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
         this.notificationStates[userId] = userNotficationState
 
