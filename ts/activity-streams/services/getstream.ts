@@ -16,6 +16,7 @@ import {
     FeedType,
     GetHomeFeedInfoResult,
     UnfollowEntityParams,
+    ListEntryActivity,
 } from "../types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
@@ -41,7 +42,7 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         const userIdString = coerceToString(await this._getCurrentUserId())
         const follow = async (feedType: FeedType) => {
             const feed = this.client.feed(feedType, userIdString);
-            await feed.follow(params.entityType, coerceToString(params.entity.id))
+            await feed.follow(params.entityType, coerceToString(params.entity.id), { limit: 0 })
         }
         if (params.feeds.home) {
             await follow('home')
@@ -65,33 +66,43 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void> => {
         const userIdString = coerceToString(await this._getCurrentUserId())
-        if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
-            const annotationFeed = this.client.feed(params.entityType, coerceToString(params.entity.id));
-            const activity = params.activity as AnnotationReplyActivity['request']
-            const data = await concretizeActivity({
-                storage: this.options.storage,
-                ...params,
-            })
-            const activityResult = data.activity as AnnotationReplyActivity['result']
-            const prepared = prepareActivityForStreamIO(data, {
-                makeReference: (collection, id) => this.client.collections.entry(collection, coerceToString(id), null)
-            })
+        const data = await concretizeActivity({
+            storage: this.options.storage,
+            ...params,
+        })
+        const activityResult = data.activity as AnnotationReplyActivity['result']
+        const prepared = prepareActivityForStreamIO(data, {
+            makeReference: (collection, id) => this.client.collections.entry(collection, coerceToString(id), null)
+        })
 
-            await Promise.all(Object.entries(prepared.objects).map(([collectionName, objects]) => {
-                return this.client.collections.upsert(collectionName, objects.map((object) => {
-                    return { id: coerceToString(object.id), ...object.data } as any
-                }))
+        await Promise.all(Object.entries(prepared.objects).map(([collectionName, objects]) => {
+            return this.client.collections.upsert(collectionName, objects.map((object) => {
+                return { id: coerceToString(object.id), ...object.data } as any
             }))
+        }))
 
-            await annotationFeed.addActivity({
-                to: [`sharedPageInfo:${activityResult.pageInfo.reference.id}`],
-                actor: `user:${userIdString}`,
-                verb: params.activityType as string,
-                object: `${params.entityType}:${params.entity.id}`,
-                foreign_id: `contentReply:${activity.replyReference.id}`,
-                ...prepared.activity,
-            })
+        const feed = this.client.feed(params.entityType, coerceToString(params.entity.id));
+        let toField: string[]
+        let activityObjectReference: AutoPkStorageReference<string>
+        if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
+            const activity = params.activity as AnnotationReplyActivity['request']
+            toField = [`sharedPageInfo:${activityResult.pageInfo.reference.id}`]
+            activityObjectReference = activity.replyReference
+        } else if (params.entityType === 'sharedList' && params.activityType === 'sharedListEntry') {
+            const activity = params.activity as ListEntryActivity['request']
+            activityObjectReference = activity.entryReference
         }
+        if (!activityObjectReference) {
+            throw new Error(`Activity not handled: ${params.entityType}.${params.activityType}`)
+        }
+        await feed.addActivity({
+            to: toField,
+            actor: `user:${userIdString}`,
+            verb: params.activityType as string,
+            object: `${params.entityType}:${params.entity.id}`,
+            foreign_id: `${params.activityType}:${activityObjectReference.id}`,
+            ...prepared.activity,
+        })
 
         if (params.follow) {
             await this.followEntity({

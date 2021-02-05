@@ -6,7 +6,7 @@ import {
 } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { User, UserReference } from '../../web-interface/types/users'
-import { UserPublicProfile } from 'src/web-interface/types/storex-generated/user-management'
+import { UserPublicProfile } from '../../web-interface/types/storex-generated/user-management'
 // import { collectAccountCollections } from "../../utils";
 // import { ACCOUNT_COLLECTIONS } from "../../constants";
 
