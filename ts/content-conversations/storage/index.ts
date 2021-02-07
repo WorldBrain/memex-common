@@ -208,7 +208,7 @@ export default class ContentConversationStorage extends StorageModule {
         const preparedReplies: PreparedAnnotationReplies = {}
 
         for (const rawReply of rawReplies) {
-            preparedReplies[rawReply.id] = [
+            preparedReplies[rawReply.sharedAnnotation] = [
                 ...(preparedReplies[rawReply.id] ?? []),
                 this._prepareReply(rawReply)
             ]
