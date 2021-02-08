@@ -89,6 +89,7 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
 
         const activity: AnnotationReplyActivity['result'] = {
             normalizedPageUrl: replyData.reply.normalizedPageUrl,
+            previousReplyReference: activityRequest.previousReplyReference,
             pageInfo: {
                 reference: pageInfoReference,
                 ...pageInfo,
@@ -110,9 +111,6 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
                 ...omit(annotation.annotation, 'selector'),
             },
         }
-        if (activityRequest.isFirstReply) {
-            activity.isFirstReply = true
-        }
         return {
             activity,
         }
@@ -128,7 +126,7 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
         }
         const entryCreatorReference = listEntry.creator
         const listCreatorReference = list.creator
-        
+
         const [entryCreator, listCreator] = await Promise.all([
             params.storage.users.getUser(entryCreatorReference),
             params.storage.users.getUser(listCreatorReference)

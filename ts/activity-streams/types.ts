@@ -98,11 +98,11 @@ export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotatio
 export interface AnnotationReplyActivity {
     request: {
         replyReference: ConversationReplyReference;
-        isFirstReply: boolean
+        previousReplyReference: ConversationReplyReference | null;
     };
     result: {
-        isFirstReply?: boolean // WARNING: This field is supplied by the user and not checked, so is only meant to be used where tampering has a low impact
         normalizedPageUrl: string;
+        previousReplyReference: ConversationReplyReference | null;
         pageInfo: {
             reference: SharedPageInfoReference
         } & SharedPageInfo

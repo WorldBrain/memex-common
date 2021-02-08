@@ -15,7 +15,7 @@ describe('Activity stream utils', () => {
             activityType: 'conversationReply' as 'conversationReply',
             activity: {
                 replyReference,
-                isFirstReply: true,
+                previousReplyReference: null,
             }
         }
         const normalizedPageUrl = 'ccc.com'
@@ -73,7 +73,7 @@ describe('Activity stream utils', () => {
         expect(concretized).toEqual({
             activity: {
                 normalizedPageUrl,
-                isFirstReply: true,
+                previousReplyReference: null,
                 pageInfo: {
                     reference: pageInfoReference,
                     ...pageInfo,
