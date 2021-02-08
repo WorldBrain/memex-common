@@ -13,6 +13,7 @@ import orderBy from 'lodash/orderBy'
 
 interface PreparedReply {
     reference: ConversationReplyReference
+    previousReply: ConversationReplyReference | null
     reply: ConversationReply
     sharedAnnotation: SharedAnnotationReference
     userReference: UserReference
@@ -22,6 +23,7 @@ type PreparedAnnotationReplies = { [annotationId: string]: PreparedReply[] }
 
 type RawReply = ConversationReply & {
     id: number | string
+    previousReply?: number | string
     sharedPageInfo: number | string
     sharedAnnotation: number | string
     user: number | string
@@ -68,6 +70,7 @@ export default class ContentConversationStorage extends StorageModule {
                 },
                 relationships: [
                     { childOf: 'user' },
+                    { childOf: 'conversationReply', alias: 'previousReply' },
                     { childOf: 'user', alias: 'pageCreator' },
                     { childOf: 'sharedAnnotation' },
                 ],
@@ -153,6 +156,7 @@ export default class ContentConversationStorage extends StorageModule {
                 args: {
                     user: params.userReference.id,
                     sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
+                    previousReply: params.previousReplyReference ? params.previousReplyReference.id : undefined,
                     createdWhen: Date.now(),
                     pageCreator: params.pageCreatorReference.id,
                     normalizedPageUrl: params.normalizedPageUrl,
@@ -243,6 +247,7 @@ export default class ContentConversationStorage extends StorageModule {
     _prepareReply(rawReply: RawReply): PreparedReply {
         return {
             reference: { type: 'conversation-reply-reference', id: rawReply.id },
+            previousReply: rawReply.previousReply ? { type: 'conversation-reply-reference', id: rawReply.previousReply } : null,
             reply: omit(rawReply, 'sharedPageInfo', 'sharedAnnotation', 'user'),
             sharedAnnotation: { type: 'shared-annotation-reference', id: rawReply.sharedAnnotation },
             userReference: { type: 'user-reference', id: rawReply.user }

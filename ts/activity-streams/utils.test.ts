@@ -61,6 +61,7 @@ describe('Activity stream utils', () => {
                         reply: reply,
                         sharedAnnotation: annotationReference,
                         userReference: replyUserReference,
+                        previousReply: null,
                     }),
                 },
                 users: {
