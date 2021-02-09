@@ -8,7 +8,7 @@ import UserStorage from '../../user-management/storage';
 import { concretizeActivity } from '../utils';
 import {
     ActivityStream, ActivityStreamsService, EntitityActivities,
-    AnnotationReplyActivity,
+    ConversationReplyActivity,
     AddActivityParams,
     GetHomeActivitiesResult,
     GetActivitiesParams,
@@ -65,14 +65,14 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void> => {
         const userIdString = coerceToString(await this._getCurrentUserId())
-        if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
+        if (params.entityType === 'conversationThread' && params.activityType === 'conversationReply') {
             const annotationFeed = this.client.feed(params.entityType, coerceToString(params.entity.id));
-            const activity = params.activity as AnnotationReplyActivity['request']
+            const activity = params.activity as ConversationReplyActivity['request']
             const data = await concretizeActivity({
                 storage: this.options.storage,
                 ...params,
             })
-            const activityResult = data.activity as AnnotationReplyActivity['result']
+            const activityResult = data.activity as ConversationReplyActivity['result']
             const prepared = prepareActivityForStreamIO(data, {
                 makeReference: (collection, id) => this.client.collections.entry(collection, coerceToString(id), null)
             })

@@ -49,7 +49,7 @@ export default class ContentConversationStorage extends StorageModule {
     getConfig = (): StorageModuleConfig => ({
         collections: {
             conversationThread: {
-                version: STORAGE_VERSIONS[3].date,
+                version: STORAGE_VERSIONS[6].date,
                 fields: {
                     updatedWhen: { type: 'timestamp' },
                     normalizedPageUrl: { type: 'string' },
@@ -57,10 +57,11 @@ export default class ContentConversationStorage extends StorageModule {
                 relationships: [
                     { childOf: 'user', alias: 'pageCreator' },
                     { childOf: 'sharedAnnotation' },
+                    { childOf: 'sharedList' },
                 ],
             },
             conversationReply: {
-                version: STORAGE_VERSIONS[3].date,
+                version: STORAGE_VERSIONS[6].date,
                 fields: {
                     createdWhen: { type: 'timestamp' },
                     normalizedPageUrl: { type: 'string' },
@@ -69,7 +70,9 @@ export default class ContentConversationStorage extends StorageModule {
                 relationships: [
                     { childOf: 'user' },
                     { childOf: 'user', alias: 'pageCreator' },
+                    { childOf: 'conversationThread' },
                     { childOf: 'sharedAnnotation' },
+                    { childOf: 'sharedList' },
                 ],
                 groupBy: [
                     { subcollectionName: 'replies', key: 'sharedAnnotation' }
@@ -77,9 +80,13 @@ export default class ContentConversationStorage extends StorageModule {
             },
         },
         operations: {
-            createThreadAndReply: {
-                operation: 'executeBatch',
-                args: ['$batch'],
+            createThread: {
+                collection: 'conversationThread',
+                operation: 'createObject',
+            },
+            createReply: {
+                collection: 'conversationReply',
+                operation: 'createObject',
             },
             findRepliesByCreatorAndPageUrl: {
                 operation: 'findObjects',
@@ -118,6 +125,13 @@ export default class ContentConversationStorage extends StorageModule {
                     normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
                 }
             },
+            findThreadByAnnotation: {
+                operation: 'findObject',
+                collection: 'conversationThread',
+                args: {
+                    sharedAnnotation: '$sharedAnnotation:pk',
+                }
+            },
         },
         accessRules: {
             ownership: {
@@ -134,37 +148,37 @@ export default class ContentConversationStorage extends StorageModule {
     })
 
     async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference }> {
-        const batch: OperationBatch = [
-            {
-                placeholder: 'thread',
-                operation: 'createObject',
-                collection: 'conversationThread',
-                args: {
-                    sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
-                    updatedWhen: Date.now(),
-                    pageCreator: params.pageCreatorReference.id,
-                    normalizedPageUrl: params.normalizedPageUrl,
-                }
-            },
-            {
-                placeholder: 'reply',
-                operation: 'createObject',
-                collection: 'conversationReply',
-                args: {
-                    user: params.userReference.id,
-                    sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
-                    createdWhen: Date.now(),
-                    pageCreator: params.pageCreatorReference.id,
-                    normalizedPageUrl: params.normalizedPageUrl,
-                    ...params.reply
-                }
-            },
-        ]
-        const result = await this.operation('createThreadAndReply', { batch })
+        // NOTE: We don't create thread and reply in parellel so the storage hook has access to both
+        // the reply and the thread when the reply is created
+
+        let thread = await this.operation('findThreadByAnnotation', {
+            sharedAnnotation: params.annotationReference.id,
+        })
+        if (!thread) {
+            thread = (await this.operation('createThread', {
+                sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
+                sharedList: null,
+                updatedWhen: Date.now(),
+                pageCreator: params.pageCreatorReference.id,
+                normalizedPageUrl: params.normalizedPageUrl,
+            })).object
+        }
+
+        const { object } = await this.operation('createReply', {
+            user: params.userReference.id,
+            conversationThread: thread.id,
+            sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
+            sharedList: null,
+            createdWhen: Date.now(),
+            pageCreator: params.pageCreatorReference.id,
+            normalizedPageUrl: params.normalizedPageUrl,
+            ...params.reply,
+        })
+
         return {
             reference: {
                 type: 'conversation-reply-reference',
-                id: result.info.reply.object.id,
+                id: object.id,
             }
         }
     }
