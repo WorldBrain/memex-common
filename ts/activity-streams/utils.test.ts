@@ -101,7 +101,7 @@ describe('Activity stream utils', () => {
         })).toEqual({
             "activity": {
                 "data_annotation": "ref:sharedAnnotation:sar5",
-                "data_isFirstReply": true,
+                "data_previousReplyReference": null,
                 "data_annotationCreator": "ref:user:annot-creator",
                 "data_normalizedPageUrl": "ccc.com",
                 "data_pageInfo": "ref:sharedPageInfo:the-page",
