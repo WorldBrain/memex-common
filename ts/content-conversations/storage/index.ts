@@ -18,6 +18,8 @@ interface PreparedReply {
     userReference: UserReference
 }
 
+type PreparedAnnotationReplies = { [annotationId: string]: PreparedReply[] }
+
 type RawReply = ConversationReply & {
     id: number | string
     sharedPageInfo: number | string
@@ -92,6 +94,13 @@ export default class ContentConversationStorage extends StorageModule {
                 collection: 'conversationReply',
                 args: {
                     sharedAnnotation: '$sharedAnnotation:pk',
+                }
+            },
+            findRepliesByAnnotations: {
+                operation: 'findObjects',
+                collection: 'conversationReply',
+                args: {
+                    sharedAnnotation: { $in: '$sharedAnnotations:pk' },
                 }
             },
             findReplyById: {
@@ -178,11 +187,38 @@ export default class ContentConversationStorage extends StorageModule {
 
     async getRepliesByAnnotation(params: {
         annotationReference: SharedAnnotationReference
-    }) {
+    }): Promise<PreparedReply[]> {
         const rawReplies: Array<RawReply> = await this.operation('findRepliesByAnnotation', {
             sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference)
         })
         return this._prepareReplies(rawReplies)
+    }
+
+    async getRepliesByAnnotations({
+        annotationReferences,
+        sortingFn = (a, b) => a.reply.createdWhen - b.reply.createdWhen,
+    }: {
+        annotationReferences: SharedAnnotationReference[]
+        sortingFn?: (a: PreparedReply, b: PreparedReply) => number
+    }): Promise<PreparedAnnotationReplies> {
+        const rawReplies: Array<RawReply> = await this.operation('findRepliesByAnnotations', {
+            sharedAnnotations: annotationReferences.map(ref => this.options.contentSharing._idFromReference(ref)),
+        })
+
+        const preparedReplies: PreparedAnnotationReplies = {}
+
+        for (const rawReply of rawReplies) {
+            preparedReplies[rawReply.id] = [
+                ...(preparedReplies[rawReply.id] ?? []),
+                this._prepareReply(rawReply)
+            ]
+        }
+
+        for (const id in preparedReplies) {
+            preparedReplies[id] = preparedReplies[id].sort(sortingFn)
+        }
+
+        return preparedReplies
     }
 
     async getReply(params: {

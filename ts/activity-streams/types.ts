@@ -4,6 +4,7 @@ import { UserReference, User } from "../web-interface/types/users";
 
 export interface ActivityStreamsService {
     followEntity<EntityType extends keyof ActivityStream>(params: FollowEntityParams<EntityType>): Promise<void>
+    unfollowEntity<EntityType extends keyof ActivityStream>(params: UnfollowEntityParams<EntityType>): Promise<void>
     addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void>
@@ -16,6 +17,7 @@ export interface FollowEntityParams<EntityType extends keyof ActivityStream> {
     entity: ActivityStream[EntityType]['entity']
     feeds: { [K in FeedType]: boolean }
 }
+export type UnfollowEntityParams<EntityType extends keyof ActivityStream> = FollowEntityParams<EntityType>
 
 export type AddActivityParams<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
     entityType: EntityType

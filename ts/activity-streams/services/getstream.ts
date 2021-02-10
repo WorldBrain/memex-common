@@ -15,6 +15,7 @@ import {
     FollowEntityParams,
     FeedType,
     GetHomeFeedInfoResult,
+    UnfollowEntityParams,
 } from "../types";
 
 export default class GetStreamActivityStreamService implements ActivityStreamsService {
@@ -44,6 +45,19 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
         if (params.feeds.home) {
             await follow('home')
+        }
+    }
+
+    unfollowEntity: ActivityStreamsService['unfollowEntity'] = async <EntityType extends keyof ActivityStream>(
+        params: UnfollowEntityParams<EntityType>
+    ): Promise<void> => {
+        const userIdString = coerceToString(await this._getCurrentUserId())
+        const unfollow = async (feedType: FeedType) => {
+            const feed = this.client.feed(feedType, userIdString);
+            await feed.unfollow(params.entityType, coerceToString(params.entity.id))
+        }
+        if (params.feeds.home) {
+            await unfollow('home')
         }
     }
 

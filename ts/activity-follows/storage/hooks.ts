@@ -9,6 +9,7 @@ export const ACTIVITIY_FOLLOWS_HOOKS: StorageHooks = {
         numberOfGroups: 0,
         userField: 'user',
         function: async context => {
+            console.log('created')
             const follow: ActivityFollow = await context.getObject()
             const entity = makeStorageReference(follow.collection, follow.objectId)
             await context.services.activityStreams.followEntity({
@@ -17,5 +18,20 @@ export const ACTIVITIY_FOLLOWS_HOOKS: StorageHooks = {
                 feeds: { home: true },
             } as any)
         }
-    }
+    },
+    processDeletedActivityFollow: {
+        collection: 'activityFollow',
+        operation: 'delete',
+        numberOfGroups: 0,
+        userField: 'user',
+        function: async context => {
+            const follow: ActivityFollow = await context.getObject()
+            const entity = makeStorageReference(follow.collection, follow.objectId)
+            await context.services.activityStreams.unfollowEntity({
+                entityType: follow.collection,
+                entity,
+                feeds: { home: true },
+            } as any)
+        }
+    },
 }

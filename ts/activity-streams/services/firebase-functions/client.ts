@@ -1,4 +1,4 @@
-import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, FollowEntityParams, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult } from "../../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, ActivityRequest, FollowEntityParams, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult, UnfollowEntityParams } from "../../types";
 
 export default class FirebaseFunctionsActivityStreamsService implements ActivityStreamsService {
     constructor(private options: {
@@ -10,6 +10,12 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
         params: FollowEntityParams<EntityType>
     ): Promise<void> => {
         return this.options.executeCall('activityStreams-followEntity', params)
+    }
+
+    unfollowEntity: ActivityStreamsService['unfollowEntity'] = async <EntityType extends keyof ActivityStream>(
+        params: UnfollowEntityParams<EntityType>
+    ): Promise<void> => {
+        return this.options.executeCall('activityStreams-unfollowEntity', params)
     }
 
     addActivity: ActivityStreamsService['addActivity'] = async <EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(params: {
