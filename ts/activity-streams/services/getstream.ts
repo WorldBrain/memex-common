@@ -55,7 +55,7 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         const userIdString = coerceToString(await this._getCurrentUserId())
         const unfollow = async (feedType: FeedType) => {
             const feed = this.client.feed(feedType, userIdString);
-            await feed.unfollow(params.entityType, coerceToString(params.entity.id))
+            await feed.unfollow(params.entityType, coerceToString(params.entity.id), { keepHistory: true })
         }
         if (params.feeds.home) {
             await unfollow('home')
