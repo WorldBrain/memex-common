@@ -98,7 +98,6 @@ export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotatio
 export interface AnnotationReplyActivity {
     request: {
         replyReference: ConversationReplyReference;
-        previousReplyReference: ConversationReplyReference | null;
     };
     result: {
         normalizedPageUrl: string;
