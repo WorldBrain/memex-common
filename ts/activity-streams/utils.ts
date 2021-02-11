@@ -89,7 +89,6 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
 
         const activity: AnnotationReplyActivity['result'] = {
             normalizedPageUrl: replyData.reply.normalizedPageUrl,
-            previousReplyReference: activityRequest.previousReplyReference,
             pageInfo: {
                 reference: pageInfoReference,
                 ...pageInfo,
@@ -99,6 +98,7 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
                 ...replyCreator
             },
             reply: {
+                previousReplyReference: replyData.previousReply,
                 reference: activityRequest.replyReference,
                 ...replyData.reply
             },

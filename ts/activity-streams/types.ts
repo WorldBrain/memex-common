@@ -102,7 +102,6 @@ export interface AnnotationReplyActivity {
     };
     result: {
         normalizedPageUrl: string;
-        previousReplyReference: ConversationReplyReference | null;
         pageInfo: {
             reference: SharedPageInfoReference
         } & SharedPageInfo
@@ -111,6 +110,7 @@ export interface AnnotationReplyActivity {
         } & User
         reply: {
             reference: ConversationReplyReference;
+            previousReplyReference: ConversationReplyReference | null;
         } & ConversationReply
         annotationCreator: {
             reference: UserReference

@@ -20,7 +20,7 @@ export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
                     activityType: 'conversationReply',
                     activity: {
                         replyReference,
-                        previousReplyReference: null, // TODO: figure out how to get the prev reply reference
+                        previousReplyReference: null,
                     },
                     follow: { home: true },
                 })
