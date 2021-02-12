@@ -51,13 +51,13 @@ export default class UserStorage extends StorageModule {
                 userPublicProfile: {
                     version: STORAGE_VERSIONS[6].date,
                     fields: {
-                        websiteURL: { type: 'string' },
-                        mediumURL: { type: 'string' },
-                        twitterURL: { type: 'string' },
-                        substackURL: { type: 'string' },
-                        bio: { type: 'string' },
-                        avatarURL: { type: 'string' },
-                        paymentPointer: { type: 'string' },
+                        websiteURL: { type: 'string', optional: true },
+                        mediumURL: { type: 'string', optional: true },
+                        twitterURL: { type: 'string', optional: true },
+                        substackURL: { type: 'string', optional: true },
+                        bio: { type: 'string', optional: true },
+                        avatarURL: { type: 'string', optional: true },
+                        paymentPointer: { type: 'string', optional: true },
                     },
                     relationships: [
                         {
