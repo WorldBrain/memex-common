@@ -90,12 +90,12 @@ export default class UserStorage extends StorageModule {
                 updateUserPublicProfile: {
                     operation: 'updateObjects',
                     collection: 'userPublicProfile',
-                    args: [{ id: '$id' }, '$updates'],
+                    args: [{ user: '$user' }, '$updates'],
                 },
                 findUserPublicProfileById: {
                     operation: 'findObject',
                     collection: 'userPublicProfile',
-                    args: { id: '$id:pk' },
+                    args: { user: '$user:pk' },
                 },
                 // findUserRights: {
                 //     operation: 'findObject',
@@ -203,8 +203,8 @@ export default class UserStorage extends StorageModule {
         }
 
         return (
-            await this.operation('createUser', {
-                id: userReference.id,
+            await this.operation('createUserPublicProfile', {
+                user: userReference.id,
                 ...userPublicProfile,
             })
         ).object
@@ -214,7 +214,7 @@ export default class UserStorage extends StorageModule {
         userReference: UserReference,
     ): Promise<UserPublicProfile> {
         const foundProfile = await this.operation('findUserPublicProfileById', {
-            id: userReference.id,
+            user: userReference.id,
         })
         return foundProfile
     }
@@ -227,18 +227,18 @@ export default class UserStorage extends StorageModule {
         const status =
             options.knownStatus ??
             ((await this.operation('findUserPublicProfileById', {
-                id: userReference.id,
+                user: userReference.id,
             }))
                 ? 'exists'
                 : 'new')
         if (status === 'new') {
             await this.operation('createUserPublicProfile', {
-                id: userReference.id,
+                user: userReference.id,
                 ...updates,
             })
         } else {
             await this.operation('updateUserPublicProfile', {
-                id: userReference.id,
+                user: userReference.id,
                 updates,
             })
         }
