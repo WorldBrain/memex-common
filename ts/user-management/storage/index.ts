@@ -196,7 +196,7 @@ export default class UserStorage extends StorageModule {
         userReference: UserReference,
     ): Promise<User> {
         const foundProfile = await this.operation('findUserPublicProfileById', {
-            id: userReference.id,
+            user: userReference.id,
         })
         if (foundProfile) {
             return foundProfile
