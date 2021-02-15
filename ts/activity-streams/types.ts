@@ -1,5 +1,5 @@
 import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo, SharedPageInfoReference, SharedListEntryReference, SharedList, SharedListEntry } from "../content-sharing/types";
-import { ConversationReplyReference, ConversationReply } from "../content-conversations/types";
+import { ConversationReplyReference, ConversationReply, ConversationThreadReference } from "../content-conversations/types";
 import { UserReference, User } from "../web-interface/types/users";
 
 export interface ActivityStreamsService {
@@ -39,7 +39,7 @@ export interface GetHomeFeedInfoResult {
 
 export type FeedType = 'home'
 
-export type ActivityStream = AnnotationActivityStream & PageActivityStream & ListActivityStream
+export type ActivityStream = ConversationThreadStream & PageActivityStream & ListActivityStream
 
 export interface ActivityStreamResultGroup<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
@@ -88,15 +88,16 @@ export type ActivityStreamDefinition<EntityName extends string, Definition exten
     }
 }
 
-export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotation', {
-    entity: SharedAnnotationReference
+export type ConversationThreadStream = ActivityStreamDefinition<'conversationThread', {
+    entity: ConversationThreadReference
     activities: {
-        conversationReply: AnnotationReplyActivity
+        conversationReply: ConversationReplyActivity
     }
 }>
 
-export interface AnnotationReplyActivity {
+export interface ConversationReplyActivity {
     request: {
+        annotationReference: SharedAnnotationReference;
         replyReference: ConversationReplyReference;
     };
     result: {
@@ -104,6 +105,9 @@ export interface AnnotationReplyActivity {
         pageInfo: {
             reference: SharedPageInfoReference
         } & SharedPageInfo
+        sharedList?: {
+            reference: SharedListReference
+        } & Pick<SharedList, 'title'>
         replyCreator: {
             reference: UserReference;
         } & User
@@ -123,7 +127,7 @@ export interface AnnotationReplyActivity {
 export type PageActivityStream = ActivityStreamDefinition<'sharedPageInfo', {
     entity: SharedPageInfoReference,
     activities: {
-        conversationReply: AnnotationReplyActivity
+        conversationReply: ConversationReplyActivity
     }
 }>
 

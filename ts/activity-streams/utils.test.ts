@@ -1,19 +1,21 @@
 import expect from 'expect'
 import { concretizeActivity } from "./utils"
 import { SharedAnnotationReference, SharedPageInfoReference, SharedListReference, SharedListEntryReference, SharedAnnotation, SharedPageInfo, SharedListEntry, SharedList } from "../content-sharing/types"
-import { ConversationReplyReference, ConversationReply } from "../content-conversations/types"
+import { ConversationReplyReference, ConversationReply, ConversationThreadReference } from "../content-conversations/types"
 import { UserReference } from '../web-interface/types/users'
 import { prepareActivityForStreamIO } from './services/getstream'
 
 describe('Activity stream utils', () => {
     it('should correctly concretize annotation reply activities', async () => {
         const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: 'sar5' }
+        const threadReference: ConversationThreadReference = { type: 'conversation-thread-reference', id: 'crr5' }
         const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: 'crr5' }
         const activityBase = {
-            entityType: 'sharedAnnotation' as 'sharedAnnotation',
-            entity: annotationReference,
+            entityType: 'conversationThread' as 'conversationThread',
+            entity: threadReference,
             activityType: 'conversationReply' as 'conversationReply',
             activity: {
+                annotationReference,
                 replyReference,
                 previousReplyReference: null,
             }

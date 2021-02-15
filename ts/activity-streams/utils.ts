@@ -1,4 +1,4 @@
-import { ActivityStream, ActivityRequest, EntitityActivities, ActivityResult, AnnotationReplyActivity, ListEntryActivity } from "./types";
+import { ActivityStream, ActivityRequest, EntitityActivities, ActivityResult, ConversationReplyActivity, ListEntryActivity } from "./types";
 import ContentConversationStorage from "../content-conversations/storage";
 import ContentSharingStorage from "../content-sharing/storage";
 import { SharedAnnotationReference } from '../content-sharing/types';
@@ -60,10 +60,10 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
 } & ActivityRequest<EntityType, ActivityType>): Promise<ActivityResult<EntityType, ActivityType>> {
     const { contentSharing } = params.storage
 
-    if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
-        const activityRequest = params.activity as AnnotationReplyActivity['request']
+    if (params.entityType === 'conversationThread' && params.activityType === 'conversationReply') {
+        const activityRequest = params.activity as ConversationReplyActivity['request']
         const replyData = await params.storage.contentConversations.getReply({
-            annotationReference: params.entity as SharedAnnotationReference,
+            annotationReference: activityRequest.annotationReference,
             replyReference: activityRequest.replyReference,
         })
         if (!replyData) {
@@ -87,7 +87,7 @@ export async function concretizeActivity<EntityType extends keyof ActivityStream
             params.storage.users.getUser(replyData.userReference)
         ])
 
-        const activity: AnnotationReplyActivity['result'] = {
+        const activity: ConversationReplyActivity['result'] = {
             normalizedPageUrl: replyData.reply.normalizedPageUrl,
             pageInfo: {
                 reference: pageInfoReference,

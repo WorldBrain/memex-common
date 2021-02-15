@@ -8,7 +8,7 @@ import UserStorage from '../../user-management/storage';
 import { concretizeActivity } from '../utils';
 import {
     ActivityStream, ActivityStreamsService, EntitityActivities,
-    AnnotationReplyActivity,
+    ConversationReplyActivity,
     AddActivityParams,
     GetHomeActivitiesResult,
     GetActivitiesParams,
@@ -70,7 +70,6 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
             storage: this.options.storage,
             ...params,
         })
-        const activityResult = data.activity as AnnotationReplyActivity['result']
         const prepared = prepareActivityForStreamIO(data, {
             makeReference: (collection, id) => this.client.collections.entry(collection, coerceToString(id), null)
         })
@@ -84,8 +83,9 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         const feed = this.client.feed(params.entityType, coerceToString(params.entity.id));
         let toField: string[]
         let activityObjectReference: AutoPkStorageReference<string>
-        if (params.entityType === 'sharedAnnotation' && params.activityType === 'conversationReply') {
-            const activity = params.activity as AnnotationReplyActivity['request']
+        if (params.entityType === 'conversationThread' && params.activityType === 'conversationReply') {
+            const activityResult = data.activity as ConversationReplyActivity['result']
+            const activity = params.activity as ConversationReplyActivity['request']
             toField = [`sharedPageInfo:${activityResult.pageInfo.reference.id}`]
             activityObjectReference = activity.replyReference
         } else if (params.entityType === 'sharedList' && params.activityType === 'sharedListEntry') {
