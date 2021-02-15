@@ -160,7 +160,8 @@ export default class ContentConversationStorage extends StorageModule {
                     createdWhen: Date.now(),
                     pageCreator: params.pageCreatorReference.id,
                     normalizedPageUrl: params.normalizedPageUrl,
-                    ...params.reply
+                    ...params.reply,
+                    previousReplyReference: params.previousReplyReference ?? null
                 }
             },
         ]
