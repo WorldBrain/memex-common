@@ -156,12 +156,11 @@ export default class ContentConversationStorage extends StorageModule {
                 args: {
                     user: params.userReference.id,
                     sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
-                    previousReply: params.previousReplyReference ? params.previousReplyReference.id : undefined,
+                    previousReply: params.previousReplyReference ? params.previousReplyReference.id : null,
                     createdWhen: Date.now(),
                     pageCreator: params.pageCreatorReference.id,
                     normalizedPageUrl: params.normalizedPageUrl,
                     ...params.reply,
-                    previousReplyReference: params.previousReplyReference ?? null
                 }
             },
         ]

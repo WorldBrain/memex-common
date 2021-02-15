@@ -5,7 +5,7 @@ import { ConversationReplyReference } from '../types';
 
 export interface CreateConversationReplyParams {
     userReference: UserReference;
-    previousReplyReference?: ConversationReplyReference
+    previousReplyReference: ConversationReplyReference | null
     pageCreatorReference: UserReference;
     annotationReference: SharedAnnotationReference;
     normalizedPageUrl: string;
