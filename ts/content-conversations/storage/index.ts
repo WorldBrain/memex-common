@@ -205,17 +205,19 @@ export default class ContentConversationStorage extends StorageModule {
         annotationReferences: SharedAnnotationReference[]
         sortingFn?: (a: PreparedReply, b: PreparedReply) => number
     }): Promise<PreparedAnnotationReplies> {
-        const rawReplies: Array<RawReply> = await this.operation('findRepliesByAnnotations', {
-            sharedAnnotations: annotationReferences.map(ref => this.options.contentSharing._idFromReference(ref)),
-        })
+        const rawReplies: Array<Array<RawReply>> = await Promise.all(annotationReferences.map(annotationReference => this.operation('findRepliesByAnnotation', {
+            sharedAnnotation: this.options.contentSharing._idFromReference(annotationReference)
+        })))
 
         const preparedReplies: PreparedAnnotationReplies = {}
 
-        for (const rawReply of rawReplies) {
-            preparedReplies[rawReply.sharedAnnotation] = [
-                ...(preparedReplies[rawReply.sharedAnnotation] ?? []),
-                this._prepareReply(rawReply)
-            ]
+        for (const annotationReplies of rawReplies) {
+            for (const rawReply of annotationReplies) {
+                preparedReplies[rawReply.sharedAnnotation] = [
+                    ...(preparedReplies[rawReply.sharedAnnotation] ?? []),
+                    this._prepareReply(rawReply)
+                ]
+            }
         }
 
         for (const id in preparedReplies) {
