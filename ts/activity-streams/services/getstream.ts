@@ -238,4 +238,3 @@ export function prepareActivitiesFromStreamIO(results: Array<{ [key: string]: an
         }
     }).filter(group => !!group)
 }
-

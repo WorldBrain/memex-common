@@ -1,15 +1,15 @@
 import omit from 'lodash/omit'
 import groupBy from 'lodash/groupBy'
-import { OperationBatch } from '@worldbrain/storex'
 import { StorageModule, StorageModuleConfig, StorageModuleConstructorArgs } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { UserReference } from '../../web-interface/types/users'
-import { SharedAnnotationReference, SharedPageInfoReference } from '../../content-sharing/types'
+import { SharedAnnotationReference } from '../../content-sharing/types'
 import { ConversationReply, ConversationThread } from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
-import { ConversationReplyReference } from '../types'
+import { ConversationReplyReference, ConversationThreadReference } from '../types'
 import { CreateConversationReplyParams } from './types'
 import orderBy from 'lodash/orderBy'
+import { augmentObjectWithReferences } from '../../storage/references'
 
 interface PreparedReply {
     reference: ConversationReplyReference
@@ -150,26 +150,36 @@ export default class ContentConversationStorage extends StorageModule {
         }
     })
 
-    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference }> {
-        // NOTE: We don't create thread and reply in parellel so the storage hook has access to both
-        // the reply and the thread when the reply is created
-
+    async getOrCreateThread(params: {
+        pageCreatorReference: UserReference;
+        annotationReference: SharedAnnotationReference;
+        normalizedPageUrl: string;
+        sharedListReference: SharedAnnotationReference | null;
+    }) {
         let thread = await this.operation('findThreadByAnnotation', {
             sharedAnnotation: params.annotationReference.id,
         })
         if (!thread) {
             thread = (await this.operation('createThread', {
                 sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
-                sharedList: null,
+                sharedList: params.sharedListReference?.id ?? null,
                 updatedWhen: Date.now(),
                 pageCreator: params.pageCreatorReference.id,
                 normalizedPageUrl: params.normalizedPageUrl,
             })).object
         }
 
+        return augmentObjectWithReferences<ConversationThread, ConversationThreadReference, {}>(thread, 'conversation-thread-reference', {})
+    }
+
+    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference }> {
+        // NOTE: We don't create thread and reply in parellel so the storage hook has access to both
+        // the reply and the thread when the reply is created
+
+        const thread = await this.getOrCreateThread({ ...params, sharedListReference: null })
         const { object } = await this.operation('createReply', {
             user: params.userReference.id,
-            conversationThread: thread.id,
+            conversationThread: thread.reference.id,
             previousReply: params.previousReplyReference ? params.previousReplyReference.id : null,
             sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
             sharedList: null,

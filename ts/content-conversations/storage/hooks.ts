@@ -13,7 +13,7 @@ export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
             try {
                 const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: context.objectId }
                 const reply: ConversationReply & { conversationThread: number | string, sharedAnnotation: number | string } = await context.getObject()
-                const threadReference: ConversationThreadReference = { type: 'conversation-thread-reference', id: reply.sharedAnnotation }
+                const threadReference: ConversationThreadReference = { type: 'conversation-thread-reference', id: reply.conversationThread }
                 const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: reply.sharedAnnotation }
                 await context.services.activityStreams.addActivity({
                     entityType: 'conversationThread',
