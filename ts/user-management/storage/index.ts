@@ -7,8 +7,6 @@ import {
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { User, UserReference } from '../../web-interface/types/users'
 import { UserPublicProfile } from '../../web-interface/types/storex-generated/user-management'
-// import { collectAccountCollections } from "../../utils";
-// import { ACCOUNT_COLLECTIONS } from "../../constants";
 
 export default class UserStorage extends StorageModule {
     private storageManager: StorageManager
@@ -53,13 +51,13 @@ export default class UserStorage extends StorageModule {
                 userPublicProfile: {
                     version: STORAGE_VERSIONS[6].date,
                     fields: {
-                        websiteURL: { type: 'string' },
-                        mediumURL: { type: 'string' },
-                        twitterURL: { type: 'string' },
-                        substackURL: { type: 'string' },
-                        bio: { type: 'string' },
-                        avatarURL: { type: 'string' },
-                        paymentPointer: { type: 'string' },
+                        websiteURL: { type: 'string', optional: true },
+                        mediumURL: { type: 'string', optional: true },
+                        twitterURL: { type: 'string', optional: true },
+                        substackURL: { type: 'string', optional: true },
+                        bio: { type: 'string', optional: true },
+                        avatarURL: { type: 'string', optional: true },
+                        paymentPointer: { type: 'string', optional: true },
                     },
                     relationships: [
                         {
@@ -90,14 +88,14 @@ export default class UserStorage extends StorageModule {
                     collection: 'userPublicProfile',
                 },
                 updateUserPublicProfile: {
-                    operation: 'updateObject',
+                    operation: 'updateObjects',
                     collection: 'userPublicProfile',
-                    args: [{ id: '$id:pk' }, '$updates'],
+                    args: [{ user: '$user' }, '$updates'],
                 },
                 findUserPublicProfileById: {
-                    operation: 'findOneObject',
+                    operation: 'findObject',
                     collection: 'userPublicProfile',
-                    args: { id: '$id:pk' },
+                    args: { user: '$user:pk' },
                 },
                 // findUserRights: {
                 //     operation: 'findObject',
@@ -205,8 +203,8 @@ export default class UserStorage extends StorageModule {
         }
 
         return (
-            await this.operation('createUser', {
-                id: userReference.id,
+            await this.operation('createUserPublicProfile', {
+                user: userReference.id,
                 ...userPublicProfile,
             })
         ).object
@@ -216,7 +214,7 @@ export default class UserStorage extends StorageModule {
         userReference: UserReference,
     ): Promise<UserPublicProfile> {
         const foundProfile = await this.operation('findUserPublicProfileById', {
-            id: userReference.id,
+            user: userReference.id,
         })
         return foundProfile
     }
@@ -229,18 +227,18 @@ export default class UserStorage extends StorageModule {
         const status =
             options.knownStatus ??
             ((await this.operation('findUserPublicProfileById', {
-                id: userReference.id,
+                user: userReference.id,
             }))
                 ? 'exists'
                 : 'new')
         if (status === 'new') {
             await this.operation('createUserPublicProfile', {
-                id: userReference.id,
+                user: userReference.id,
                 ...updates,
             })
         } else {
             await this.operation('updateUserPublicProfile', {
-                id: userReference.id,
+                user: userReference.id,
                 updates,
             })
         }
