@@ -28,22 +28,23 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     background-repeat: no-repeat;
 `
 
+export type ItemBoxBottomAction =
+    | {
+          key: string
+          image: string
+          isDisabled?: boolean
+          tooltipText?: string
+          onClick?: React.MouseEventHandler<HTMLDivElement>
+      }
+    | null
+    | false
+    | undefined
+
 export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
     firstDivProps?: HTMLProps<HTMLDivElement>
-    actions?: Array<
-        | {
-              key: string
-              image: string
-              isDisabled?: boolean
-              tooltipText?: string
-              onClick?: React.MouseEventHandler<HTMLDivElement>
-          }
-        | null
-        | false
-        | undefined
-    >
+    actions?: Array<ItemBoxBottomAction>
 }) {
     return (
         <Bottom {...(props.firstDivProps ?? {})}>
