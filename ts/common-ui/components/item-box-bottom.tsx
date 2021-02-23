@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { HTMLProps } from 'react'
 import styled from 'styled-components'
 import Margin from '../components/Margin'
 import CreationInfo, { CreationInfoProps } from './creation-info'
@@ -7,8 +7,10 @@ import ButtonTooltip from './button-tooltip'
 const Bottom = styled.div`
     display: flex;
     flex-direction: row;
-    padding: 15px;
+    padding: 0 15px;
+    height: 40px;
     align-items: center;
+    border-top: 1px solid #e0e0e0;
 `
 
 const Actions = styled.div`
@@ -28,24 +30,26 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     background-repeat: no-repeat;
 `
 
+export type ItemBoxBottomAction =
+    | {
+          key: string
+          image: string
+          isDisabled?: boolean
+          tooltipText?: string
+          onClick?: React.MouseEventHandler<HTMLDivElement>
+      }
+    | null
+    | false
+    | undefined
+
 export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
-    actions?: Array<
-        | {
-              key: string
-              image: string
-              isDisabled?: boolean
-              tooltipText?: string
-              onClick?: React.MouseEventHandler<HTMLDivElement>
-          }
-        | null
-        | false
-        | undefined
-    >
+    firstDivProps?: HTMLProps<HTMLDivElement>
+    actions?: Array<ItemBoxBottomAction>
 }) {
     return (
-        <Bottom>
+        <Bottom {...(props.firstDivProps ?? {})}>
             <CreationInfo {...props.creationInfo} />
             <Actions>
                 {props.actions?.map?.(
