@@ -212,11 +212,11 @@ export default class UserStorage extends StorageModule {
 
     async getUserPublicProfile(
         userReference: UserReference,
-    ): Promise<UserPublicProfile> {
+    ): Promise<UserPublicProfile | null> {
         const foundProfile = await this.operation('findUserPublicProfileById', {
             user: userReference.id,
         })
-        return foundProfile
+        return foundProfile ?? null
     }
 
     async createOrUpdateUserPublicProfile(
