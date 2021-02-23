@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { HTMLProps } from 'react'
 import styled from 'styled-components'
 import Margin from '../components/Margin'
 import CreationInfo, { CreationInfoProps } from './creation-info'
@@ -31,6 +31,7 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
 export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
+    firstDivProps?: HTMLProps<HTMLDivElement>
     actions?: Array<
         | {
               key: string
@@ -45,7 +46,7 @@ export default function ItemBoxBottom(props: {
     >
 }) {
     return (
-        <Bottom>
+        <Bottom {...(props.firstDivProps ?? {})}>
             <CreationInfo {...props.creationInfo} />
             <Actions>
                 {props.actions?.map?.(
