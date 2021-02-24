@@ -1,4 +1,4 @@
-import React, { HTMLProps } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import Margin from '../components/Margin'
 
@@ -7,8 +7,12 @@ export type ItemBoxVariant = 'new-item'
 const StyledItemBox = styled.div<{ variant?: ItemBoxVariant }>`
     font-family: ${(props) => props.theme.fonts.primary};
     background: #ffffff;
+    border: ${(props) =>
+        props.variant === 'new-item'
+            ? '3px solid rgba(92, 217, 166, 0.98);'
+            : '1px solid rgba(0, 0, 0, 0.1)'};
     box-sizing: border-box;
-    box-shadow: rgb(0 0 0 / 10%) 0px 1px 2px 0px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.2);
     border-radius: 5px;
     text-decoration: none;
     width: 100%;
@@ -17,11 +21,8 @@ const StyledItemBox = styled.div<{ variant?: ItemBoxVariant }>`
 export default function ItemBox(props: {
     children: React.ReactNode
     variant?: ItemBoxVariant
-    firstDivProps?: HTMLProps<HTMLDivElement>
 }) {
     return (
-        <StyledItemBox variant={props.variant} {...(props.firstDivProps ?? {})}>
-            {props.children}
-        </StyledItemBox>
+        <StyledItemBox variant={props.variant}>{props.children}</StyledItemBox>
     )
 }
