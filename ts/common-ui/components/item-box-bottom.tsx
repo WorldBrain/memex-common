@@ -23,7 +23,8 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     display: block;
     width: 20px;
     height: 20px !important;
-    cursor: ${(props) => (!props.isDisabled ? 'pointer' : 'default')};
+    opacity: ${(props) => (props.isDisabled ? 0.35 : 1)};
+    cursor: ${(props) => (props.isDisabled ? 'default' : 'pointer')};
     background-image: url("${(props) => props.image}");
     background-size: auto 14px;
     background-position: center center;
