@@ -10,6 +10,7 @@ export type TooltipPosition =
     | 'rightContentTooltip'
     | 'top'
     | 'bottom'
+    | 'bottomSidebar'
     | 'bottomRightEdge'
     | 'popupLeft'
 
@@ -94,7 +95,7 @@ const determineBubbleStyles = ({ position }: Props) => {
         case 'left':
             return `
             justify-content: flex-end;
-            right: 40px;
+            right: 20px;
             align-items: center;
         `
         case 'leftNarrow':
@@ -105,7 +106,7 @@ const determineBubbleStyles = ({ position }: Props) => {
         case 'leftBig':
             return `
             justify-content: flex-end;
-            right: 60px;
+            right: 35px;
             flex-wrap: wrap;
             width: 150px;
         `
@@ -122,6 +123,13 @@ const determineBubbleStyles = ({ position }: Props) => {
         case 'bottom':
             return `
             transform: translate(-40%, 30px);
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 250000;
+        `
+        case 'bottomSidebar':
+            return `
+            transform: translate(0,30px);
             justify-content: center;
             align-items: flex-start;
             z-index: 250000;
@@ -147,7 +155,7 @@ const determineBubbleStyles = ({ position }: Props) => {
         `
         case 'bottomRightEdge':
             return `
-            transform: translate(-60px, 30px);
+            transform: translate(-25px, 30px);
             justify-content: center;
             align-items: flex-start;
             z-index: 250000;
