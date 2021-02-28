@@ -121,7 +121,7 @@ const determineBubbleStyles = ({ position }: Props) => {
         `
         case 'bottom':
             return `
-            transform: translateY(30px);
+            transform: translate(-40%, 30px);
             justify-content: center;
             align-items: flex-start;
             z-index: 250000;
