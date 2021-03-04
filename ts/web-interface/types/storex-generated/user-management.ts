@@ -12,11 +12,11 @@ export type UserEmail =
 
 export type UserPublicProfile =
     {
-        websiteURL: string
-        mediumURL: string
-        twitterURL: string
-        substackURL: string
-        bio: string
-        avatarURL: string
-        paymentPointer: string
+        websiteURL?: string
+        mediumURL?: string
+        twitterURL?: string
+        substackURL?: string
+        bio?: string
+        avatarURL?: string
+        paymentPointer?: string
     }

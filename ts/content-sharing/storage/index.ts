@@ -59,6 +59,58 @@ export default class ContentSharingStorage extends StorageModule {
                     { alias: 'creator', childOf: 'user' }
                 ],
             },
+            sharedListRole: {
+                version: STORAGE_VERSIONS[7].date,
+                fields: {
+                    createdWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    roleID: { type: 'int' },
+                },
+                relationships: [
+                    { childOf: 'sharedList' },
+                    { childOf: 'user' },
+                ],
+                groupBy: [
+                    { subcollectionName: 'users', key: 'sharedList' }
+                ],
+                indices: [
+                    { field: { relationship: 'user' }, pk: true }
+                ]
+            },
+            sharedListRoleByUser: {
+                version: STORAGE_VERSIONS[7].date,
+                fields: {
+                    createdWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    roleID: { type: 'int' },
+                },
+                relationships: [
+                    { childOf: 'sharedList' },
+                    { childOf: 'user' },
+                ],
+                groupBy: [
+                    { subcollectionName: 'lists', key: 'user' }
+                ],
+                indices: [
+                    { field: { relationship: 'sharedList' }, pk: true }
+                ]
+            },
+            sharedListKey: {
+                version: STORAGE_VERSIONS[7].date,
+                fields: {
+                    createdWhen: { type: 'timestamp' },
+                    updatedWhen: { type: 'timestamp' },
+                    key: { type: 'string' },
+                    disabled: { type: 'boolean', optional: true },
+                    roleID: { type: 'int' },
+                },
+                relationships: [
+                    { childOf: 'sharedList' },
+                ],
+                groupBy: [
+                    { subcollectionName: 'keys', key: 'sharedList' }
+                ]
+            },
             sharedPageInfo: {
                 version: STORAGE_VERSIONS[2].date,
                 fields: {
@@ -898,6 +950,64 @@ export default class ContentSharingStorage extends StorageModule {
         await this.operation('updateAnnotationComment', {
             id: this._idFromReference(params.sharedAnnotationReference),
             comment: params.updatedComment
+        })
+    }
+
+    async getListKey(params: {
+        listReference: types.SharedListReference,
+        key: string
+    }) {
+        const retrievedKey = await this.operation('findListKey', {
+            sharedList: params.listReference.id,
+            key: params.key
+        })
+        const relations = {
+            user: 'user-reference' as UserReference['type'],
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+        }
+        return augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
+            retrievedKey, 'shared-list-key-reference', relations
+        )
+    }
+
+    async getListRole(params: {
+        listReference: types.SharedListReference,
+        userReference: UserReference
+    }) {
+        const retrievedRole = await this.operation('findListRole', {
+            sharedList: params.listReference.id,
+            user: params.userReference.id
+        })
+        const relations = {
+            user: 'user-reference' as UserReference['type'],
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+        }
+        return augmentObjectWithReferences<types.SharedListRole, types.SharedListRoleReference, typeof relations>(
+            retrievedRole, 'shared-list-role-reference', relations
+        )
+    }
+
+    async createListRole(params: {
+        listReference: types.SharedListReference,
+        userReference: UserReference
+        roleID: types.SharedListRoleID
+    }) {
+        await this.operation('createListRole', {
+            sharedList: params.listReference.id,
+            user: params.userReference.id,
+            roleID: params.roleID,
+        })
+    }
+
+    async updateListRole(params: {
+        listReference: types.SharedListReference,
+        userReference: UserReference
+        roleID: types.SharedListRoleID
+    }) {
+        await this.operation('updateListRole', {
+            sharedList: params.listReference.id,
+            user: params.userReference.id,
+            roleID: params.roleID,
         })
     }
 

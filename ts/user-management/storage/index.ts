@@ -216,6 +216,7 @@ export default class UserStorage extends StorageModule {
         const foundProfile = await this.operation('findUserPublicProfileById', {
             user: userReference.id,
         })
+        delete foundProfile.user
         return foundProfile ?? null
     }
 
@@ -224,6 +225,18 @@ export default class UserStorage extends StorageModule {
         options: { knownStatus?: 'exists' | 'new' },
         updates: Partial<UserPublicProfile>,
     ) {
+        for (const fieldName of [
+            'websiteURL',
+            'mediumURL',
+            'twitterURL',
+            'substackURL',
+            'bio',
+            'avatarURL',
+            'paymentPointer',
+        ] as Array<keyof UserPublicProfile>) {
+            updates[fieldName] = updates[fieldName] ?? ''
+        }
+
         const status =
             options.knownStatus ??
             ((await this.operation('findUserPublicProfileById', {
