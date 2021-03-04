@@ -11,6 +11,7 @@ export const SYNC_STORAGE_AREA_KEYS: {
     continuousSyncEnabled: 'enable-continuous-sync',
     deviceId: 'device-id',
     encryptionKey: 'sync-encryption-key',
+    lastSyncTimestamp: '@Sync-last_sync_timestamp',
 }
 
 export const SYNCED_COLLECTIONS: string[] = [
