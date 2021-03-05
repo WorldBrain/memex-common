@@ -18,17 +18,17 @@ export default function Markdown(props: { children: ReactMarkdown.ReactMarkdownP
 
 const Container = styled.div`
     & h1 {
-        font-size: 1.5em
+        font-size: 1.3em;
         margin-block-end: 0em;
         margin-bottom: -5px;
     }
     & h2 {
-        font-size: 1.3em
+        font-size: 1.2em;
         margin-block-end: 0em;
         margin-bottom: -5px;
     }
     & h3 {
-        font-size: 1.1em
+        font-size: 1.1em;
         margin-block-end: 0em;
         margin-bottom: -5px;
     }
