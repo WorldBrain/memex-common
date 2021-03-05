@@ -112,3 +112,11 @@ export function getCurrentSchemaVersion(storageManager: StorageManager): Date {
 
     return new Date(schemaVersions[schemaVersions.length - 1])
 }
+
+export function isAccessRulesPermissionError(e: Error) {
+    if (e.name !== 'FirebaseError') {
+        return false
+    }
+    const firebaseError = e as any
+    return firebaseError.code === 'permission-denied'
+}

@@ -360,7 +360,14 @@ export default class ContentSharingStorage extends StorageModule {
             permissions: {
                 sharedList: { list: { rule: true }, read: { rule: true } },
                 sharedListCreatorInfo: { list: { rule: true }, read: { rule: true } },
-                sharedListEntry: { list: { rule: true }, read: { rule: true } },
+                sharedListEntry: {
+                    list: { rule: true }, read: { rule: true }, create: {
+                        prepare: [
+                            { placeholder: 'list', operation: 'findObject', collection: 'sharedList', where: { id: '$value.sharedList' } }
+                        ],
+                        rule: { and: ['$ownership', { eq: ['$list.creator', '$value.creator'] }] }
+                    }
+                },
                 sharedPageInfo: { list: { rule: true }, read: { rule: true } },
                 sharedAnnotation: { list: { rule: true }, read: { rule: true } },
                 sharedAnnotationListEntry: { list: { rule: true }, read: { rule: true } },
