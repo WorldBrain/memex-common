@@ -38,7 +38,6 @@ export type SharedListKey =
     {
         createdWhen: number
         updatedWhen: number
-        key: string
         disabled?: boolean
         roleID: number
     }

@@ -1,378 +1,42 @@
 import chunk from 'lodash/chunk'
 import orderBy from 'lodash/orderBy'
-import { OperationBatch, StorageBackend } from '@worldbrain/storex'
-import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig } from '@worldbrain/storex-pattern-modules'
+import { OperationBatch } from '@worldbrain/storex'
+import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig, PermissionRule } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
 import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
 import { idFromAutoPkReference, autoPkReferenceFromLinkId, augmentObjectWithReferences } from '../../storage/references'
+import { CONTENT_SHARING_STORAGE_COLLECTIONS } from './collections'
+import { CONTENT_SHARING_OPERATIONS } from './operations'
+import { CONTENT_SHARING_STORAGE_ACCESS_RULES } from './access-rules'
+import { ANNOTATION_LIST_ENTRY_ORDER } from './constants'
 
-const PAGE_LIST_ENTRY_ORDER = 'desc'
-const ANNOTATION_LIST_ENTRY_ORDER = 'asc'
-
+function isListOwnerRule(listIdAccess: string): PermissionRule {
+    return {
+        prepare: [
+            {
+                placeholder: 'list', operation: 'findObject', collection: 'sharedList', where: {
+                    id: listIdAccess,
+                }
+            }
+        ],
+        rule: { eq: ['$list.creator', '$context.userId'] }
+    }
+}
 export default class ContentSharingStorage extends StorageModule {
     constructor(private options: StorageModuleConstructorArgs & {
         autoPkType: 'number' | 'string'
     }) {
         super(options)
+
+        console.log(require('util').inspect(this.collections, { depth: null }))
     }
 
     getConfig = (): StorageModuleConfig => ({
-        collections: {
-            sharedList: {
-                version: STORAGE_VERSIONS[0].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    title: { type: 'string' },
-                    description: { type: 'string', optional: true },
-                },
-                relationships: [
-                    { alias: 'creator', childOf: 'user' }
-                ]
-            },
-            sharedListCreatorInfo: {
-                version: STORAGE_VERSIONS[0].date,
-                fields: {
-                    localListId: { type: 'timestamp' },
-                },
-                relationships: [
-                    { childOf: 'sharedList' },
-                    { alias: 'creator', childOf: 'user' }
-                ],
-                groupBy: [
-                    { key: 'creator', subcollectionName: 'lists' }
-                ]
-            },
-            sharedListEntry: {
-                version: STORAGE_VERSIONS[0].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    entryTitle: { type: 'string' },
-                    normalizedUrl: { type: 'string' },
-                    originalUrl: { type: 'string' },
-                },
-                relationships: [
-                    { childOf: 'sharedList' },
-                    { alias: 'creator', childOf: 'user' }
-                ],
-            },
-            sharedListRole: {
-                version: STORAGE_VERSIONS[7].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    roleID: { type: 'int' },
-                },
-                relationships: [
-                    { childOf: 'sharedList' },
-                    { childOf: 'user' },
-                ],
-                groupBy: [
-                    { subcollectionName: 'users', key: 'sharedList' }
-                ],
-                indices: [
-                    { field: { relationship: 'user' }, pk: true }
-                ]
-            },
-            sharedListRoleByUser: {
-                version: STORAGE_VERSIONS[7].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    roleID: { type: 'int' },
-                },
-                relationships: [
-                    { childOf: 'sharedList' },
-                    { childOf: 'user' },
-                ],
-                groupBy: [
-                    { subcollectionName: 'lists', key: 'user' }
-                ],
-                indices: [
-                    { field: { relationship: 'sharedList' }, pk: true }
-                ]
-            },
-            sharedListKey: {
-                version: STORAGE_VERSIONS[7].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    key: { type: 'string' },
-                    disabled: { type: 'boolean', optional: true },
-                    roleID: { type: 'int' },
-                },
-                relationships: [
-                    { childOf: 'sharedList' },
-                ],
-                groupBy: [
-                    { subcollectionName: 'keys', key: 'sharedList' }
-                ]
-            },
-            sharedPageInfo: {
-                version: STORAGE_VERSIONS[2].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    normalizedUrl: { type: 'string' },
-                    originalUrl: { type: 'string' },
-                    fullTitle: { type: 'string' },
-                },
-                relationships: [
-                    { alias: 'creator', childOf: 'user' }
-                ]
-            },
-            sharedAnnotation: {
-                version: STORAGE_VERSIONS[1].date,
-                fields: {
-                    normalizedPageUrl: { type: 'string' },
-                    createdWhen: { type: 'timestamp' },
-                    uploadedWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    body: { type: 'string', optional: true },
-                    comment: { type: 'string', optional: true },
-                    selector: { type: 'string', optional: true },
-                },
-                relationships: [
-                    { alias: 'creator', childOf: 'user' }
-                ]
-            },
-            sharedAnnotationListEntry: {
-                version: STORAGE_VERSIONS[1].date,
-                fields: {
-                    createdWhen: { type: 'timestamp' },
-                    uploadedWhen: { type: 'timestamp' },
-                    updatedWhen: { type: 'timestamp' },
-                    normalizedPageUrl: { type: 'string' },
-                },
-                relationships: [
-                    { alias: 'creator', childOf: 'user' },
-                    { connects: ['sharedList', 'sharedAnnotation'] },
-                ],
-            },
-        },
-        operations: {
-            createSharedList: {
-                operation: 'createObject',
-                collection: 'sharedList',
-            },
-            createSharedListCreatorInfo: {
-                operation: 'createObject',
-                collection: 'sharedListCreatorInfo',
-            },
-            createListEntries: {
-                operation: 'executeBatch',
-                args: ['$batch'],
-            },
-            findListByID: {
-                operation: 'findObject',
-                collection: 'sharedList',
-                args: { id: '$id:pk' }
-            },
-            findListsByIDs: {
-                operation: 'findObjects',
-                collection: 'sharedList',
-                args: {
-                    id: { $in: '$ids:pk[]' },
-                }
-            },
-            findListEntriesByList: {
-                operation: 'findObjects',
-                collection: 'sharedListEntry',
-                args: [
-                    { sharedList: '$sharedListID:pk' },
-                    { order: [['createdWhen', PAGE_LIST_ENTRY_ORDER]] }
-                ]
-            },
-            findListEntriesByUrl: {
-                operation: 'findObjects',
-                collection: 'sharedListEntry',
-                args: {
-                    sharedList: '$sharedList:pk',
-                    normalizedUrl: '$normalizedUrl:string'
-                }
-            },
-            findListEntryById: {
-                operation: 'findObject',
-                collection: 'sharedListEntry',
-                args: {
-                    id: '$id:pk',
-                }
-            },
-            findSingleEntryByUserAndUrl: {
-                operation: 'findObject',
-                collection: 'sharedListEntry',
-                args: [
-                    {
-                        creator: '$creator:pk',
-                        normalizedUrl: '$normalizedUrl:string'
-                    },
-                    { limit: 1 }
-                ]
-            },
-            deleteListEntriesByIds: {
-                operation: 'deleteObjects',
-                collection: 'sharedListEntry',
-                args: { id: { $in: '$ids:array:pk' } }
-            },
-            updateListTitle: {
-                operation: 'updateObjects',
-                collection: 'sharedList',
-                args: [
-                    { id: '$id' },
-                    { title: '$newTitle' }
-                ]
-            },
-            createPageInfo: {
-                operation: 'createObject',
-                collection: 'sharedPageInfo',
-            },
-            findPageInfoById: {
-                operation: 'findObject',
-                collection: 'sharedPageInfo',
-                args: {
-                    id: '$id:pk'
-                }
-            },
-            findPageInfoByCreatorAndUrl: {
-                operation: 'findObject',
-                collection: 'sharedPageInfo',
-                args: {
-                    normalizedUrl: '$normalizedUrl:string',
-                    creator: '$creator:pk'
-                }
-            },
-            createAnnotationsAndEntries: {
-                operation: 'executeBatch',
-                args: ['$batch'],
-            },
-            createAnnotationListEntries: {
-                operation: 'executeBatch',
-                args: ['$batch'],
-            },
-            findSingleAnnotationEntryByListPage: {
-                operation: 'findObject',
-                collection: 'sharedAnnotationListEntry',
-                args: [
-                    {
-                        sharedList: '$sharedList:pk',
-                        normalizedPageUrl: '$normalizedPageUrl:string',
-                    },
-                    { limit: 1 }
-                ]
-            },
-            findAnnotationEntriesByListPages: {
-                operation: 'findObjects',
-                collection: 'sharedAnnotationListEntry',
-                args: [
-                    {
-                        sharedList: '$sharedList:pk',
-                        normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
-                    },
-                    { order: [['createdWhen', ANNOTATION_LIST_ENTRY_ORDER]] }
-                ]
-            },
-            findAnnotationEntriesByList: {
-                operation: 'findObjects',
-                collection: 'sharedAnnotationListEntry',
-                args: [
-                    {
-                        sharedList: '$sharedList:pk',
-                    },
-                    { order: [['createdWhen', ANNOTATION_LIST_ENTRY_ORDER]] }
-                ]
-            },
-            findAnnotationsByIds: {
-                operation: 'findObjects',
-                collection: 'sharedAnnotation',
-                args: {
-                    id: { $in: '$ids:array:pk' }
-                }
-            },
-            findAnnotationById: {
-                operation: 'findObject',
-                collection: 'sharedAnnotation',
-                args: {
-                    id: '$id:pk'
-                }
-            },
-            findAnnotationsByCreatorAndPageUrl: {
-                operation: 'findObjects',
-                collection: 'sharedAnnotation',
-                args: {
-                    creator: '$creator:pk',
-                    normalizedPageUrl: '$normalizedPageUrl:pk',
-                }
-            },
-            findAnnotationEntriesForAnnotations: {
-                operation: 'findObjects',
-                collection: 'sharedAnnotationListEntry',
-                args: {
-                    sharedAnnotation: { $in: '$sharedAnnotations:array:pk' },
-                }
-            },
-            deleteAnnotationEntries: {
-                operation: 'executeBatch',
-                args: ['$batch'],
-            },
-            deleteAnnotations: {
-                operation: 'executeBatch',
-                args: ['$batch'],
-            },
-            updateAnnotationComment: {
-                operation: 'updateObjects',
-                collection: 'sharedAnnotation',
-                args: [
-                    { id: '$id:pk' },
-                    { comment: '$comment:string' }
-                ]
-            }
-        },
-        accessRules: {
-            ownership: {
-                sharedList: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-                sharedListCreatorInfo: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-                sharedListEntry: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-                sharedPageInfo: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-                sharedAnnotation: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-                sharedAnnotationListEntry: {
-                    field: 'creator',
-                    access: ['create', 'update', 'delete'],
-                },
-            },
-            permissions: {
-                sharedList: { list: { rule: true }, read: { rule: true } },
-                sharedListCreatorInfo: { list: { rule: true }, read: { rule: true } },
-                sharedListEntry: {
-                    list: { rule: true }, read: { rule: true }, create: {
-                        prepare: [
-                            { placeholder: 'list', operation: 'findObject', collection: 'sharedList', where: { id: '$value.sharedList' } }
-                        ],
-                        rule: { and: ['$ownership', { eq: ['$list.creator', '$value.creator'] }] }
-                    }
-                },
-                sharedPageInfo: { list: { rule: true }, read: { rule: true } },
-                sharedAnnotation: { list: { rule: true }, read: { rule: true } },
-                sharedAnnotationListEntry: { list: { rule: true }, read: { rule: true } },
-            }
-        }
+        collections: CONTENT_SHARING_STORAGE_COLLECTIONS(),
+        operations: CONTENT_SHARING_OPERATIONS,
+        accessRules: CONTENT_SHARING_STORAGE_ACCESS_RULES,
     })
 
     getSharedListLinkID(reference: types.SharedListReference): string {
@@ -960,13 +624,33 @@ export default class ContentSharingStorage extends StorageModule {
         })
     }
 
+    async createListKey(params: { key: Omit<types.SharedListKey, 'createdWhen' | 'updatedWhen'>, listReference: types.SharedListReference }): Promise<{
+        keyString: string
+    }> {
+        const now = Date.now()
+        const key = (await this.operation('createListKey', {
+            ...params.key,
+            createdWhen: now,
+            updatedWhen: now,
+            sharedList: params.listReference.id,
+            disabled: false,
+        })).object
+        return { keyString: key.id }
+    }
+
+    async getListKeys(params: { listReference: types.SharedListReference }) {
+        return this.operation('findKeysByList', {
+            sharedList: params.listReference.id,
+        })
+    }
+
     async getListKey(params: {
         listReference: types.SharedListReference,
-        key: string
+        keyString: string
     }) {
         const retrievedKey = await this.operation('findListKey', {
             sharedList: params.listReference.id,
-            key: params.key
+            id: params.keyString,
         })
         const relations = {
             user: 'user-reference' as UserReference['type'],
@@ -994,12 +678,29 @@ export default class ContentSharingStorage extends StorageModule {
         )
     }
 
+    async getListRoles(params: {
+        listReference: types.SharedListReference,
+    }) {
+        const retrievedRoles = await this.operation('findListRoles', {
+            sharedList: params.listReference.id,
+        })
+        const relations = {
+            user: 'user-reference' as UserReference['type'],
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+        }
+        return retrievedRoles.map(retrievedRole => augmentObjectWithReferences<types.SharedListRole, types.SharedListRoleReference, typeof relations>(
+            retrievedRole, 'shared-list-role-reference', relations
+        ))
+    }
+
     async createListRole(params: {
         listReference: types.SharedListReference,
         userReference: UserReference
         roleID: types.SharedListRoleID
     }) {
         await this.operation('createListRole', {
+            createdWhen: Date.now(),
+            updatedWhen: Date.now(),
             sharedList: params.listReference.id,
             user: params.userReference.id,
             roleID: params.roleID,

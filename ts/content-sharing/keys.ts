@@ -3,7 +3,7 @@ import ContentSharingStorage from "./storage";
 import { UserReference } from "src/web-interface/types/users";
 
 export async function processListKey(params: {
-    key: string
+    keyString: string
     listReference: SharedListReference
     userReference: UserReference
     contentSharing: ContentSharingStorage
