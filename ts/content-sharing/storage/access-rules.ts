@@ -102,6 +102,11 @@ export const CONTENT_SHARING_STORAGE_ACCESS_RULES: AccessRules = {
         },
         sharedPageInfo: { list: { rule: true }, read: { rule: true } },
         sharedAnnotation: { list: { rule: true }, read: { rule: true } },
-        sharedAnnotationListEntry: { list: { rule: true }, read: { rule: true } },
+        sharedAnnotationListEntry: {
+            list: { rule: true }, read: { rule: true },
+            create: listCreatorOrRoleRule('$value.sharedList', SharedListRoleID.AddOnly),
+            update: listCreatorOrRoleRule('$value.sharedList', SharedListRoleID.AddOnly),
+            delete: listCreatorOrRoleRule('$value.sharedList', SharedListRoleID.AddOnly),
+        },
     }
 }

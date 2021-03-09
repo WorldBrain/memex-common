@@ -15,7 +15,7 @@ import { StorageHook } from '../storage/hooks/types';
 import { UserReference } from '../web-interface/types/users';
 import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
-import { ContentSharingService } from 'src/content-sharing/service';
+import { ContentSharingService } from '../content-sharing/service';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
