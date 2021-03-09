@@ -29,8 +29,6 @@ export default class ContentSharingStorage extends StorageModule {
         autoPkType: 'number' | 'string'
     }) {
         super(options)
-
-        console.log(require('util').inspect(this.collections, { depth: null }))
     }
 
     getConfig = (): StorageModuleConfig => ({
