@@ -12,18 +12,6 @@ import { CONTENT_SHARING_OPERATIONS } from './operations'
 import { CONTENT_SHARING_STORAGE_ACCESS_RULES } from './access-rules'
 import { ANNOTATION_LIST_ENTRY_ORDER } from './constants'
 
-function isListOwnerRule(listIdAccess: string): PermissionRule {
-    return {
-        prepare: [
-            {
-                placeholder: 'list', operation: 'findObject', collection: 'sharedList', where: {
-                    id: listIdAccess,
-                }
-            }
-        ],
-        rule: { eq: ['$list.creator', '$context.userId'] }
-    }
-}
 export default class ContentSharingStorage extends StorageModule {
     constructor(private options: StorageModuleConstructorArgs & {
         autoPkType: 'number' | 'string'

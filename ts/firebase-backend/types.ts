@@ -4,6 +4,7 @@ import ContentSharingStorage from '../content-sharing/storage'
 import UserStorage from '../user-management/storage'
 import { ActivityStreamsService } from '../activity-streams/types'
 import { ContentSharingService } from '../content-sharing/service'
+import { UserMessageService } from 'src/user-messages/service/types'
 
 export interface FunctionsBackendStorage {
     manager: StorageManager
@@ -17,4 +18,5 @@ export interface FunctionsBackendStorage {
 export interface FunctionsBackendServices {
     activityStreams: ActivityStreamsService
     contentSharing: ContentSharingService
+    userMessages: UserMessageService
 }

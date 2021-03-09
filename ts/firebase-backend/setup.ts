@@ -16,6 +16,7 @@ import { UserReference } from '../web-interface/types/users';
 import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
 import { ContentSharingService } from '../content-sharing/service';
+import { FirebaseUserMessageService } from 'src/user-messages/service/firebase';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
@@ -46,10 +47,15 @@ export async function createStorage(options: {
 }
 
 export function createServices(options: {
+    firebase: typeof firebaseModule,
     functions: typeof functionsModule,
     storage: FunctionsBackendStorage,
     getCurrentUserId(): Promise<number | string | null>
 }): FunctionsBackendServices {
+    const userMessages = new FirebaseUserMessageService({
+        firebase: options.firebase,
+        auth: { getCurrentUserId: options.getCurrentUserId },
+    });
     return {
         activityStreams: new GetStreamActivityStreamService({
             apiKey: options.functions.config().getstreams.key!,
@@ -60,7 +66,9 @@ export function createServices(options: {
         contentSharing: new ContentSharingService({
             getCurrentUserId: options.getCurrentUserId,
             contentSharing: options.storage.modules.contentSharing,
-        })
+            userMessages
+        }),
+        userMessages
     }
 }
 
@@ -75,6 +83,7 @@ function createWildcardPattern(collectionName: string, numberOfGroups: number) {
 }
 
 export function createFirestoreTrigger(params: {
+    firebase: typeof firebaseModule,
     functions: typeof functionsModule,
     hook: StorageHook,
     getStorage: () => Promise<FunctionsBackendStorage>
@@ -85,7 +94,12 @@ export function createFirestoreTrigger(params: {
         const userReference: UserReference | undefined = hook.userField && { type: 'user-reference', id: snapshot.data()[hook.userField] };
 
         const storage = await params.getStorage()
-        const services = await createServices({ functions: params.functions, storage, getCurrentUserId: async () => userReference?.id })
+        const services = await createServices({
+            firebase: params.firebase,
+            functions: params.functions,
+            storage,
+            getCurrentUserId: async () => userReference?.id
+        })
 
         await hook.function({
             operation: hook.operation,
@@ -127,6 +141,7 @@ export function createFirestoreTriggers(options: {
     const hooks: any = {}
     for (const [hookName, hook] of Object.entries(STORAGE_HOOKS)) {
         hooks[hookName] = createFirestoreTrigger({
+            firebase: options.firebase,
             functions: options.functions,
             hook,
             getStorage: async () => {

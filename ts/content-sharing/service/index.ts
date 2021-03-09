@@ -1,10 +1,12 @@
 import { ContentSharingServiceInterface } from "./types";
 import { processListKey } from "../keys";
 import ContentSharingStorage from "../storage";
+import { UserMessageService } from "src/user-messages/service/types";
 
 export class ContentSharingService implements ContentSharingServiceInterface {
     constructor(private dependencies: {
         contentSharing: ContentSharingStorage,
+        userMessages: UserMessageService,
         getCurrentUserId: () => Promise<number | string | null>
     }) {
 
@@ -19,6 +21,7 @@ export class ContentSharingService implements ContentSharingServiceInterface {
         return {
             success: await processListKey({
                 contentSharing: this.dependencies.contentSharing,
+                userMessages: this.dependencies.userMessages,
                 userReference: { type: 'user-reference', id: userId },
                 keyString: params.keyString,
                 listReference: { type: 'shared-list-reference', id: params.listId },
