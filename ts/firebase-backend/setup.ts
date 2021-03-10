@@ -16,7 +16,7 @@ import { UserReference } from '../web-interface/types/users';
 import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
 import { ContentSharingService } from '../content-sharing/service';
-import { FirebaseUserMessageService } from 'src/user-messages/service/firebase';
+import { FirebaseUserMessageService } from '../user-messages/service/firebase';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,

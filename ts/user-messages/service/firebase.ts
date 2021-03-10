@@ -70,19 +70,21 @@ export class FirebaseUserMessageService implements UserMessageService {
 
 export function getUserMessageRules() {
     return {
-        "$user_id": {
-            ".read": "auth != null && $user_id == auth.uid",
-            ".write": "auth != null && $user_id == auth.uid",
-            "$message_id": {
-                ".indexOn": ["timestamp"],
-                "timestamp": {
-                    ".validate": "newData.val() == now"
-                },
-                "message": {
-                    ".validate": true
-                },
-                "$other": {
-                    ".validate": false
+        "userMessages": {
+            "$user_id": {
+                ".read": "auth != null && $user_id == auth.uid",
+                ".write": "auth != null && $user_id == auth.uid",
+                "$message_id": {
+                    ".indexOn": ["timestamp"],
+                    "timestamp": {
+                        ".validate": "newData.val() == now"
+                    },
+                    "message": {
+                        ".validate": true
+                    },
+                    "$other": {
+                        ".validate": false
+                    }
                 }
             }
         }
