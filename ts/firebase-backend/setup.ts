@@ -15,7 +15,7 @@ import { StorageHook } from '../storage/hooks/types';
 import { UserReference } from '../web-interface/types/users';
 import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
-import { ContentSharingService } from '../content-sharing/service';
+import { ContentSharingBackend } from '../content-sharing/backend';
 import { FirebaseUserMessageService } from '../user-messages/service/firebase';
 
 export async function createStorage(options: {
@@ -63,7 +63,7 @@ export function createServices(options: {
             getCurrentUserId: options.getCurrentUserId,
             storage: options.storage.modules,
         }),
-        contentSharing: new ContentSharingService({
+        contentSharing: new ContentSharingBackend({
             getCurrentUserId: options.getCurrentUserId,
             contentSharing: options.storage.modules.contentSharing,
             userMessages
