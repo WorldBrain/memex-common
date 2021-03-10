@@ -402,7 +402,10 @@ export default class ContentSharingStorage extends StorageModule {
 
     async retrieveList(listReference: types.SharedListReference): Promise<{
         sharedList: types.SharedList,
-        entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }>,
+        entries: Array<types.SharedListEntry & {
+            creator?: Pick<User, 'displayName'> | null
+            creatorReference?: UserReference | undefined | null
+        } & { sharedList: types.SharedListReference }>,
         creator: UserReference
     } | null> {
         const id = this._idFromReference(listReference)
@@ -413,10 +416,18 @@ export default class ContentSharingStorage extends StorageModule {
 
         const rawEntries = await this.operation('findListEntriesByList', { sharedListID: id })
         const entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }> = rawEntries.map(
-            (entry: types.SharedListEntry & { sharedList: string | number }) => ({
-                ...entry,
+            (entry: types.SharedListEntry & { sharedList: string | number }) => {
+                const relations = {
+                    creator: 'user-reference' as UserReference['type'],
+                }
+                const augmentedEntry = augmentObjectWithReferences<types.SharedListEntry, types.SharedListEntryReference, typeof relations>(
+                    (entry as any), 'shared-list-entry-reference', relations
+                )
+
+                return {
+                ...augmentedEntry,
                 sharedList: { type: 'shared-list-reference', id: entry.sharedList }
-            })
+            }}
         )
         return { sharedList, entries, creator: { type: 'user-reference', id: sharedList.creator } }
     }
