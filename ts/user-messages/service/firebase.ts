@@ -3,7 +3,6 @@ import { UserMessageService, UserMessageEvents } from "./types";
 import { EventEmitter } from "events";
 import TypedEventEmitter from "typed-emitter";
 import { UserMessage } from "../types";
-import { UserReference } from 'src/web-interface/types/users';
 
 interface LastSeen {
     get(): Promise<number | null>
@@ -16,7 +15,7 @@ export class FirebaseUserMessageService implements UserMessageService {
     _destroyListener?: () => void
 
     constructor(private dependencies: {
-        firebase: typeof firebaseModule
+        firebase: typeof firebaseModule | (() => typeof firebaseModule)
         auth: { getCurrentUserId(): Promise<number | string | null> },
     }) {
 
@@ -64,7 +63,18 @@ export class FirebaseUserMessageService implements UserMessageService {
 
     async _getQueueRef() {
         const userId = await this.dependencies.auth.getCurrentUserId()
-        return userId && this.dependencies.firebase.database().ref(`/userMessages/${userId}`)
+        if (!userId) {
+            return null
+        }
+        return this._getFirebase().database().ref(`/userMessages/${userId}`)
+    }
+
+    _getFirebase() {
+        let { firebase } = this.dependencies
+        if (typeof firebase === 'function') {
+            firebase = firebase()
+        }
+        return firebase
     }
 }
 
