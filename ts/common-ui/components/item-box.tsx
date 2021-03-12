@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { HTMLProps } from 'react'
 import styled from 'styled-components'
-import Margin from '../components/Margin'
 
 export type ItemBoxVariant = 'new-item'
 
@@ -17,8 +16,11 @@ const StyledItemBox = styled.div<{ variant?: ItemBoxVariant }>`
 export default function ItemBox(props: {
     children: React.ReactNode
     variant?: ItemBoxVariant
+    firstDivProps?: HTMLProps<HTMLDivElement>
 }) {
     return (
-        <StyledItemBox variant={props.variant}>{props.children}</StyledItemBox>
+        <StyledItemBox variant={props.variant} {...(props.firstDivProps ?? {})}>
+            {props.children}
+        </StyledItemBox>
     )
 }
