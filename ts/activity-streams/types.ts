@@ -1,9 +1,10 @@
 import { SharedAnnotationReference, SharedListReference, SharedAnnotation, SharedPageInfo, SharedPageInfoReference, SharedListEntryReference, SharedList, SharedListEntry } from "../content-sharing/types";
-import { ConversationReplyReference, ConversationReply } from "../content-conversations/types";
+import { ConversationReplyReference, ConversationReply, ConversationThreadReference } from "../content-conversations/types";
 import { UserReference, User } from "../web-interface/types/users";
 
 export interface ActivityStreamsService {
     followEntity<EntityType extends keyof ActivityStream>(params: FollowEntityParams<EntityType>): Promise<void>
+    unfollowEntity<EntityType extends keyof ActivityStream>(params: UnfollowEntityParams<EntityType>): Promise<void>
     addActivity<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>>(
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void>
@@ -16,6 +17,7 @@ export interface FollowEntityParams<EntityType extends keyof ActivityStream> {
     entity: ActivityStream[EntityType]['entity']
     feeds: { [K in FeedType]: boolean }
 }
+export type UnfollowEntityParams<EntityType extends keyof ActivityStream> = FollowEntityParams<EntityType>
 
 export type AddActivityParams<EntityType extends keyof ActivityStream, ActivityType extends keyof EntitityActivities<EntityType>> = {
     entityType: EntityType
@@ -37,7 +39,7 @@ export interface GetHomeFeedInfoResult {
 
 export type FeedType = 'home'
 
-export type ActivityStream = AnnotationActivityStream & PageActivityStream & ListActivityStream
+export type ActivityStream = ConversationThreadStream & PageActivityStream & ListActivityStream
 
 export interface ActivityStreamResultGroup<
     EntityType extends keyof ActivityStream = keyof ActivityStream,
@@ -86,29 +88,32 @@ export type ActivityStreamDefinition<EntityName extends string, Definition exten
     }
 }
 
-export type AnnotationActivityStream = ActivityStreamDefinition<'sharedAnnotation', {
-    entity: SharedAnnotationReference
+export type ConversationThreadStream = ActivityStreamDefinition<'conversationThread', {
+    entity: ConversationThreadReference
     activities: {
-        conversationReply: AnnotationReplyActivity
+        conversationReply: ConversationReplyActivity
     }
 }>
 
-export interface AnnotationReplyActivity {
+export interface ConversationReplyActivity {
     request: {
+        annotationReference: SharedAnnotationReference;
         replyReference: ConversationReplyReference;
-        isFirstReply: boolean
     };
     result: {
-        isFirstReply?: boolean // WARNING: This field is supplied by the user and not checked, so is only meant to be used where tampering has a low impact
         normalizedPageUrl: string;
         pageInfo: {
             reference: SharedPageInfoReference
         } & SharedPageInfo
+        sharedList?: {
+            reference: SharedListReference
+        } & Pick<SharedList, 'title'>
         replyCreator: {
             reference: UserReference;
         } & User
         reply: {
             reference: ConversationReplyReference;
+            previousReplyReference: ConversationReplyReference | null;
         } & ConversationReply
         annotationCreator: {
             reference: UserReference
@@ -122,7 +127,7 @@ export interface AnnotationReplyActivity {
 export type PageActivityStream = ActivityStreamDefinition<'sharedPageInfo', {
     entity: SharedPageInfoReference,
     activities: {
-        conversationReply: AnnotationReplyActivity
+        conversationReply: ConversationReplyActivity
     }
 }>
 

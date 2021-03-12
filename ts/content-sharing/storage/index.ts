@@ -378,7 +378,7 @@ export default class ContentSharingStorage extends StorageModule {
                     sharedList: this._idFromReference(options.listReference),
                     creator: options.userReference.id,
                     createdWhen: '$now', // may be overwritten by entry content
-                    updatedWhen: '$now',
+                    updatedWhen: entry.createdWhen ?? '$now',
                     ...entry,
                 }
             }))

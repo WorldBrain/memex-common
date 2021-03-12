@@ -1,4 +1,4 @@
-import React, { HTMLProps } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import Margin from '../components/Margin'
 import CreationInfo, { CreationInfoProps } from './creation-info'
@@ -31,26 +31,24 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     background-repeat: no-repeat;
 `
 
-export type ItemBoxBottomAction =
-    | {
-          key: string
-          image: string
-          isDisabled?: boolean
-          tooltipText?: string
-          onClick?: React.MouseEventHandler<HTMLDivElement>
-      }
-    | null
-    | false
-    | undefined
-
 export default function ItemBoxBottom(props: {
     creationInfo: CreationInfoProps
     replyCount?: number
-    firstDivProps?: HTMLProps<HTMLDivElement>
-    actions?: Array<ItemBoxBottomAction>
+    actions?: Array<
+        | {
+              key: string
+              image: string
+              isDisabled?: boolean
+              tooltipText?: string
+              onClick?: React.MouseEventHandler<HTMLDivElement>
+          }
+        | null
+        | false
+        | undefined
+    >
 }) {
     return (
-        <Bottom {...(props.firstDivProps ?? {})}>
+        <Bottom>
             <CreationInfo {...props.creationInfo} />
             <Actions>
                 {props.actions?.map?.(

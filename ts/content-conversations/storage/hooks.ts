@@ -1,7 +1,7 @@
 import { StorageHooks } from "../../storage/hooks/types";
-import { ConversationReplyReference } from "../types";
+import { ConversationReplyReference, ConversationThreadReference } from "../types";
 import { SharedAnnotationReference } from "../../content-sharing/types";
-import { ConversationReply } from "src/web-interface/types/storex-generated/content-conversations";
+import { ConversationReply } from "../../web-interface/types/storex-generated/content-conversations";
 
 export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
     processReplyCreation: {
@@ -12,15 +12,16 @@ export const CONTENT_CONVERSATIONS_HOOKS: StorageHooks = {
         function: async context => {
             try {
                 const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: context.objectId }
-                const reply: ConversationReply & { sharedAnnotation: number | string } = await context.getObject()
+                const reply: ConversationReply & { conversationThread: number | string, sharedAnnotation: number | string } = await context.getObject()
+                const threadReference: ConversationThreadReference = { type: 'conversation-thread-reference', id: reply.conversationThread }
                 const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: reply.sharedAnnotation }
                 await context.services.activityStreams.addActivity({
-                    entityType: 'sharedAnnotation',
-                    entity: annotationReference,
+                    entityType: 'conversationThread',
+                    entity: threadReference,
                     activityType: 'conversationReply',
                     activity: {
+                        annotationReference,
                         replyReference,
-                        isFirstReply: false,
                     },
                     follow: { home: true },
                 })

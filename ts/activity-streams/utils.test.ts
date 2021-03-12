@@ -1,21 +1,23 @@
 import expect from 'expect'
 import { concretizeActivity } from "./utils"
 import { SharedAnnotationReference, SharedPageInfoReference, SharedListReference, SharedListEntryReference, SharedAnnotation, SharedPageInfo, SharedListEntry, SharedList } from "../content-sharing/types"
-import { ConversationReplyReference, ConversationReply } from "../content-conversations/types"
+import { ConversationReplyReference, ConversationReply, ConversationThreadReference } from "../content-conversations/types"
 import { UserReference } from '../web-interface/types/users'
 import { prepareActivityForStreamIO } from './services/getstream'
 
 describe('Activity stream utils', () => {
     it('should correctly concretize annotation reply activities', async () => {
         const annotationReference: SharedAnnotationReference = { type: 'shared-annotation-reference', id: 'sar5' }
+        const threadReference: ConversationThreadReference = { type: 'conversation-thread-reference', id: 'crr5' }
         const replyReference: ConversationReplyReference = { type: 'conversation-reply-reference', id: 'crr5' }
         const activityBase = {
-            entityType: 'sharedAnnotation' as 'sharedAnnotation',
-            entity: annotationReference,
+            entityType: 'conversationThread' as 'conversationThread',
+            entity: threadReference,
             activityType: 'conversationReply' as 'conversationReply',
             activity: {
+                annotationReference,
                 replyReference,
-                isFirstReply: true,
+                previousReplyReference: null,
             }
         }
         const normalizedPageUrl = 'ccc.com'
@@ -61,6 +63,7 @@ describe('Activity stream utils', () => {
                         reply: reply,
                         sharedAnnotation: annotationReference,
                         userReference: replyUserReference,
+                        previousReply: null,
                     }),
                 },
                 users: {
@@ -72,7 +75,7 @@ describe('Activity stream utils', () => {
         expect(concretized).toEqual({
             activity: {
                 normalizedPageUrl,
-                isFirstReply: true,
+                previousReplyReference: null,
                 pageInfo: {
                     reference: pageInfoReference,
                     ...pageInfo,
@@ -100,7 +103,7 @@ describe('Activity stream utils', () => {
         })).toEqual({
             "activity": {
                 "data_annotation": "ref:sharedAnnotation:sar5",
-                "data_isFirstReply": true,
+                "data_previousReplyReference": null,
                 "data_annotationCreator": "ref:user:annot-creator",
                 "data_normalizedPageUrl": "ccc.com",
                 "data_pageInfo": "ref:sharedPageInfo:the-page",
