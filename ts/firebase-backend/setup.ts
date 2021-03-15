@@ -26,7 +26,7 @@ export async function createStorage(options: {
         backend: new FirestoreStorageBackend({
             firebase: options.firebase,
             firestore: options.firebase.firestore(),
-            firebaseModule,
+            firebaseModule: options.firebase,
         })
     })
     const contentSharing = new ContentSharingStorage({ storageManager, autoPkType: 'string' })
