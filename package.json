@@ -23,7 +23,6 @@
     "json-date-parser": "^1.0.1",
     "moment": "^2.29.1",
     "react-markdown": "^5.0.2",
-    "styled-components": "^5.2.0",
     "styled-components-spacing": "^3.1.1",
     "traverse": "^0.6.6",
     "tweetnacl-async": "^2.0.0",
@@ -47,6 +46,7 @@
   "peerDependencies": {
     "firebase": "^7.21.1",
     "firebase-admin": "^9.2.0",
+    "styled-components": ">= 5",
     "firebase-functions": "^3.11.0",
     "react": "^17.0.1"
   },
