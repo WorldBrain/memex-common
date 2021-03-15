@@ -1,7 +1,7 @@
 import { ContentSharingBackendInterface } from "./types";
 import { processListKey } from "../keys";
 import ContentSharingStorage from "../storage";
-import { UserMessageService } from "src/user-messages/service/types";
+import { UserMessageService } from "../../user-messages/service/types";
 
 export class ContentSharingBackend implements ContentSharingBackendInterface {
     constructor(private dependencies: {
