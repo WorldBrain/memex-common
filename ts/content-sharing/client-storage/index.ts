@@ -51,6 +51,11 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'sharedListMetadata',
                     args: { localId: '$localId:number' },
                 },
+                getListMetadataByRemoteId: {
+                    operation: 'findObject',
+                    collection: 'sharedListMetadata',
+                    args: { remoteId: '$remoteId:string' },
+                },
                 getMetadataForLists: {
                     operation: 'findObjects',
                     collection: 'sharedListMetadata',
@@ -125,6 +130,11 @@ export class ContentSharingClientStorage extends StorageModule {
         await this.operation('createListMetadata', {
             ...params,
         })
+    }
+
+    async getLocalListId(params: { remoteId: string }): Promise<string | null> {
+        const existing = await this.operation('getListMetadataByRemoteId', params)
+        return existing?.localId ?? null
     }
 
     async getRemoteListId(params: { localId: number }): Promise<string | null> {

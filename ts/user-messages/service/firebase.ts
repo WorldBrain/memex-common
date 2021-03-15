@@ -3,6 +3,7 @@ import { UserMessageService, UserMessageEvents } from "./types";
 import { EventEmitter } from "events";
 import TypedEventEmitter from "typed-emitter";
 import { UserMessage } from "../types";
+import createResolvable, { Resolvable } from '@josephg/resolvable';
 
 interface LastSeen {
     get(): Promise<number | null>
@@ -13,6 +14,7 @@ export class FirebaseUserMessageService implements UserMessageService {
     events = new EventEmitter() as TypedEventEmitter<UserMessageEvents>
     _lastSeen: number | null = null
     _destroyListener?: () => void
+    _handlingIncomingMessage?: Resolvable<void>
 
     constructor(private dependencies: {
         firebase: typeof firebaseModule | (() => typeof firebaseModule)
@@ -47,18 +49,28 @@ export class FirebaseUserMessageService implements UserMessageService {
 
         const listener = (snapshot: firebaseModule.database.DataSnapshot) => {
             const { message, timestamp } = snapshot.val()
-            this.events.emit('message', { timestamp, message })
-            this._lastSeen = timestamp
-            lastSeen.set(timestamp)
+            this._handleIncomingMessage(lastSeen, { message, timestamp })
         }
 
         const queueRef = await this._getQueueRef()
-        if (queueRef) {
-            queueRef.orderByChild('timestamp').startAt(this._lastSeen ?? Date.now()).on('child_added', listener)
-            this._destroyListener = () => {
-                queueRef.off('child_added', listener)
-            }
+        if (!queueRef) {
+            return
         }
+        const ordered = queueRef.orderByChild('timestamp')
+        const filtered = this._lastSeen ? ordered.startAt(this._lastSeen) : ordered
+        filtered.on('child_added', listener)
+        this._destroyListener = () => {
+            filtered.off('child_added', listener)
+        }
+    }
+
+    async _handleIncomingMessage(lastSeen: LastSeen, event: { timestamp: number, message: UserMessage }) {
+        await this._handleIncomingMessage
+        this._handlingIncomingMessage = createResolvable()
+        this.events.emit('message', event)
+        this._lastSeen = event.timestamp
+        await lastSeen.set(event.timestamp)
+        delete this._handleIncomingMessage
     }
 
     async _getQueueRef() {
