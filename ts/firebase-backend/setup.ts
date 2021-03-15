@@ -66,7 +66,8 @@ export function createServices(options: {
         contentSharing: new ContentSharingBackend({
             getCurrentUserId: options.getCurrentUserId,
             contentSharing: options.storage.modules.contentSharing,
-            userMessages
+            activityFollows: options.storage.modules.activityFollows,
+            userMessages,
         }),
         userMessages
     }

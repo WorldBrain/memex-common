@@ -2,6 +2,7 @@ import { SharedListReference } from "./types";
 import ContentSharingStorage from "./storage";
 import { UserReference } from "../web-interface/types/users";
 import { UserMessageService } from "../user-messages/service/types";
+import ActivityFollowsStorage from "../activity-follows/storage";
 
 export async function processListKey(params: {
     keyString: string
@@ -9,6 +10,7 @@ export async function processListKey(params: {
     userReference: UserReference
     contentSharing: ContentSharingStorage
     userMessages: UserMessageService
+    activityFollows: ActivityFollowsStorage
 }) {
     const { contentSharing } = params
     const key = await contentSharing.getListKey(params)
@@ -23,6 +25,11 @@ export async function processListKey(params: {
     }
     if (!existingRole) {
         await params.userMessages.pushMessage({ type: 'joined-collection', sharedListId: params.listReference.id })
+        await params.activityFollows.storeFollow({
+            collection: 'sharedList',
+            objectId: params.listReference.id as string,
+            userReference: params.userReference,
+        })
     }
     return true
 }
