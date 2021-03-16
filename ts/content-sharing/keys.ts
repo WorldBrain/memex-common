@@ -24,12 +24,12 @@ export async function processListKey(params: {
         await contentSharing.updateListRole({ ...params, roleID: key.roleID })
     }
     if (!existingRole) {
-        await params.userMessages.pushMessage({ type: 'joined-collection', sharedListId: params.listReference.id })
         await params.activityFollows.storeFollow({
             collection: 'sharedList',
             objectId: params.listReference.id as string,
             userReference: params.userReference,
         })
     }
+    await params.userMessages.pushMessage({ type: 'joined-collection', sharedListId: params.listReference.id })
     return true
 }

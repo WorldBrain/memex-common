@@ -9,7 +9,6 @@ export const ACTIVITIY_FOLLOWS_HOOKS: StorageHooks = {
         numberOfGroups: 0,
         userField: 'user',
         function: async context => {
-            console.log('created')
             const follow: ActivityFollow = await context.getObject()
             const entity = makeStorageReference(follow.collection, follow.objectId)
             await context.services.activityStreams.followEntity({
