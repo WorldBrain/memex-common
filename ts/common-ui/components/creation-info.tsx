@@ -26,7 +26,7 @@ const EditedText = styled.span`
     margin-right: 5px;
 `
 const CreationDate = styled.div`
-    font-family: 'Poppins';
+    font-family: 'Poppins', sans-serif;
     font-weight: normal;
     font-size: 12px;
     color: ${(props) => props.theme.colors.primary};

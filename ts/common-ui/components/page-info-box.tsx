@@ -56,7 +56,7 @@ const PageInfoBoxUrl = styled.div`
 `
 
 const CreatedWhenDate = styled.div`
-    font-family: 'Poppins';
+    font-family: 'Poppins', sans-serif;
     font-weight: normal;
     font-size: 12px;
     color: ${(props) => props.theme.colors.primary};
