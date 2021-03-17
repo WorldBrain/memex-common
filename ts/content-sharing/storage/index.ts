@@ -667,7 +667,7 @@ export default class ContentSharingStorage extends StorageModule {
     async getListRoles(params: {
         listReference: types.SharedListReference,
     }) {
-        const retrievedRoles = await this.operation('findListRoles', {
+        const retrievedRoles: Array<any> = await this.operation('findListRoles', {
             sharedList: params.listReference.id,
         })
         const relations = {
