@@ -172,7 +172,7 @@ export default class ContentConversationStorage extends StorageModule {
         return augmentObjectWithReferences<ConversationThread, ConversationThreadReference, {}>(thread, 'conversation-thread-reference', {})
     }
 
-    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference }> {
+    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference, threadReference: ConversationThreadReference }> {
         // NOTE: We don't create thread and reply in parellel so the storage hook has access to both
         // the reply and the thread when the reply is created
 
@@ -193,7 +193,8 @@ export default class ContentConversationStorage extends StorageModule {
             reference: {
                 type: 'conversation-reply-reference',
                 id: object.id,
-            }
+            },
+            threadReference: thread.reference,
         }
     }
 

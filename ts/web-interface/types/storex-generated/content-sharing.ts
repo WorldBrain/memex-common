@@ -20,6 +20,28 @@ export type SharedListEntry =
         originalUrl: string
     }
 
+export type SharedListRole =
+    {
+        createdWhen: number
+        updatedWhen: number
+        roleID: number
+    }
+
+export type SharedListRoleByUser =
+    {
+        createdWhen: number
+        updatedWhen: number
+        roleID: number
+    }
+
+export type SharedListKey =
+    {
+        createdWhen: number
+        updatedWhen: number
+        disabled?: boolean
+        roleID: number
+    }
+
 export type SharedPageInfo =
     {
         createdWhen: number
