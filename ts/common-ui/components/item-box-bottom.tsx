@@ -1,72 +1,59 @@
-import React, { HTMLProps } from 'react'
+import React from 'react'
 import styled from 'styled-components'
-import Margin from '../components/Margin'
+import { Margin } from 'styled-components-spacing'
 import CreationInfo, { CreationInfoProps } from './creation-info'
-import ButtonTooltip from './button-tooltip'
 
 const Bottom = styled.div`
     display: flex;
     flex-direction: row;
-    padding: 0 15px;
-    height: 40px;
     align-items: center;
+    justify-content: space-between;
+    padding: 0px 15px 0px 15px;
     border-top: 1px solid #e0e0e0;
+    height: 40px;
 `
 
 const Actions = styled.div`
     display: flex;
     flex-grow: 2;
-    align-items: center;
+    align-items: flex-end;
     justify-content: flex-end;
 `
-const Action = styled.div<{ image: string; isDisabled?: boolean }>`
+const Action = styled.div<{ image: string }>`
     display: block;
     width: 20px;
-    height: 20px !important;
-    opacity: ${(props) => (props.isDisabled ? 0.35 : 1)};
-    cursor: ${(props) => (props.isDisabled ? 'default' : 'pointer')};
-    background-image: url("${(props) => props.image}");
-    background-size: auto 14px;
+    height: 20px;
+    cursor: pointer;
+    background-image: url('${(props) => props.image}');
+    background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;
 `
 
-export type ItemBoxBottomAction =
-    | {
-          key: string
-          image: string
-          isDisabled?: boolean
-          tooltipText?: string
-          onClick?: React.MouseEventHandler<HTMLDivElement>
-      }
-    | null
-    | false
-    | undefined
-
-export default function ItemBoxBottom(props: {
+export interface ItemBoxBottomProps {
     creationInfo: CreationInfoProps
     replyCount?: number
-    firstDivProps?: HTMLProps<HTMLDivElement>
-    actions?: Array<ItemBoxBottomAction>
-}) {
+    actions?: Array<
+        | { key: string; image: string; onClick?(): void }
+        | null
+        | false
+        | undefined
+    >
+    renderCreationInfo?: (props: { children: React.ReactNode }) => React.ReactNode
+}
+
+export default function ItemBoxBottom(props: ItemBoxBottomProps) {
+    const renderCreationInfo = props.renderCreationInfo ?? ((props) => props.children)
+
     return (
-        <Bottom {...(props.firstDivProps ?? {})}>
-            <CreationInfo {...props.creationInfo} />
+        <Bottom>
+            {renderCreationInfo({ children: <CreationInfo {...props.creationInfo} /> })}
             <Actions>
                 {props.actions?.map?.(
                     (actionProps) =>
                         actionProps && (
-                            <Margin key={actionProps.key} left="5px">
-                                {actionProps.tooltipText ? (
-                                    <ButtonTooltip
-                                        position="bottom"
-                                        tooltipText={actionProps.tooltipText}
-                                    >
-                                        <Action {...actionProps} />
-                                    </ButtonTooltip>
-                                ) : (
-                                    <Action {...actionProps} />
-                                )}
+                            <Margin key={actionProps.key} left="small">
+                                <Action {...actionProps} />
                             </Margin>
                         ),
                 )}
