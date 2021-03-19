@@ -654,6 +654,11 @@ export default class ContentSharingStorage extends StorageModule {
         )
     }
 
+    async deleteListKey(params: { keyString: string }) {
+        const id = Number(params.keyString)
+        await this.operation('deleteListKey', { id })
+    }
+
     async getListRole(params: {
         listReference: types.SharedListReference,
         userReference: UserReference

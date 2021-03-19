@@ -273,4 +273,11 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             id: '$id:string',
         }
     },
+    deleteListKey: {
+        operation: 'deleteObject',
+        collection: 'sharedListKey',
+        args: {
+            id: '$id:string'
+        }
+    }
 }
