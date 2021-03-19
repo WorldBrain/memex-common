@@ -625,9 +625,16 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getListKeys(params: { listReference: types.SharedListReference }) {
-        return this.operation('findKeysByList', {
-            sharedList: params.listReference.id,
-        })
+        const retrievedKeys: any[] = await this.operation('findKeysByList', { sharedList: params.listReference.id })
+        const relations = {
+            user: 'user-reference' as UserReference['type'],
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+        }
+        return retrievedKeys.map(key =>
+            augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
+                key, 'shared-list-key-reference', relations
+            )
+        )
     }
 
     async getListKey(params: {
