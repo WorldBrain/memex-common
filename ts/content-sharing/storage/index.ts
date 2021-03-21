@@ -52,10 +52,16 @@ export default class ContentSharingStorage extends StorageModule {
         return { type: 'shared-annotation-reference', id }
     }
 
-    private ensureDBObjectHasStringId = <T extends { id: number | string }>(rawObject: T): Omit<T, 'id'> & { id: string } => ({
-        ...rawObject,
-        id: rawObject.id.toString(),
-    })
+    private ensureDBObjectHasStringId<T extends { id: number | string }>(rawObject: T): Omit<T, 'id'> & { id: string } {
+        if (!rawObject) {
+            return null
+        }
+
+        return {
+            ...rawObject,
+            id: rawObject.id.toString(),
+        }
+    }
 
     async createSharedList(options: {
         listData: Omit<types.SharedList, 'createdWhen' | 'updatedWhen'>
