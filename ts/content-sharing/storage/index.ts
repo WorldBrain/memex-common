@@ -52,6 +52,11 @@ export default class ContentSharingStorage extends StorageModule {
         return { type: 'shared-annotation-reference', id }
     }
 
+    private ensureDBObjectHasStringId = <T extends { id: number | string }>(rawObject: T): Omit<T, 'id'> & { id: string } => ({
+        ...rawObject,
+        id: rawObject.id.toString(),
+    })
+
     async createSharedList(options: {
         listData: Omit<types.SharedList, 'createdWhen' | 'updatedWhen'>
         localListId: number,
@@ -621,7 +626,7 @@ export default class ContentSharingStorage extends StorageModule {
             sharedList: params.listReference.id,
             disabled: false,
         })).object
-        return { keyString: key.id }
+        return { keyString: this.ensureDBObjectHasStringId(key).id }
     }
 
     async getListKeys(params: { listReference: types.SharedListReference }) {
@@ -632,7 +637,7 @@ export default class ContentSharingStorage extends StorageModule {
         }
         return retrievedKeys.map(key =>
             augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
-                key, 'shared-list-key-reference', relations
+                this.ensureDBObjectHasStringId(key) as any, 'shared-list-key-reference', relations
             )
         )
     }
@@ -650,12 +655,12 @@ export default class ContentSharingStorage extends StorageModule {
             sharedList: 'shared-list-reference' as types.SharedListReference['type'],
         }
         return augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
-            retrievedKey, 'shared-list-key-reference', relations
+            this.ensureDBObjectHasStringId(retrievedKey) as any, 'shared-list-key-reference', relations
         )
     }
 
     async deleteListKey(params: { keyString: string }) {
-        const id = Number(params.keyString)
+        const id = this.options.autoPkType === 'number' ? parseInt(params.keyString) : params.keyString
         await this.operation('deleteListKey', { id })
     }
 
