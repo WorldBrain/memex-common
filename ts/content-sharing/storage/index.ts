@@ -1,3 +1,4 @@
+import flatten from 'lodash/flatten'
 import chunk from 'lodash/chunk'
 import orderBy from 'lodash/orderBy'
 import { OperationBatch } from '@worldbrain/storex'
@@ -530,23 +531,34 @@ export default class ContentSharingStorage extends StorageModule {
         sharedListReferences: types.SharedListReference[],
         sharedAnnotations: Array<{ reference: types.SharedAnnotationReference, normalizedPageUrl: string, createdWhen: number }>
     }) {
+        const entryHash = ((entry: { sharedList: number | string, normalizedPageUrl: string }) => `${entry.sharedList}-${entry.normalizedPageUrl}`)
+        const existingEntryList = flatten(await Promise.all(chunk(params.sharedAnnotations, 10).map(annotations => (
+            this.operation('findAnnotationEntriesForAnnotations', { sharedAnnotations: annotations.map(a => a.reference.id) })
+        ))))
+        const existingEntrySet = new Set(existingEntryList.map(entry => entryHash(entry)))
+
         const batch: OperationBatch = []
         const objectCounts = { entries: 0 }
         for (const { reference: annotationReference, normalizedPageUrl, createdWhen } of params.sharedAnnotations) {
             for (const listReference of params.sharedListReferences) {
+                const toCreate = {
+                    sharedList: this._idFromReference(listReference),
+                    sharedAnnotation: this._idFromReference(annotationReference),
+                    createdWhen,
+                    uploadedWhen: '$now',
+                    updatedWhen: '$now',
+                    creator: params.creator.id,
+                    normalizedPageUrl,
+                }
+                if (existingEntrySet.has(entryHash(toCreate))) {
+                    continue
+                }
+
                 batch.push({
                     placeholder: `entry-${objectCounts.entries++}`,
                     operation: 'createObject',
                     collection: 'sharedAnnotationListEntry',
-                    args: {
-                        sharedList: this._idFromReference(listReference),
-                        sharedAnnotation: this._idFromReference(annotationReference),
-                        createdWhen,
-                        uploadedWhen: '$now',
-                        updatedWhen: '$now',
-                        creator: params.creator.id,
-                        normalizedPageUrl,
-                    }
+                    args: toCreate
                 })
             }
         }
