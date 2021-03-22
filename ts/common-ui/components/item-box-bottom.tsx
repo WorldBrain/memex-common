@@ -48,13 +48,18 @@ export interface ItemBoxBottomProps {
     replyCount?: number
     firstDivProps?: HTMLProps<HTMLDivElement>
     actions?: Array<ItemBoxBottomAction>
-    renderCreationInfo?: (props: { children: React.ReactNode }) => React.ReactNode
+    renderCreationInfo?: (props: {
+        children: React.ReactNode
+    }) => React.ReactNode
 }
 
 export default function ItemBoxBottom(props: ItemBoxBottomProps) {
+    const creationInfo = <CreationInfo {...props.creationInfo} />
     return (
         <Bottom {...(props.firstDivProps ?? {})}>
-            {props.renderCreationInfo({ children: <CreationInfo {...props.creationInfo} /> })}
+            {props.renderCreationInfo
+                ? props.renderCreationInfo({ children: creationInfo })
+                : creationInfo}
             <Actions>
                 {props.actions?.map?.(
                     (actionProps) =>
