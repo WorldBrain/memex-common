@@ -42,6 +42,14 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             normalizedUrl: '$normalizedUrl:string'
         }
     },
+    findListEntriesByUrls: {
+        operation: 'findObjects',
+        collection: 'sharedListEntry',
+        args: {
+            sharedList: '$sharedList:pk',
+            normalizedUrl: { $in: '$normalizedUrls:string' }
+        }
+    },
     findListEntryById: {
         operation: 'findObject',
         collection: 'sharedListEntry',

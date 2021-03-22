@@ -90,8 +90,14 @@ export default class ContentSharingStorage extends StorageModule {
         listEntries: Array<Omit<types.SharedListEntry, 'createdWhen' | 'updatedWhen'> & { createdWhen?: number | '$now' }>,
         userReference: UserReference
     }) {
+        const existingEntryList = flatten(await Promise.all(chunk(options.listEntries, 10).map(entryChunk => this.operation('findListEntriesByUrls', {
+            sharedList: options.listReference.id,
+            normalizedUrls: entryChunk.map(entry => entry.normalizedUrl)
+        }))))
+        const existingEntrySet = new Set<string>(existingEntryList.map(entry => entry.normalizedUrl))
+
         await this.operation('createListEntries', {
-            batch: options.listEntries.map(entry => ({
+            batch: options.listEntries.filter(entry => !existingEntrySet.has(entry.normalizedUrl)).map(entry => ({
                 placeholder: entry.normalizedUrl,
                 operation: 'createObject',
                 collection: 'sharedListEntry',
