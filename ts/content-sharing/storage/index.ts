@@ -655,10 +655,7 @@ export default class ContentSharingStorage extends StorageModule {
 
     async getListKeys(params: { listReference: types.SharedListReference }) {
         const retrievedKeys: any[] = await this.operation('findKeysByList', { sharedList: params.listReference.id })
-        const relations = {
-            user: 'user-reference' as UserReference['type'],
-            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
-        }
+        const relations = { sharedList: 'shared-list-reference' as types.SharedListReference['type'] }
         return retrievedKeys.map(key =>
             augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
                 this.ensureDBObjectHasStringId(key) as any, 'shared-list-key-reference', relations
@@ -674,10 +671,7 @@ export default class ContentSharingStorage extends StorageModule {
             sharedList: params.listReference.id,
             id: params.keyString,
         })
-        const relations = {
-            user: 'user-reference' as UserReference['type'],
-            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
-        }
+        const relations = { sharedList: 'shared-list-reference' as types.SharedListReference['type'] }
         return augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
             this.ensureDBObjectHasStringId(retrievedKey) as any, 'shared-list-key-reference', relations
         )
