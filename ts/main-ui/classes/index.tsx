@@ -1,4 +1,3 @@
-
 import mapValues from 'lodash/mapValues'
 import * as reactUILogic from 'ui-logic-react'
 import { Services } from '../../services/types'
@@ -6,14 +5,10 @@ import * as logic from './logic'
 import { EventHandlers } from './events'
 
 type UIServices = 'logicRegistry' | 'device'
-export type UIElementServices<Wanted extends keyof Services = never> = Pick<
-    Services,
-    UIServices | Wanted
->
 
 export abstract class UIElement<
-    Props extends { services: UIElementServices } = {
-        services: UIElementServices
+    Props extends { services: Pick<Services, UIServices> } = {
+        services: Pick<Services, UIServices>
     },
     State = {},
     Event extends logic.UIEvent<{}> = logic.UIEvent<{}>
