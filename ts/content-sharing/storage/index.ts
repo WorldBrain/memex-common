@@ -127,25 +127,30 @@ export default class ContentSharingStorage extends StorageModule {
         await this.operation('deleteListEntriesByIds', { ids })
     }
 
-    async retrieveList(listReference: types.SharedListReference): Promise<{
-        sharedList: types.SharedList,
-        entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }>,
-        creator: UserReference
-    } | null> {
+    async retrieveList(listReference: types.SharedListReference) {
         const id = this._idFromReference(listReference)
-        const sharedList: types.SharedList & { creator: string } = await this.operation('findListByID', { id })
-        if (!sharedList) {
+        const rawSharedList = await this.operation('findListByID', { id })
+        if (!rawSharedList) {
             return null
         }
-
-        const rawEntries = await this.operation('findListEntriesByList', { sharedListID: id })
-        const entries: Array<types.SharedListEntry & { sharedList: types.SharedListReference }> = rawEntries.map(
-            (entry: types.SharedListEntry & { sharedList: string | number }) => ({
-                ...entry,
-                sharedList: { type: 'shared-list-reference', id: entry.sharedList }
-            })
+        const listRelations = {
+            creator: 'user-reference' as UserReference['type'],
+        }
+        const sharedList = augmentObjectWithReferences<types.SharedList, types.SharedListReference, typeof listRelations>(
+            rawSharedList, 'shared-list-reference', listRelations
         )
-        return { sharedList, entries, creator: { type: 'user-reference', id: sharedList.creator } }
+
+        const rawEntries: any[] = await this.operation('findListEntriesByList', { sharedListID: id })
+        const entryRelations = {
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+            creator: 'user-reference' as UserReference['type']
+        }
+        const entries = rawEntries.map(
+            (entry) => augmentObjectWithReferences<types.SharedListEntry, types.SharedListEntryReference, typeof entryRelations>(
+                entry, 'shared-list-entry-reference', entryRelations
+            )
+        )
+        return { sharedList, entries, creator: sharedList.creator }
     }
 
     async updateListTitle(listReference: types.SharedListReference, newTitle: string) {
