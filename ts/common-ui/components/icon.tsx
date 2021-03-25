@@ -15,15 +15,18 @@ const StyledIcon = styled.div<{
     cursor: pointer;
 `
 
-export interface Props {
-    fileName: string
+export type IconProps = {
     height: string
     width?: string
     onClick?: React.MouseEventHandler
-}
+} & ({ fileName: string } | { filePath: string })
 
-export default function Icon(props: Props) {
-    const icon = require(`../../assets/img/${props.fileName}`)
+export default function Icon(props: IconProps) {
+    const icon =
+        'filePath' in props
+            ? props.filePath
+            : require(`../../assets/img/${props.fileName}`)
+
     const width = props.width ?? props.height
     return (
         <StyledIcon
