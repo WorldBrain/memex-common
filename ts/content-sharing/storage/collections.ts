@@ -32,7 +32,7 @@ export const CONTENT_SHARING_STORAGE_COLLECTIONS = (): StorageModuleCollections 
         fields: {
             createdWhen: { type: 'timestamp' },
             updatedWhen: { type: 'timestamp' },
-            entryTitle: { type: 'string' },
+            entryTitle: { type: 'string', optional: true },
             normalizedUrl: { type: 'string' },
             originalUrl: { type: 'string' },
         },
@@ -99,7 +99,7 @@ export const CONTENT_SHARING_STORAGE_COLLECTIONS = (): StorageModuleCollections 
             updatedWhen: { type: 'timestamp' },
             normalizedUrl: { type: 'string' },
             originalUrl: { type: 'string' },
-            fullTitle: { type: 'string' },
+            fullTitle: { type: 'string', optional: true },
         },
         relationships: [
             { alias: 'creator', childOf: 'user' }
