@@ -10,7 +10,7 @@ export interface InviteLink {
 
 export interface ListShareModalDependencies {
     services: UIElementServices<'contentSharing' | 'overlay' | 'clipboard'>
-    listID: string | number
+    listID: string
     onCloseRequested: () => void
 }
 

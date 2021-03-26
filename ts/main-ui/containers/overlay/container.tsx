@@ -15,6 +15,7 @@ const StyledOverlayContainer = styled.div`
     background-color: ${(props) => props.theme.colors.overlay.background};
     backdrop-filter: blur(3px);
     z-index: ${(props) => props.theme.zIndices.overlay};
+    cursor: pointer;
 `
 
 const OverlayContent = styled.div`
@@ -26,6 +27,7 @@ const OverlayContent = styled.div`
     overflow-y: scroll;
     max-height: 90%;
     height: max-content;
+    cursor: default;
 `
 
 interface OverlayContainerProps {
