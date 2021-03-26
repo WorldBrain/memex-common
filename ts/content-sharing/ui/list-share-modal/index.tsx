@@ -17,7 +17,14 @@ import {
 } from './types'
 import { sharedListRoleIDToString } from './util'
 
-export interface Props extends ListShareModalDependencies {}
+export interface Props extends ListShareModalDependencies {
+    /**
+     * This affords switching all icons to use the static image directory used in
+     * the Memex extension.
+     * TODO: Find a better way to do this
+     */
+    useExtImgDir?: boolean
+}
 
 export default class ListShareModal extends UIElement<
     Props,
@@ -27,6 +34,11 @@ export default class ListShareModal extends UIElement<
     constructor(props: Props) {
         super(props, { logic: new Logic(props) })
     }
+
+    private getIconPropsForImg = (fileName: string) =>
+        this.props.useExtImgDir
+            ? { filePath: '/img/' + fileName }
+            : { fileName }
 
     private renderDeleteModal = () =>
         this.state.linkDeleteIndex != null && (
@@ -83,7 +95,7 @@ export default class ListShareModal extends UIElement<
             <LinkContainer>
                 <CopyLinkBox>
                     <Icon
-                        fileName="copy.svg"
+                        {...this.getIconPropsForImg('copy.svg')}
                         height="16px"
                         onClick={() =>
                             this.processEvent('copyLink', { linkIndex })
@@ -98,7 +110,7 @@ export default class ListShareModal extends UIElement<
                     </PermissionText>
                 </CopyLinkBox>
                 <Icon
-                    fileName="remove.svg"
+                    {...this.getIconPropsForImg('remove.svg')}
                     height="16px"
                     onClick={() =>
                         this.processEvent('requestLinkDelete', { linkIndex })
@@ -223,7 +235,9 @@ export default class ListShareModal extends UIElement<
                                                 <AddSuccessBox>
                                                     <Margin right="small">
                                                         <Icon
-                                                            fileName="checkRound.svg"
+                                                            {...this.getIconPropsForImg(
+                                                                'checkRound.svg',
+                                                            )}
                                                             height="20px"
                                                         />
                                                     </Margin>
