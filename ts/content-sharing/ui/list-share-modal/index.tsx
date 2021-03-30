@@ -189,6 +189,35 @@ export default class ListShareModal extends UIElement<
         </Margin>
     )
 
+    private renderAddLinkMsg = () => {
+        if (!this.state.showSuccessMsg && this.state.addLinkState !== 'error') {
+            return
+        }
+
+        const iconField = this.state.showSuccessMsg
+            ? 'checkRound.svg'
+            : 'alertRound.svg'
+        const msgText = this.state.showSuccessMsg
+            ? 'Link created and copied to clipboard'
+            : 'Error creating the link. Try again'
+
+        return (
+            <Margin left="medium">
+                <MsgContainer>
+                    <AddMsgBox>
+                        <Margin right="small">
+                            <Icon
+                                {...this.getIconPropsForImg(iconField)}
+                                height="20px"
+                            />
+                        </Margin>
+                        <MsgText>{msgText}</MsgText>
+                    </AddMsgBox>
+                </MsgContainer>
+            </Margin>
+        )
+    }
+
     render() {
         return (
             <>
@@ -229,26 +258,7 @@ export default class ListShareModal extends UIElement<
                                     >
                                         Add Link
                                     </Button>
-                                    {this.state.showSuccessMsg && (
-                                        <Margin left="medium">
-                                            <SuccessContainer>
-                                                <AddSuccessBox>
-                                                    <Margin right="small">
-                                                        <Icon
-                                                            {...this.getIconPropsForImg(
-                                                                'checkRound.svg',
-                                                            )}
-                                                            height="20px"
-                                                        />
-                                                    </Margin>
-                                                    <SuccessText>
-                                                        Link created and copied
-                                                        to clipboard
-                                                    </SuccessText>
-                                                </AddSuccessBox>
-                                            </SuccessContainer>
-                                        </Margin>
-                                    )}
+                                    {this.renderAddLinkMsg()}
                                 </ButtonBox>
                             </AddLinkBox>
                         </Margin>
@@ -314,7 +324,7 @@ const PermissionText = styled.span`
     flex-direction: row;
 `
 
-const SuccessText = styled.span`
+const MsgText = styled.span`
     font-size: 12px;
     color: ${(props) => props.theme.colors.primary};
     font-weight: bold;
@@ -364,7 +374,7 @@ const PrimaryButton = styled.div`
 
 const InviteLinksContainer = styled.div``
 
-const AddSuccessBox = styled.div`
+const AddMsgBox = styled.div`
     display: flex;
     width: 100%;
     justify-content: center;
@@ -391,7 +401,7 @@ const CopyLinkBox = styled.div`
     align-items: center;
 `
 
-const SuccessContainer = styled.div`
+const MsgContainer = styled.div`
     > div {
         width: 100%;
     }
