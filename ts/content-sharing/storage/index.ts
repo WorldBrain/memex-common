@@ -173,9 +173,9 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getListsByReferences(references: types.SharedListReference[]) {
-        const retrievedLists = await this.operation('findListsByIDs', {
-            ids: references.map(ref => ref.id),
-        })
+        const retrievedLists = flatten(await Promise.all(chunk(references, 10).map(referenceChunk => this.operation('findListsByIDs', {
+            ids: referenceChunk.map(ref => ref.id),
+        }))))
         const relations = {
             creator: 'user-reference' as UserReference['type'],
         }
