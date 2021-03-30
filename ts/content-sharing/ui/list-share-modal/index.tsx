@@ -90,7 +90,7 @@ export default class ListShareModal extends UIElement<
                         }
                     />
                     <Margin horizontal="small">
-                        <LinkBox>{link}</LinkBox>
+                        <LinkBox><Link>{link}</Link></LinkBox>
                     </Margin>
                     <PermissionText>
                         <Margin right="smallest">invite as</Margin>
@@ -376,8 +376,16 @@ const LinkBox = styled.div`
     display: flex;
     background-color: ${(props) => props.theme.colors.grey};
     font-size: 12px;
-    padding: 5px 10px;
     border-radius: 3px;
+    width: 350px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-x: scroll;
+    text-align: left;
+`
+
+const Link = styled.span`
+    padding: 5px 10px;
 `
 
 const CopyLinkBox = styled.div`
