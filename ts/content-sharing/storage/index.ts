@@ -677,9 +677,14 @@ export default class ContentSharingStorage extends StorageModule {
         )
     }
 
-    async deleteListKey(params: { keyString: string }) {
-        const id = this.options.autoPkType === 'number' ? parseInt(params.keyString) : params.keyString
-        await this.operation('deleteListKey', { id })
+    async deleteListKey(params: { 
+        listReference: types.SharedListReference,
+        keyString: string,
+    }) {
+        await this.operation('deleteListKey', { 
+            sharedList: params.listReference.id,
+            id: this.options.autoPkType === 'number' ? parseInt(params.keyString) : params.keyString,
+        })
     }
 
     async getListRole(params: {

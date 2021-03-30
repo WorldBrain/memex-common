@@ -15,7 +15,10 @@ export type ProcessSharedListKeyResult =
 
 export interface ContentSharingServiceInterface {
     processCurrentKey: () => Promise<{ result: ProcessSharedListKeyResult }>
-    deleteKeyLink: (params: { link: string }) => Promise<void>
+    deleteKeyLink: (params: {
+        link: string
+        listReference: SharedListReference
+    }) => Promise<void>
     generateKeyLink: (params: {
         key: Pick<SharedListKey, 'roleID' | 'disabled'>
         listReference: SharedListReference

@@ -285,6 +285,7 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
         operation: 'deleteObject',
         collection: 'sharedListKey',
         args: {
+            sharedList: '$sharedList:pk',
             id: '$id:string'
         }
     }

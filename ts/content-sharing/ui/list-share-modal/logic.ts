@@ -129,6 +129,10 @@ export default class ListShareModalLogic extends UILogic<
             async () => {
                 await contentSharing.deleteKeyLink({
                     link: inviteLinks[linkDeleteIndex].link,
+                    listReference: {
+                        id: this.listId,
+                        type: 'shared-list-reference',
+                    },
                 })
 
                 this.emitMutation({
