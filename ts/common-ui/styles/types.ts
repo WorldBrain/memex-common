@@ -1,21 +1,40 @@
 import { SpacingValue } from 'styled-components-spacing'
 
 export type ColorThemeKeys =
-  | 'background'
-  | 'warning'
-  | 'primary'
-  | 'secondary'
-  | 'subText'
-  | 'purple'
-  | 'lightgrey'
-  | 'grey'
-  | 'darkgrey'
-  | 'black'
-  | 'lightblack'
+    | 'background'
+    | 'warning'
+    | 'primary'
+    | 'secondary'
+    | 'subText'
+    | 'purple'
+    | 'lightgrey'
+    | 'grey'
+    | 'darkgrey'
+    | 'black'
+    | 'lightblack'
+
+export type IconKeys =
+    | 'copy'
+    | 'removeX'
+    | 'hamburger'
+    | 'addPeople'
+    | 'checkRound'
+    | 'alertRound'
+    | 'webLogo'
+    | 'mediumLogo'
+    | 'twitterLogo'
+    | 'substackLogo'
+    | 'webMonetizationLogo'
+    | 'webMonetizationLogoConfirmed'
 
 export type FontThemeKeys = 'primary' | 'secondary'
 
-export declare type FontSizeThemeKeys = 'header' | 'listTitle' | 'url' | 'text' | 'smallText'
+export declare type FontSizeThemeKeys =
+    | 'header'
+    | 'listTitle'
+    | 'url'
+    | 'text'
+    | 'smallText'
 
 export declare type LineHeightThemeKeys = FontSizeThemeKeys
 
@@ -35,4 +54,5 @@ export interface MemexTheme {
     hoverBackgrounds: { [Key in 'primary']: string }
     borderRadii: { [Key in 'default']: string }
     zIndices: { [Key in 'overlay']: number }
+    icons: { [Key in IconKeys]: string }
 }
