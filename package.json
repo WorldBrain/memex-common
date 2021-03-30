@@ -5,9 +5,8 @@
   "main": "lib/index.js",
   "typings": "lib/index",
   "scripts": {
-    "prepare": "tsc && npm run prepare:assets",
+    "prepare": "tsc",
     "prepare:watch": "npm run prepare -- -w",
-    "prepare:assets": "cp -r ts/assets/* lib/assets/",
     "test": "mocha --require ts-node/register \"ts/**/*.test.ts\"",
     "test:watch": "mocha -r source-map-support/register -r ts-node/register \"ts/**/*.test.ts\" --watch --watch-extensions ts"
   },
