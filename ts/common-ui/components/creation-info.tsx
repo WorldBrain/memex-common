@@ -15,7 +15,12 @@ const AvatarHolder = styled.div`
     justify-content: center;
 `
 
-const Details = styled.div``
+const Details = styled.div`
+    diplay: flex;
+    align-items: center;
+    justify-content: flex-start;
+`
+
 const Creator = styled.div`
     font-weight: 600;
     color: ${(props) => props.theme.colors.primary};
@@ -41,7 +46,7 @@ export interface CreationInfoProps {
 export default function CreationInfo(props: CreationInfoProps) {
     return (
         <StyledCreationInfo>
-            {props.creator != null && (
+            {/*{props.creator != null && (
                 <AvatarHolder>
                     <Margin right="small">
                         <UserAvatar
@@ -50,12 +55,15 @@ export default function CreationInfo(props: CreationInfoProps) {
                         />
                     </Margin>
                 </AvatarHolder>
-            )}
+            )}*/
+            }
             <Details>
                 {props.creator?.displayName && (
-                    <Creator>
-                        {props.creator?.displayName ?? <span>&nbsp;</span>}
-                    </Creator>
+                    <Margin right="smallest">
+                        <Creator>
+                            {props.creator?.displayName ?? <span>&nbsp;</span>}
+                        </Creator>
+                    </Margin>
                 )}
                 <CreationDate>
                     {props.lastEdited && <EditedText>Last Edit: </EditedText>}
