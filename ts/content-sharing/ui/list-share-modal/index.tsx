@@ -17,14 +17,7 @@ import {
 } from './types'
 import { sharedListRoleIDToString } from './util'
 
-export type Props = ListShareModalDependencies & {
-    /**
-     * This affords switching all icons to use the static image directory used in
-     * the Memex extension.
-     * TODO: Find a better way to do this
-     */
-    useExtImgDir?: boolean
-}
+export type Props = ListShareModalDependencies & {}
 
 export default class ListShareModal extends UIElement<
     Props,
@@ -34,11 +27,6 @@ export default class ListShareModal extends UIElement<
     constructor(props: Props) {
         super(props, { logic: new Logic(props) })
     }
-
-    private getIconPropsForImg = (fileName: string) =>
-        this.props.useExtImgDir
-            ? { filePath: '/img/' + fileName }
-            : { fileName }
 
     private renderDeleteModal = () =>
         this.state.linkDeleteIndex != null && (
@@ -95,7 +83,7 @@ export default class ListShareModal extends UIElement<
             <LinkContainer>
                 <CopyLinkBox>
                     <Icon
-                        {...this.getIconPropsForImg('copy.svg')}
+                        icon="copy"
                         height="16px"
                         onClick={() =>
                             this.processEvent('copyLink', { linkIndex })
@@ -110,7 +98,7 @@ export default class ListShareModal extends UIElement<
                     </PermissionText>
                 </CopyLinkBox>
                 <Icon
-                    {...this.getIconPropsForImg('remove.svg')}
+                    icon="removeX"
                     height="16px"
                     onClick={() =>
                         this.processEvent('requestLinkDelete', { linkIndex })
@@ -195,8 +183,8 @@ export default class ListShareModal extends UIElement<
         }
 
         const iconField = this.state.showSuccessMsg
-            ? 'checkRound.svg'
-            : 'alertRound.svg'
+            ? 'checkRound'
+            : 'alertRound'
         const msgText = this.state.showSuccessMsg
             ? 'Link created and copied to clipboard'
             : 'Error creating the link. Try again'
@@ -206,10 +194,7 @@ export default class ListShareModal extends UIElement<
                 <MsgContainer>
                     <AddMsgBox>
                         <Margin right="small">
-                            <Icon
-                                {...this.getIconPropsForImg(iconField)}
-                                height="20px"
-                            />
+                            <Icon icon={iconField} height="20px" />
                         </Margin>
                         <MsgText>{msgText}</MsgText>
                     </AddMsgBox>
