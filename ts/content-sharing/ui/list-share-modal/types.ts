@@ -8,11 +8,19 @@ export interface InviteLink {
     link: string
 }
 
-export interface ListShareModalDependencies {
+export type ListShareModalDependencies = {
     services: UIElementServices<'contentSharing' | 'overlay' | 'clipboard'>
-    listID: string
     onCloseRequested: () => void
-}
+} & (
+    | {
+          /** If not defined, will attempt to share the list on first link generation. */
+          listId: string
+      }
+    | {
+          /** Define this if remote list ID is not immediately available i.e., not-yet-shared. */
+          shareList: () => Promise<{ listId: string }>
+      }
+)
 
 export interface ListShareModalState {
     addLinkRoleID: SharedListRoleID

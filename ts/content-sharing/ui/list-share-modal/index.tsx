@@ -17,7 +17,7 @@ import {
 } from './types'
 import { sharedListRoleIDToString } from './util'
 
-export interface Props extends ListShareModalDependencies {
+export type Props = ListShareModalDependencies & {
     /**
      * This affords switching all icons to use the static image directory used in
      * the Memex extension.

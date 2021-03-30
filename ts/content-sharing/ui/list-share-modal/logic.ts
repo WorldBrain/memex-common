@@ -22,6 +22,8 @@ export default class ListShareModalLogic extends UILogic<
     ListShareModalState,
     ListShareModalEvent
 > {
+    private listId: string
+
     constructor(private dependencies: ListShareModalDependencies) {
         super()
     }
@@ -42,14 +44,23 @@ export default class ListShareModalLogic extends UILogic<
         const { contentSharing } = this.dependencies.services
 
         await loadInitial<ListShareModalState>(this, async () => {
-            const { links } = await contentSharing.getExistingKeyLinksForList({
-                listReference: {
-                    type: 'shared-list-reference',
-                    id: this.dependencies.listID,
-                },
-            })
+            if (
+                'listId' in this.dependencies &&
+                this.dependencies.listId != null
+            ) {
+                this.listId = this.dependencies.listId
 
-            this.emitMutation({ inviteLinks: { $set: links } })
+                const {
+                    links,
+                } = await contentSharing.getExistingKeyLinksForList({
+                    listReference: {
+                        type: 'shared-list-reference',
+                        id: this.listId,
+                    },
+                })
+
+                this.emitMutation({ inviteLinks: { $set: links } })
+            }
         })
     }
 
@@ -65,10 +76,15 @@ export default class ListShareModalLogic extends UILogic<
             this,
             'addLinkState',
             async () => {
+                if (!this.listId && 'shareList' in this.dependencies) {
+                    const { listId } = await this.dependencies.shareList()
+                    this.listId = listId
+                }
+
                 const { link } = await contentSharing.generateKeyLink({
                     key: { roleID },
                     listReference: {
-                        id: this.dependencies.listID,
+                        id: this.listId,
                         type: 'shared-list-reference',
                     },
                 })
