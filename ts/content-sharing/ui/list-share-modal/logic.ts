@@ -33,7 +33,7 @@ export default class ListShareModalLogic extends UILogic<
 
     getInitialState(): ListShareModalState {
         return {
-            addLinkRoleID: SharedListRoleID.Reader,
+            addLinkRoleID: SharedListRoleID.ReadWrite,
             deleteLinkState: 'pristine',
             addLinkState: 'pristine',
             loadState: 'pristine',
@@ -79,6 +79,11 @@ export default class ListShareModalLogic extends UILogic<
             this,
             'addLinkState',
             async () => {
+                if (roleID === SharedListRoleID.Reader
+                    && previousState.inviteLinks.map(link => link.roleID).includes(SharedListRoleID.Reader)) {
+                    throw new Error('Cannot create multiple reader links')
+                }
+
                 if (!this.listId && 'shareList' in this.dependencies) {
                     const { listId } = await this.dependencies.shareList()
                     this.listId = listId
@@ -107,7 +112,11 @@ export default class ListShareModalLogic extends UILogic<
         )
     }
 
-    requestLinkDelete: EventHandler<'requestLinkDelete'> = ({ event }) => {
+    requestLinkDelete: EventHandler<'requestLinkDelete'> = ({ event, previousState }) => {
+        if (previousState.inviteLinks[event.linkIndex].roleID === SharedListRoleID.Reader) {
+            return
+        }
+
         this.emitMutation({
             linkDeleteIndex: { $set: event.linkIndex },
         })

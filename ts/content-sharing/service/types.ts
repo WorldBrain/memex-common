@@ -3,7 +3,7 @@ import { SharedListKey } from '../../web-interface/types/storex-generated/conten
 
 interface SharedListKeyLink {
     link: string
-    keyString: string
+    keyString?: string
     roleID: SharedListRoleID
 }
 

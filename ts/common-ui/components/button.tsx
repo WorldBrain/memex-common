@@ -86,12 +86,17 @@ export default function Button(
                     onClick={handleClick}
                     href={props.externalHref}
                     target="_blank"
+                    isDisabled={props.isDisabled}
                 >
                     {props.children}
                 </ButtonWithLink>
             )}
             {!('externalHref' in props) && (
-                <ButtonWithOnClick type={props.type} onClick={handleClick}>
+                <ButtonWithOnClick
+                    type={props.type}
+                    onClick={handleClick}
+                    isDisabled={props.isDisabled}
+                >
                     {props.children}
                 </ButtonWithOnClick>
             )}

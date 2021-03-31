@@ -28,6 +28,14 @@ export default class ListShareModal extends UIElement<
         super(props, { logic: new Logic(props) })
     }
 
+    private get addBtnDisabled(): boolean {
+        const { addLinkRoleID, addLinkState, inviteLinks } = this.state
+
+        return addLinkState === 'running' ||
+            (inviteLinks.find(link => link.roleID === SharedListRoleID.Reader) != null
+                && addLinkRoleID === SharedListRoleID.Reader)
+    }
+
     private renderDeleteModal = () =>
         this.state.linkDeleteIndex != null && (
             <Overlay
@@ -100,13 +108,15 @@ export default class ListShareModal extends UIElement<
                         <BoldText>{sharedListRoleIDToString(roleID)}</BoldText>
                     </PermissionText>
                 </CopyLinkBox>
-                <Icon
-                    icon="removeX"
-                    height="16px"
-                    onClick={() =>
-                        this.processEvent('requestLinkDelete', { linkIndex })
-                    }
-                />
+                {roleID !== SharedListRoleID.Reader && (
+                    <Icon
+                        icon="removeX"
+                        height="16px"
+                        onClick={() =>
+                            this.processEvent('requestLinkDelete', { linkIndex })
+                        }
+                    />
+                )}
             </LinkContainer>
         </Margin>
     )
@@ -188,7 +198,7 @@ export default class ListShareModal extends UIElement<
         const iconField = this.state.showSuccessMsg
             ? 'checkRound'
             : 'alertRound'
-        const msgText = this.state.showSuccessMsg
+        const msgText = this.state.addLinkState !== 'error'
             ? 'Link created and copied to clipboard'
             : 'Error creating the link. Try again'
 
@@ -236,10 +246,7 @@ export default class ListShareModal extends UIElement<
                                 <ButtonBox>
                                     <Button
                                         type="primary-action"
-                                        isDisabled={
-                                            this.state.addLinkState ===
-                                            'running'
-                                        }
+                                        isDisabled={this.addBtnDisabled}
                                         onClick={() =>
                                             this.processEvent('addLink', null)
                                         }
