@@ -140,16 +140,6 @@ export default class ListShareModal extends UIElement<
             }),
         )
 
-        if (this.state.addLinkState === 'running') {
-            renderedLinks.push(
-                <Margin key="add-link-loader" bottom="smallest">
-                    <LinkContainer>
-                        <LoadingIndicator />
-                    </LinkContainer>
-                </Margin>,
-            )
-        }
-
         return (
             <InviteLinksBox>
                 <Margin top="medium">
@@ -244,15 +234,28 @@ export default class ListShareModal extends UIElement<
                                     </AddLinkBoxTextContainer>
                                 </Margin>
                                 <ButtonBox>
-                                    <Button
+                                    {this.state.addLinkState === 'running' ? (
+                                        <Button
                                         type="primary-action"
-                                        isDisabled={this.addBtnDisabled}
-                                        onClick={() =>
-                                            this.processEvent('addLink', null)
-                                        }
-                                    >
-                                        Add Link
-                                    </Button>
+                                        isDisabled={true}
+                                        onClick={null}
+                                        >
+                                            <LoadingIndicator/>
+                                        </Button>
+                                    ):(
+                                     <Button
+                                            type="primary-action"
+                                            isDisabled={
+                                                this.state.addLinkState ===
+                                                'running'
+                                            }
+                                            onClick={() =>
+                                                this.processEvent('addLink', null)
+                                            }
+                                        >
+                                            Add Link
+                                        </Button>
+                                    )}
                                     {this.renderAddLinkMsg()}
                                 </ButtonBox>
                             </AddLinkBox>
