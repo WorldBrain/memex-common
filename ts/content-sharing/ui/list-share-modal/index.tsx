@@ -78,6 +78,7 @@ export default class ListShareModal extends UIElement<
         link,
         roleID,
         linkIndex,
+        showCopyMsg
     }: InviteLink & { linkIndex: number }) => (
         <Margin key={linkIndex} bottom="smallest">
             <LinkContainer>
@@ -90,7 +91,9 @@ export default class ListShareModal extends UIElement<
                         }
                     />
                     <Margin horizontal="small">
-                        <LinkBox><Link>{link}</Link></LinkBox>
+                        <LinkBox>
+                            <Link>{showCopyMsg ? 'Copied to clipboard' : link}</Link>
+                        </LinkBox>
                     </Margin>
                     <PermissionText>
                         <Margin right="smallest">invite as</Margin>

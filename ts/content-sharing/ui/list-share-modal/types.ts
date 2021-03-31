@@ -5,6 +5,7 @@ import { SharedListRoleID } from '../../types'
 
 export interface InviteLink {
     roleID: SharedListRoleID
+    showCopyMsg?: boolean
     link: string
 }
 

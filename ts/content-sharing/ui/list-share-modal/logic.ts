@@ -22,6 +22,9 @@ export default class ListShareModalLogic extends UILogic<
     ListShareModalState,
     ListShareModalEvent
 > {
+    static COPY_MSG_TIMEOUT = 2000
+    static SUCCESS_MSG_TIMEOUT = 2000
+
     private listId: string
 
     constructor(private dependencies: ListShareModalDependencies) {
@@ -100,7 +103,7 @@ export default class ListShareModalLogic extends UILogic<
 
         setTimeout(
             () => this.emitMutation({ showSuccessMsg: { $set: false } }),
-            2000,
+            ListShareModalLogic.SUCCESS_MSG_TIMEOUT
         )
     }
 
@@ -157,5 +160,15 @@ export default class ListShareModalLogic extends UILogic<
         }
 
         await clipboard.copy(inviteLink.link)
+        this.emitMutation({
+            inviteLinks: { [event.linkIndex]: { showCopyMsg: { $set: true } } }
+        })
+
+        setTimeout(() =>
+            this.emitMutation({
+                inviteLinks: { [event.linkIndex]: { showCopyMsg: { $set: false } } }
+            }),
+            ListShareModalLogic.COPY_MSG_TIMEOUT
+        )
     }
 }
