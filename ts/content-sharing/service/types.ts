@@ -22,7 +22,7 @@ export interface ContentSharingServiceInterface {
     generateKeyLink: (params: {
         key: Pick<SharedListKey, 'roleID' | 'disabled'>
         listReference: SharedListReference
-    }) => Promise<{ link: string; keyString: string }>
+    }) => Promise<{ link: string }>
     getExistingKeyLinksForList: (params: {
         listReference: SharedListReference
     }) => Promise<{ links: SharedListKeyLink[] }>
