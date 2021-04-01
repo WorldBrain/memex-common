@@ -15,25 +15,24 @@
     "@worldbrain/memex-stemmer": "^0.1.0",
     "@worldbrain/memex-storage": "^0.1.1",
     "@worldbrain/storex": "^0.4.1",
-    "@worldbrain/storex-pattern-modules": "^0.3.0",
     "@worldbrain/storex-backend-dexie": "^0.3.1",
     "@worldbrain/storex-backend-firestore": "^0.1.1",
+    "@worldbrain/storex-pattern-modules": "^0.3.0",
     "@worldbrain/storex-sync": "^0.1.1",
     "getstream": "^7.0.0",
     "json-date-parser": "^1.0.1",
     "moment": "^2.29.1",
+    "openpgp": "^4.10.4",
     "react-markdown": "^5.0.2",
     "styled-components-spacing": "^3.1.1",
     "traverse": "^0.6.6",
     "tweetnacl-async": "^2.0.0",
     "tweetnacl-util": "^0.15.1",
-    "typed-emitter": "^1.2.0",
-    "openpgp": "^4.10.4"
+    "typed-emitter": "^1.2.0"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.7",
     "@types/openpgp": "^0.0.29",
-    "@types/react": "^16.8.24",
     "expect": "^26.4.2",
     "firebase": "^7.21.1",
     "firebase-admin": "^9.2.0",
@@ -46,9 +45,9 @@
   "peerDependencies": {
     "firebase": "^7.21.1",
     "firebase-admin": "^9.2.0",
-    "styled-components": ">= 5",
     "firebase-functions": "^3.11.0",
-    "react": "^17.0.1"
+    "react": "^17.0.1",
+    "styled-components": ">= 5"
   },
   "repository": {
     "type": "git",

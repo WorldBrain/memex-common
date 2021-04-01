@@ -46,15 +46,16 @@ const Container = styled.div`
         }
     }
     & ul {
-        padding-inline-start: 20px;
-        margin-top: 10px;
+        padding-inline-start: 25px;
+        margin-top: 0px;
         & ul {
             margin-top: 5px;
         }
     }
     & ol {
-        padding-inline-start: 20px;
-        margin-top: 10px;
+        padding-inline-start: 15px;
+        margin-top: 15px;
+        margin-block-end: 0px;
         & ol {
             margin-top: 5px;
         }
@@ -85,4 +86,17 @@ const Container = styled.div`
     & img {
         height:
     }
+
+    & li {
+        padding-left: 5px;
+    }
+
+    & li:first-child {
+
+    }
+
+    & p {
+        margin-block-end: 0;
+    }
+
     `;
