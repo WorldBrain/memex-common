@@ -79,8 +79,12 @@ export default class ListShareModalLogic extends UILogic<
             this,
             'addLinkState',
             async () => {
-                if (roleID === SharedListRoleID.Reader
-                    && previousState.inviteLinks.map(link => link.roleID).includes(SharedListRoleID.Reader)) {
+                if (
+                    roleID === SharedListRoleID.Reader &&
+                    previousState.inviteLinks
+                        .map((link) => link.roleID)
+                        .includes(SharedListRoleID.Reader)
+                ) {
                     throw new Error('Cannot create multiple reader links')
                 }
 
@@ -97,8 +101,29 @@ export default class ListShareModalLogic extends UILogic<
                     },
                 })
 
+                const newLinks: InviteLink[] = [{ link, roleID }]
+
+                // Also create reader link if non-reader link is the first being created
+                if (
+                    !previousState.inviteLinks.length &&
+                    roleID !== SharedListRoleID.Reader
+                ) {
+                    const readerLink = await contentSharing.generateKeyLink({
+                        key: { roleID: SharedListRoleID.Reader },
+                        listReference: {
+                            id: this.listId,
+                            type: 'shared-list-reference',
+                        },
+                    })
+
+                    newLinks.unshift({
+                        link: readerLink.link,
+                        roleID: SharedListRoleID.Reader,
+                    })
+                }
+
                 this.emitMutation({
-                    inviteLinks: { $push: [{ link, roleID }] },
+                    inviteLinks: { $push: newLinks },
                     showSuccessMsg: { $set: true },
                 })
 
@@ -108,12 +133,18 @@ export default class ListShareModalLogic extends UILogic<
 
         setTimeout(
             () => this.emitMutation({ showSuccessMsg: { $set: false } }),
-            ListShareModalLogic.SUCCESS_MSG_TIMEOUT
+            ListShareModalLogic.SUCCESS_MSG_TIMEOUT,
         )
     }
 
-    requestLinkDelete: EventHandler<'requestLinkDelete'> = ({ event, previousState }) => {
-        if (previousState.inviteLinks[event.linkIndex].roleID === SharedListRoleID.Reader) {
+    requestLinkDelete: EventHandler<'requestLinkDelete'> = ({
+        event,
+        previousState,
+    }) => {
+        if (
+            previousState.inviteLinks[event.linkIndex].roleID ===
+            SharedListRoleID.Reader
+        ) {
             return
         }
 
@@ -170,14 +201,17 @@ export default class ListShareModalLogic extends UILogic<
 
         await clipboard.copy(inviteLink.link)
         this.emitMutation({
-            inviteLinks: { [event.linkIndex]: { showCopyMsg: { $set: true } } }
+            inviteLinks: { [event.linkIndex]: { showCopyMsg: { $set: true } } },
         })
 
-        setTimeout(() =>
-            this.emitMutation({
-                inviteLinks: { [event.linkIndex]: { showCopyMsg: { $set: false } } }
-            }),
-            ListShareModalLogic.COPY_MSG_TIMEOUT
+        setTimeout(
+            () =>
+                this.emitMutation({
+                    inviteLinks: {
+                        [event.linkIndex]: { showCopyMsg: { $set: false } },
+                    },
+                }),
+            ListShareModalLogic.COPY_MSG_TIMEOUT,
         )
     }
 }
