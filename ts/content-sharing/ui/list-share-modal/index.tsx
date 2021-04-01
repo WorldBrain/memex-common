@@ -31,9 +31,13 @@ export default class ListShareModal extends UIElement<
     private get addBtnDisabled(): boolean {
         const { addLinkRoleID, addLinkState, inviteLinks } = this.state
 
-        return addLinkState === 'running' ||
-            (inviteLinks.find(link => link.roleID === SharedListRoleID.Reader) != null
-                && addLinkRoleID === SharedListRoleID.Reader)
+        return (
+            addLinkState === 'running' ||
+            (inviteLinks.find(
+                (link) => link.roleID === SharedListRoleID.Reader,
+            ) != null &&
+                addLinkRoleID === SharedListRoleID.Reader)
+        )
     }
 
     private renderDeleteModal = () =>
@@ -86,7 +90,7 @@ export default class ListShareModal extends UIElement<
         link,
         roleID,
         linkIndex,
-        showCopyMsg
+        showCopyMsg,
     }: InviteLink & { linkIndex: number }) => (
         <Margin key={linkIndex} bottom="smallest">
             <LinkContainer>
@@ -100,7 +104,9 @@ export default class ListShareModal extends UIElement<
                     />
                     <Margin horizontal="small">
                         <LinkBox>
-                            <Link>{showCopyMsg ? 'Copied to clipboard' : link}</Link>
+                            <Link>
+                                {showCopyMsg ? 'Copied to clipboard' : link}
+                            </Link>
                         </LinkBox>
                     </Margin>
                     <PermissionText>
@@ -113,7 +119,9 @@ export default class ListShareModal extends UIElement<
                         icon="removeX"
                         height="16px"
                         onClick={() =>
-                            this.processEvent('requestLinkDelete', { linkIndex })
+                            this.processEvent('requestLinkDelete', {
+                                linkIndex,
+                            })
                         }
                     />
                 )}
@@ -188,9 +196,10 @@ export default class ListShareModal extends UIElement<
         const iconField = this.state.showSuccessMsg
             ? 'checkRound'
             : 'alertRound'
-        const msgText = this.state.addLinkState !== 'error'
-            ? 'Link created and copied to clipboard'
-            : 'Error creating the link. Try again'
+        const msgText =
+            this.state.addLinkState !== 'error'
+                ? 'Link created and copied to clipboard'
+                : 'Error creating the link. Try again'
 
         return (
             <Margin left="medium">
@@ -234,28 +243,20 @@ export default class ListShareModal extends UIElement<
                                     </AddLinkBoxTextContainer>
                                 </Margin>
                                 <ButtonBox>
-                                    {this.state.addLinkState === 'running' ? (
-                                        <Button
+                                    <Button
                                         type="primary-action"
-                                        isDisabled={true}
-                                        onClick={null}
-                                        >
-                                            <LoadingIndicator/>
-                                        </Button>
-                                    ):(
-                                     <Button
-                                            type="primary-action"
-                                            isDisabled={
-                                                this.state.addLinkState ===
-                                                'running'
-                                            }
-                                            onClick={() =>
-                                                this.processEvent('addLink', null)
-                                            }
-                                        >
-                                            Add Link
-                                        </Button>
-                                    )}
+                                        isDisabled={this.addBtnDisabled}
+                                        onClick={() =>
+                                            this.processEvent('addLink', null)
+                                        }
+                                    >
+                                        {this.state.addLinkState ===
+                                        'running' ? (
+                                            <LoadingIndicator />
+                                        ) : (
+                                            'Add Link'
+                                        )}
+                                    </Button>
                                     {this.renderAddLinkMsg()}
                                 </ButtonBox>
                             </AddLinkBox>
