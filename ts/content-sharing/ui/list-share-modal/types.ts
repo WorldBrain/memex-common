@@ -11,6 +11,7 @@ export interface InviteLink {
 
 export type ListShareModalDependencies = {
     services: UIElementServices<'contentSharing' | 'overlay' | 'clipboard'>
+    defaultAddLinkRole?: SharedListRoleID
     onCloseRequested: () => void
 } & (
     | {

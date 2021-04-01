@@ -33,7 +33,9 @@ export default class ListShareModalLogic extends UILogic<
 
     getInitialState(): ListShareModalState {
         return {
-            addLinkRoleID: SharedListRoleID.ReadWrite,
+            addLinkRoleID:
+                this.dependencies.defaultAddLinkRole ??
+                SharedListRoleID.ReadWrite,
             deleteLinkState: 'pristine',
             addLinkState: 'pristine',
             loadState: 'pristine',
