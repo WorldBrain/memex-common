@@ -12,6 +12,9 @@ const VARIATIONS: {
     'primary-action': css`
         padding: 10px 10px;
         font-size: 14px;
+        color: white;
+        background-color: ${(props) => props.theme.colors.purple};
+        padding: 8px 25px;
     `,
     small: css`
         padding: 3px 10px;
@@ -21,23 +24,25 @@ const VARIATIONS: {
         background-color: none !important;
         padding: 3px 10px;
         font-size: 12px;
+        color: ${(props) => props.theme.colors.primary};
+        background-color: none;
     `,
 }
 
 const StyledButton = (props: ButtonProps) => css`
     ${VARIATIONS[props.type]}
-    display: block;
+    display: flex;
     font-family: ${(props) => props.theme.fonts.primary};
-    padding: ${props.type === 'primary-action' ? '10px' : '3px'} 20px;
+    padding: ${props.type};
     text-align: center;
     font-weight: 500;
-    background-color: #5cd9a6;
     border-radius: 3px;
-    color: ${(props) => props.theme.colors.primary};
-    background-color: ${(props) => props.theme.colors.secondary};
+    color: ${props.type};
+    background-color: ${props.type};
     cursor: ${props.isDisabled ? 'not-allowed' : 'pointer'};
     white-space: nowrap;
     text-decoration: none;
+    align-items: center;
 
     &:hover {
         opacity: 0.8;

@@ -55,7 +55,7 @@ export default class ListShareModal extends UIElement<
                         <DeleteModalBtnContainer>
                             <Margin right="small">
                                 <Button
-                                    type="small"
+                                    type="primary-action"
                                     isDisabled={
                                         this.state.deleteLinkState === 'running'
                                     }
@@ -117,7 +117,7 @@ export default class ListShareModal extends UIElement<
                 {roleID !== SharedListRoleID.Reader && (
                     <Icon
                         icon="removeX"
-                        height="16px"
+                        height="12px"
                         onClick={() =>
                             this.processEvent('requestLinkDelete', {
                                 linkIndex,
