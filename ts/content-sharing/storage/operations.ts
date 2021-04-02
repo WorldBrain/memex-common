@@ -273,6 +273,13 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             sharedList: '$sharedList:pk'
         }
     },
+    findKeysByLists: {
+        operation: 'findObjects',
+        collection: 'sharedListKey',
+        args: {
+            sharedList: { $in: '$sharedLists:pk' }
+        }
+    },
     findListKey: {
         operation: 'findObject',
         collection: 'sharedListKey',

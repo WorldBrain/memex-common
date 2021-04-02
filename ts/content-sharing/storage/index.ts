@@ -3,11 +3,10 @@ import chunk from 'lodash/chunk'
 import orderBy from 'lodash/orderBy'
 import { OperationBatch } from '@worldbrain/storex'
 import { StorageModule, StorageModuleConstructorArgs, StorageModuleConfig, PermissionRule } from '@worldbrain/storex-pattern-modules'
-import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
 import { GetAnnotationListEntriesResult, GetAnnotationsResult } from './types'
-import { idFromAutoPkReference, autoPkReferenceFromLinkId, augmentObjectWithReferences } from '../../storage/references'
+import { idFromAutoPkReference, autoPkReferenceFromLinkId, augmentObjectWithReferences, ObjectWithReferences } from '../../storage/references'
 import { CONTENT_SHARING_STORAGE_COLLECTIONS } from './collections'
 import { CONTENT_SHARING_OPERATIONS } from './operations'
 import { CONTENT_SHARING_STORAGE_ACCESS_RULES } from './access-rules'
@@ -680,6 +679,39 @@ export default class ContentSharingStorage extends StorageModule {
         return augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
             this.ensureDBObjectHasStringId(retrievedKey) as any, 'shared-list-key-reference', relations
         )
+    }
+
+    async getKeysForLists(params: {
+        listReferences: types.SharedListReference[]
+    }) {
+        const retrievedKeys: (types.SharedListKey & {
+            id: string
+            sharedList: string
+        })[] = await this.operation('findKeysByLists', {
+            sharedLists: params.listReferences.map((ref) => ref.id),
+        })
+
+        const relations = {
+            sharedList: 'shared-list-reference' as types.SharedListReference['type'],
+        }
+        const listKeysMap = new Map<
+            string,
+            ObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>[]
+        >()
+
+        for (const key of retrievedKeys) {
+            const prev = listKeysMap.get(key.sharedList) ?? []
+            listKeysMap.set(key.sharedList, [
+                ...prev,
+                augmentObjectWithReferences<types.SharedListKey, types.SharedListKeyReference, typeof relations>(
+                    this.ensureDBObjectHasStringId(key),
+                    'shared-list-key-reference',
+                    relations,
+                ),
+            ])
+        }
+
+        return listKeysMap
     }
 
     async deleteListKey(params: { 
