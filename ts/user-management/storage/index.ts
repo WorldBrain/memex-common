@@ -7,6 +7,8 @@ import {
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { User, UserReference } from '../../web-interface/types/users'
 import { UserPublicProfile } from '../../web-interface/types/storex-generated/user-management'
+import { augmentObjectWithReferences } from '../../storage/references'
+import { UserPublicProfileReference } from '../types'
 
 export default class UserStorage extends StorageModule {
     private storageManager: StorageManager
@@ -212,12 +214,16 @@ export default class UserStorage extends StorageModule {
 
     async getUserPublicProfile(
         userReference: UserReference,
-    ): Promise<UserPublicProfile | null> {
+    ) {
         const foundProfile = await this.operation('findUserPublicProfileById', {
             user: userReference.id,
         })
-        delete foundProfile.user
-        return foundProfile ?? null
+        const relations = {
+            user: 'user-reference' as UserReference['type']
+        }
+        return augmentObjectWithReferences<UserPublicProfile, UserPublicProfileReference, typeof relations>(
+            foundProfile, 'user-public-profile-reference', relations,
+        )
     }
 
     async createOrUpdateUserPublicProfile(

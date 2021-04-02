@@ -2,8 +2,10 @@ import moment from 'moment'
 import React from 'react'
 import styled from 'styled-components'
 import { Margin } from 'styled-components-spacing'
+import { User } from '../../web-interface/types/users'
 import { SharedPageInfo } from '../../content-sharing/types'
 import ItemBox from '../components/item-box'
+import CreationInfo, { CreationInfoProps } from './creation-info'
 
 const PageBox = styled.div`
     display: flex;
@@ -35,7 +37,7 @@ const PageInfoBoxTitle = styled.div`
     font-weight: 600;
     color: ${(props) => props.theme.colors.primary};
     text-decoration: none;
-    font-size: ${(props) => props.theme.fontSize.listTitle};
+    font-size: ${(props) => props.theme.fontSizes.listTitle};
     text-overflow: ellipsis;
     overflow-x: hidden;
     text-decoration: none;
@@ -45,7 +47,7 @@ const PageInfoBoxTitle = styled.div`
 
 const PageInfoBoxUrl = styled.div`
     font-weight: 400;
-    font-size: ${(props) => props.theme.fontSize.url};
+    font-size: ${(props) => props.theme.fontSizes.url};
     color: ${(props) => props.theme.colors.subText};
     text-overflow: ellipsis;
     overflow-x: hidden;
@@ -90,15 +92,17 @@ export type PageInfoBoxAction =
       }
     | { node: React.ReactNode }
 
-export default function PageInfoBox(props: {
-    pageInfo: Pick<
-        SharedPageInfo,
-        'fullTitle' | 'createdWhen' | 'originalUrl' | 'normalizedUrl'
-    >
+export interface PageInfoBoxProps {
+    pageInfo: Pick<SharedPageInfo, 'fullTitle' | 'createdWhen' | 'originalUrl' | 'normalizedUrl'>
+    creator?: Pick<User, 'displayName'> | null
     actions?: Array<PageInfoBoxAction>
     children?: React.ReactNode
-}) {
+    renderCreationInfo?: (props: CreationInfoProps) => React.ReactNode
+}
+
+export default function PageInfoBox(props: PageInfoBoxProps) {
     const { pageInfo } = props
+    const renderCreationInfo = props.renderCreationInfo ?? ((props) =>  <CreationInfo {...props} />)
 
     return (
         <ItemBox>
@@ -119,9 +123,10 @@ export default function PageInfoBox(props: {
                                     {pageInfo.normalizedUrl}
                                 </PageInfoBoxUrl>
                             </Margin>
-                            <CreatedWhenDate>
-                                {moment(pageInfo.createdWhen).format('LLL')}
-                            </CreatedWhenDate>
+                            {props.creator && renderCreationInfo({
+                                creator: props.creator,
+                                createdWhen: pageInfo.createdWhen
+                            })}
                         </PageInfoBoxLeft>
                     </PageInfoBoxLink>
                 </PageContentBox>
