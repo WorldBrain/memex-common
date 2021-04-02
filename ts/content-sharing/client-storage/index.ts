@@ -4,7 +4,7 @@ import {
     StorageModuleConfig,
 } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../browser-extension/storage/versions'
-import { ContentSharingAction } from './types'
+import { ContentSharingAction, SharedListMetadata } from './types'
 
 export class ContentSharingClientStorage extends StorageModule {
     getConfig = (): StorageModuleConfig => {
@@ -27,7 +27,7 @@ export class ContentSharingClientStorage extends StorageModule {
                     },
                     indices: [
                         { field: 'localId', pk: true },
-                        { field: 'remoteId' }
+                        { field: 'remoteId' },
                     ],
                 },
                 contentSharingAction: {
@@ -56,12 +56,16 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'sharedListMetadata',
                     args: { remoteId: '$remoteId:string' },
                 },
+                getMetadataForList: {
+                    operation: 'findObject',
+                    collection: 'sharedListMetadata',
+                    args: { localId: '$localId:pk' },
+                },
                 getMetadataForLists: {
                     operation: 'findObjects',
                     collection: 'sharedListMetadata',
                     args: { localId: { $in: '$localIds:array:pk' } },
                 },
-
                 createAnnotationMetadata: {
                     operation: 'createObject',
                     collection: 'sharedAnnotationMetadata',
@@ -79,15 +83,15 @@ export class ContentSharingClientStorage extends StorageModule {
                 deleteAnnotationMetadata: {
                     operation: 'deleteObjects',
                     collection: 'sharedAnnotationMetadata',
-                    args: { localId: { $in: '$localIds:array:pk' } }
+                    args: { localId: { $in: '$localIds:array:pk' } },
                 },
                 updateAnnotationsExcludedFromLists: {
                     operation: 'updateObjects',
                     collection: 'sharedAnnotationMetadata',
                     args: [
                         { localId: { $in: '$localIds:array:pk' } },
-                        { excludeFromLists: '$excludeFromLists:boolean' }
-                    ]
+                        { excludeFromLists: '$excludeFromLists:boolean' },
+                    ],
                 },
 
                 getPages: {
@@ -133,7 +137,10 @@ export class ContentSharingClientStorage extends StorageModule {
     }
 
     async getLocalListId(params: { remoteId: string }): Promise<string | null> {
-        const existing = await this.operation('getListMetadataByRemoteId', params)
+        const existing = await this.operation(
+            'getListMetadataByRemoteId',
+            params,
+        )
         return existing?.localId ?? null
     }
 
@@ -142,46 +149,85 @@ export class ContentSharingClientStorage extends StorageModule {
         return existing?.remoteId ?? null
     }
 
-    async getRemoteListIds(params: { localIds: number[] }): Promise<{ [localId: number]: string }> {
-        const metadataObjects: Array<{ localId: string, remoteId: string }> = await this.operation('getMetadataForLists', params)
-        return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
+    async getRemoteListIds(params: {
+        localIds: number[]
+    }): Promise<{ [localId: number]: string }> {
+        const metadataObjects: SharedListMetadata[] = []
+        for (const localId of params.localIds) {
+            const metadata: SharedListMetadata | null = await this.operation(
+                'getMetadataForList',
+                { localId },
+            )
+            if (!metadata) {
+                continue
+            }
+            metadataObjects.push(metadata)
+        }
+        return fromPairs(
+            metadataObjects.map((object) => [object.localId, object.remoteId]),
+        )
     }
 
-    async storeAnnotationMetadata(annotationMetadataList: Array<{ localId: string, remoteId: string, excludeFromLists: boolean }>) {
+    async storeAnnotationMetadata(
+        annotationMetadataList: Array<{
+            localId: string
+            remoteId: string
+            excludeFromLists: boolean
+        }>,
+    ) {
         for (const annotationMetadata of annotationMetadataList) {
             await this.operation('createAnnotationMetadata', annotationMetadata)
         }
     }
 
-    async setAnnotationsExcludedFromLists(params: { localIds: string[], excludeFromLists: boolean }) {
+    async setAnnotationsExcludedFromLists(params: {
+        localIds: string[]
+        excludeFromLists: boolean
+    }) {
         await this.operation('updateAnnotationsExcludedFromLists', params)
     }
 
-    async deleteAnnotationMetadata(params: {
-        localIds: string[]
-    }) {
+    async deleteAnnotationMetadata(params: { localIds: string[] }) {
         await this.operation('deleteAnnotationMetadata', params)
     }
 
     async getRemoteAnnotationIds(params: {
         localIds: string[]
     }): Promise<{ [localId: string]: string | number }> {
-        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
-        return fromPairs(metadataObjects.map(object => [object.localId, object.remoteId]))
+        const metadataObjects: Array<{
+            localId: string
+            remoteId: string | number
+        }> = await this.operation('getMetadataForAnnotations', params)
+        return fromPairs(
+            metadataObjects.map((object) => [object.localId, object.remoteId]),
+        )
     }
 
     async getRemoteAnnotationMetadata(params: {
         localIds: string[]
-    }): Promise<{ [localId: string]: { localId: string, remoteId: string | number, excludeFromLists?: boolean } }> {
-        const metadataObjects: Array<{ localId: string, remoteId: string | number }> = await this.operation('getMetadataForAnnotations', params)
-        return fromPairs(metadataObjects.map(object => [object.localId, object]))
+    }): Promise<{
+        [localId: string]: {
+            localId: string
+            remoteId: string | number
+            excludeFromLists?: boolean
+        }
+    }> {
+        const metadataObjects: Array<{
+            localId: string
+            remoteId: string | number
+        }> = await this.operation('getMetadataForAnnotations', params)
+        return fromPairs(
+            metadataObjects.map((object) => [object.localId, object]),
+        )
     }
 
     async _getPages(params: { normalizedPageUrls: string[] }) {
-        const foundPages = await Promise.all(params.normalizedPageUrls.map(
-            normalizedPageUrl => this.operation('getPage', { normalizedPageUrl })
-        )) as Array<{ url: string, fullUrl: string, fullTitle: string }>
-        return foundPages.filter(page => !!page)
+        const foundPages = (await Promise.all(
+            params.normalizedPageUrls.map((normalizedPageUrl) =>
+                this.operation('getPage', { normalizedPageUrl }),
+            ),
+        )) as Array<{ url: string; fullUrl: string; fullTitle: string }>
+        return foundPages.filter((page) => !!page)
     }
 
     async getPageTitles(params: { normalizedPageUrls: string[] }) {
@@ -195,7 +241,13 @@ export class ContentSharingClientStorage extends StorageModule {
 
     async getPages(params: { normalizedPageUrls: string[] }) {
         // TODO: Doesn't belong here
-        const pages: { [pageUrl: string]: { normalizedUrl: string, originalUrl: string, fullTitle: string } } = {}
+        const pages: {
+            [pageUrl: string]: {
+                normalizedUrl: string
+                originalUrl: string
+                fullTitle: string
+            }
+        } = {}
         for (const page of await this._getPages(params)) {
             pages[page.url] = {
                 normalizedUrl: page.url,
@@ -206,18 +258,17 @@ export class ContentSharingClientStorage extends StorageModule {
         return pages
     }
 
-    async areListsShared(params: { localIds: number[] }) {
-        const allMetadata = await this.operation('getMetadataForLists', params)
-        const shared: { [listId: number]: boolean } = {}
-        for (const listMetadata of allMetadata) {
-            shared[listMetadata.localId] = true
-        }
-        for (const localId of params.localIds) {
-            if (!shared[localId]) {
-                shared[localId] = false
-            }
-        }
-        return shared
+    async areListsShared(params: {
+        localIds: number[]
+    }): Promise<{ [listId: number]: boolean }> {
+        const remoteListIds = await this.getRemoteListIds(params)
+
+        return fromPairs(
+            params.localIds.map((localId) => [
+                localId,
+                remoteListIds[localId] != null,
+            ]),
+        )
     }
 
     async queueAction(params: {
@@ -236,9 +287,9 @@ export class ContentSharingClientStorage extends StorageModule {
         const firstAction = await this.operation('getOldestAction', {})
         return firstAction
             ? {
-                id: firstAction.id,
-                ...firstAction.action,
-            }
+                  id: firstAction.id,
+                  ...firstAction.action,
+              }
             : null
     }
 

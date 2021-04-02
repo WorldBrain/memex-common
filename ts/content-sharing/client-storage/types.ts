@@ -10,6 +10,11 @@ export type ContentSharingAction =
     | UpdateAnnotationCommentAction
     | EnsurePageInfoAction
 
+export interface SharedListMetadata {
+    localId: number
+    remoteId: string
+}
+
 export interface AddSharedListEntriesAction {
     type: 'add-shared-list-entries'
     localListId: number
