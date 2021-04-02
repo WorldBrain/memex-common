@@ -126,15 +126,25 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }
     }
 
+    async getRawFeedActivitiesForDebug(params: GetActivitiesParams): Promise<any[]> {
+        const userIdString = coerceToString(await this._getCurrentUserId())
+        const homeFeed = this.client.feed('home', userIdString)
+        const activities = await homeFeed.get({ enrich: true, offset: params.offset, limit: params.limit })
+        return activities.results
+    }
+
     async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
         const userIdString = coerceToString(await this._getCurrentUserId())
         const homeFeed = this.client.feed('home', userIdString)
         const activities = await homeFeed.get({ offset: 0, limit: 1 })
-        const firstActivity = activities.results[0]
-        if (!firstActivity) {
+
+        const firstActivityGroup = activities.results[0]
+        const firstActivity = firstActivityGroup?.activities?.[0]
+        const firstActivityTime = firstActivity?.time
+        if (!firstActivityTime) {
             return { latestActivityTimestamp: null }
         }
-        return { latestActivityTimestamp: new Date((firstActivity as any).updated_at).getTime() }
+        return { latestActivityTimestamp: new Date(firstActivityTime).getTime() }
     }
 
     async _getCurrentUserId() {

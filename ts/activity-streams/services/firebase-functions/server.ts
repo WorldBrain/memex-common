@@ -22,6 +22,7 @@ export function activityStreamFunctions(options: {
             'unfollowEntity',
             'getHomeFeedActivities',
             'getHomeFeedInfo',
+            'getRawFeedActivitiesForDebug'
         ]
     })
 }

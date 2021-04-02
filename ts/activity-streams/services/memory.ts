@@ -125,7 +125,7 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         return userId
     }
 
-    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+    async _getRawHomeFeedActivities(params: GetActivitiesParams) {
         const userId = await this._ensureUserId(`Tried to get notifications wtihout being authenticated`)
         const userNotficationState = this.notificationStates[userId] ?? { seen: new Set(), read: new Set() }
         this.notificationStates[userId] = userNotficationState
@@ -141,23 +141,31 @@ export default class MemoryStreamsService implements ActivityStreamsService {
         const activityGroups = aggregatedActivities
             .reverse() // mutates the array, but that's OK in this case
             .slice(params.offset, params.offset + params.limit)
-            .map(group => ({
-                id: group.items.map(activity => activity.id).join(':'),
-                entityType: group.key.entityType,
-                entity: group.key.entity,
-                activityType: group.key.activityType,
-                activities: group.items.map(activity => ({
-                    id: activity.id,
-                    entityType: activity.entity.type,
-                    entity: activity.entity,
-                    activityType: activity.type,
-                    activity: activity.data
-                })),
-            }));
+        return activityGroups
+    }
+
+    async getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult> {
+        const activityGroups = (await this._getRawHomeFeedActivities(params)).map(group => ({
+            id: group.items.map(activity => activity.id).join(':'),
+            entityType: group.key.entityType,
+            entity: group.key.entity,
+            activityType: group.key.activityType,
+            activities: group.items.map(activity => ({
+                id: activity.id,
+                entityType: activity.entity.type,
+                entity: activity.entity,
+                activityType: activity.type,
+                activity: activity.data
+            })),
+        }));
         return {
             hasMore: false,
             activityGroups: activityGroups as any[],
         }
+    }
+
+    async getRawFeedActivitiesForDebug(params: GetActivitiesParams) {
+        return this._getRawHomeFeedActivities(params)
     }
 
     async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {

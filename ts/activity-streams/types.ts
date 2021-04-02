@@ -9,6 +9,7 @@ export interface ActivityStreamsService {
         params: AddActivityParams<EntityType, ActivityType>
     ): Promise<void>
     getHomeFeedActivities(params: GetActivitiesParams): Promise<GetHomeActivitiesResult>
+    getRawFeedActivitiesForDebug(params: GetActivitiesParams): Promise<any[]>
     getHomeFeedInfo(): Promise<GetHomeFeedInfoResult>
 }
 

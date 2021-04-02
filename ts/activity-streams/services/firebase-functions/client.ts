@@ -29,6 +29,10 @@ export default class FirebaseFunctionsActivityStreamsService implements Activity
         return this.options.executeCall('activityStreams-getHomeFeedActivities', {})
     }
 
+    async getRawFeedActivitiesForDebug(params: GetActivitiesParams): Promise<any[]> {
+        return this.options.executeCall('activityStreams-getRawFeedActivitiesForDebug', {})
+    }
+
     async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
         return this.options.executeCall('activityStreams-getHomeFeedInfo', {})
     }
