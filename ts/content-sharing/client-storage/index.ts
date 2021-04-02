@@ -66,6 +66,11 @@ export class ContentSharingClientStorage extends StorageModule {
                     collection: 'sharedListMetadata',
                     args: { localId: { $in: '$localIds:array:pk' } },
                 },
+                getAllSharedListMetadata: {
+                    operation: 'findObjects',
+                    collection: 'sharedListMetadata',
+                    args: {},
+                },
                 createAnnotationMetadata: {
                     operation: 'createObject',
                     collection: 'sharedAnnotationMetadata',
@@ -147,6 +152,17 @@ export class ContentSharingClientStorage extends StorageModule {
     async getRemoteListId(params: { localId: number }): Promise<string | null> {
         const existing = await this.operation('getListMetadata', params)
         return existing?.remoteId ?? null
+    }
+
+    async getAllRemoteListIds(): Promise<{ [localId: number]: string }> {
+        const metadataObjects: SharedListMetadata[] = await this.operation(
+            'getAllSharedListMetadata',
+            {},
+        )
+
+        return fromPairs(
+            metadataObjects.map((object) => [object.localId, object.remoteId]),
+        )
     }
 
     async getRemoteListIds(params: {
