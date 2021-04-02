@@ -5,6 +5,7 @@ import ContentSharingStorage from '../../content-sharing/storage';
 import ContentConversationStorage from '../../content-conversations/storage';
 import { AutoPkStorageReference, makeStorageReference, getStorageReferenceCollection } from '../../storage/references';
 import UserStorage from '../../user-management/storage';
+import { ActivityStreamsStorage } from '../storage/types';
 import { concretizeActivity } from '../utils';
 import {
     ActivityStream, ActivityStreamsService, EntitityActivities,
@@ -26,6 +27,7 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         apiKey: string,
         apiSecret: string
         storage: {
+            activityStreams: ActivityStreamsStorage
             contentSharing: ContentSharingStorage,
             contentConversations: ContentConversationStorage,
             users: UserStorage,
@@ -134,17 +136,27 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
     }
 
     async getHomeFeedInfo(): Promise<GetHomeFeedInfoResult> {
-        const userIdString = coerceToString(await this._getCurrentUserId())
+        const userId = await this._getCurrentUserId();
+        const userIdString = coerceToString(userId)
         const homeFeed = this.client.feed('home', userIdString)
-        const activities = await homeFeed.get({ offset: 0, limit: 1 })
+        const homeFeedTimestamp = (await this.options.storage.activityStreams.retrieveHomeFeedTimestamp({
+            user: { type: 'user-reference', id: userId }
+        }))?.timestamp
+        const activities = await homeFeed.get({ offset: 0, limit: homeFeedTimestamp ? 10 : 1 })
 
-        const firstActivityGroup = activities.results[0]
-        const firstActivity = firstActivityGroup?.activities?.[0]
-        const firstActivityTime = firstActivity?.time
-        if (!firstActivityTime) {
-            return { latestActivityTimestamp: null }
+        for (const activityGroup of activities.results) {
+            for (const activity of (activityGroup as any).activities) {
+                const activityTimestamp = new Date(activity.time).getTime()
+                if (homeFeedTimestamp && activityTimestamp <= homeFeedTimestamp) {
+                    continue
+                }
+                if (activity.actor.split(':')[1] !== userIdString) {
+                    return { latestActivityTimestamp: activityTimestamp }
+                }
+            }
         }
-        return { latestActivityTimestamp: new Date(firstActivityTime).getTime() }
+
+        return { latestActivityTimestamp: null }
     }
 
     async _getCurrentUserId() {
