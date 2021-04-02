@@ -144,6 +144,8 @@ export default class GetStreamActivityStreamService implements ActivityStreamsSe
         }))?.timestamp
         const activities = await homeFeed.get({ offset: 0, limit: homeFeedTimestamp ? 10 : 1 })
 
+        // HACK: The discard rule for `sharedList` doesn't work properly, so we detect the first activity
+        // not by the current user that is not yet seen.
         for (const activityGroup of activities.results) {
             for (const activity of (activityGroup as any).activities) {
                 const activityTimestamp = new Date(activity.time).getTime()
