@@ -10,7 +10,7 @@ interface MarginProps {
     bottom?: string
 }
 
-const MarginDiv = styled.div`
+const MarginDiv = styled.div<MarginProps>`
     ${(props) => {
         if (props.horizontal)
             return `margin-left: ${props.horizontal}; margin-right: ${props.horizontal};`

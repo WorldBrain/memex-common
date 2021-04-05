@@ -31,6 +31,14 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     background-repeat: no-repeat;
 `
 
+export type AllowedDivProps = Pick<
+    HTMLProps<HTMLDivElement>,
+        | 'onMouseLeave'
+        | 'onMouseEnter'
+        | 'onDragStart'
+        | 'onDragEnd'
+>
+
 export type ItemBoxBottomAction =
     | {
           key: string
@@ -46,7 +54,7 @@ export type ItemBoxBottomAction =
 export interface ItemBoxBottomProps {
     creationInfo: CreationInfoProps
     replyCount?: number
-    firstDivProps?: HTMLProps<HTMLDivElement>
+    firstDivProps?: AllowedDivProps
     actions?: Array<ItemBoxBottomAction>
     renderCreationInfo?: (props: {
         children: React.ReactNode

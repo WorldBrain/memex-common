@@ -3,7 +3,7 @@ import styled, { CSSObject } from 'styled-components'
 import { IconKeys } from '../styles/types'
 
 const StyledIcon = styled.div<{
-    icon: IconKeys
+    icon: string
     height: string
     width: string
 }>`

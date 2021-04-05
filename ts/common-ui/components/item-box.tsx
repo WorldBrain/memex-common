@@ -1,5 +1,6 @@
-import React, { HTMLProps } from 'react'
+import React from 'react'
 import styled from 'styled-components'
+import type { AllowedDivProps } from './item-box-bottom'
 
 export type ItemBoxVariant = 'new-item'
 
@@ -16,7 +17,7 @@ const StyledItemBox = styled.div<{ variant?: ItemBoxVariant }>`
 export default function ItemBox(props: {
     children: React.ReactNode
     variant?: ItemBoxVariant
-    firstDivProps?: HTMLProps<HTMLDivElement>
+    firstDivProps?: AllowedDivProps
 }) {
     return (
         <StyledItemBox variant={props.variant} {...(props.firstDivProps ?? {})}>

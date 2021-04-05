@@ -54,17 +54,15 @@ class ButtonTooltip extends React.Component<Props, State> {
     private handleMouseLeave = () => this.setState({ displayTooltip: false })
 
     render() {
-        const { tooltipText, position, children } = this.props
-
         return (
-            <Container ref={this.tooltipRef} position={position}>
+            <Container ref={this.tooltipRef} {...this.props}>
                 {this.state.displayTooltip && (
-                    <TooltipBubble position={position}>
-                        <TooltipText>{tooltipText}</TooltipText>
+                    <TooltipBubble {...this.props}>
+                        <TooltipText>{this.props.tooltipText}</TooltipText>
                     </TooltipBubble>
                 )}
 
-                {children}
+                {this.props.children}
             </Container>
         )
     }
@@ -165,14 +163,14 @@ const determineBubbleStyles = ({ position }: Props) => {
     }
 }
 
-const Container = styled.div`
+const Container = styled.div<Props>`
     display: inline-flex;
     align-items: center;
     position: relative;
     z-index: 2 ${determineContainerStyles};
 `
 
-const TooltipBubble = styled.div`
+const TooltipBubble = styled.div<Props>`
     position: absolute;
     height: 18px;
     border-radius: 5px;
