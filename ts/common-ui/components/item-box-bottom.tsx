@@ -33,10 +33,7 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
 
 export type AllowedDivProps = Pick<
     HTMLProps<HTMLDivElement>,
-        | 'onMouseLeave'
-        | 'onMouseEnter'
-        | 'onDragStart'
-        | 'onDragEnd'
+    'onMouseLeave' | 'onMouseEnter' | 'onDragStart' | 'onDragEnd' | 'id'
 >
 
 export type ItemBoxBottomAction =
