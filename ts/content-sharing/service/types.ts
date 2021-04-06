@@ -14,6 +14,7 @@ export type ProcessSharedListKeyResult =
     | 'denied'
 
 export interface ContentSharingServiceInterface {
+    hasCurrentKey(): boolean
     processCurrentKey: () => Promise<{ result: ProcessSharedListKeyResult }>
     deleteKeyLink: (params: {
         link: string
