@@ -43,6 +43,7 @@ const StyledButton = (props: ButtonProps) => css`
     white-space: nowrap;
     text-decoration: none;
     align-items: center;
+    justify-content: center;
 
     &:hover {
         opacity: 0.8;
