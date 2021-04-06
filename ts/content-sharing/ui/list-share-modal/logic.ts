@@ -82,10 +82,10 @@ export default class ListShareModalLogic extends UILogic<
             'addLinkState',
             async () => {
                 if (
-                    roleID === SharedListRoleID.Reader &&
+                    roleID === SharedListRoleID.Commenter &&
                     previousState.inviteLinks
                         .map((link) => link.roleID)
-                        .includes(SharedListRoleID.Reader)
+                        .includes(SharedListRoleID.Commenter)
                 ) {
                     throw new Error('Cannot create multiple reader links')
                 }
@@ -108,10 +108,10 @@ export default class ListShareModalLogic extends UILogic<
                 // Also create reader link if non-reader link is the first being created
                 if (
                     !previousState.inviteLinks.length &&
-                    roleID !== SharedListRoleID.Reader
+                    roleID !== SharedListRoleID.Commenter
                 ) {
-                    const readerLink = await contentSharing.generateKeyLink({
-                        key: { roleID: SharedListRoleID.Reader },
+                    const commenterLink = await contentSharing.generateKeyLink({
+                        key: { roleID: SharedListRoleID.Commenter },
                         listReference: {
                             id: this.listId,
                             type: 'shared-list-reference',
@@ -119,8 +119,8 @@ export default class ListShareModalLogic extends UILogic<
                     })
 
                     newLinks.unshift({
-                        link: readerLink.link,
-                        roleID: SharedListRoleID.Reader,
+                        link: commenterLink.link,
+                        roleID: SharedListRoleID.Commenter,
                     })
                 }
 
@@ -145,7 +145,7 @@ export default class ListShareModalLogic extends UILogic<
     }) => {
         if (
             previousState.inviteLinks[event.linkIndex].roleID ===
-            SharedListRoleID.Reader
+            SharedListRoleID.Commenter
         ) {
             return
         }

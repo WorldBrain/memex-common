@@ -34,9 +34,9 @@ export default class ListShareModal extends UIElement<
         return (
             addLinkState === 'running' ||
             (inviteLinks.find(
-                (link) => link.roleID === SharedListRoleID.Reader,
+                (link) => link.roleID === SharedListRoleID.Commenter,
             ) != null &&
-                addLinkRoleID === SharedListRoleID.Reader)
+                addLinkRoleID === SharedListRoleID.Commenter)
         )
     }
 
@@ -103,7 +103,11 @@ export default class ListShareModal extends UIElement<
                         }
                     />
                     <Margin horizontal="small">
-                        <LinkBox>
+                        <LinkBox
+                            onClick={() =>
+                                this.processEvent('copyLink', { linkIndex })
+                            }
+                        >
                             <Link>
                                 {showCopyMsg ? 'Copied to clipboard' : link}
                             </Link>
@@ -114,7 +118,7 @@ export default class ListShareModal extends UIElement<
                         <BoldText>{sharedListRoleIDToString(roleID)}</BoldText>
                     </PermissionText>
                 </CopyLinkBox>
-                {roleID !== SharedListRoleID.Reader && (
+                {/*{roleID !== SharedListRoleID.Reader && (
                     <Icon
                         icon="removeX"
                         height="12px"
@@ -124,7 +128,7 @@ export default class ListShareModal extends UIElement<
                             })
                         }
                     />
-                )}
+                )}*/}
             </LinkContainer>
         </Margin>
     )
@@ -169,9 +173,9 @@ export default class ListShareModal extends UIElement<
                 }
                 options={[
                     {
-                        value: SharedListRoleID.Reader,
+                        value: SharedListRoleID.Commenter,
                         headerText: sharedListRoleIDToString(
-                            SharedListRoleID.Reader,
+                            SharedListRoleID.Commenter,
                         ),
                         subText: 'Can view content and reply to notes',
                     },
@@ -216,6 +220,8 @@ export default class ListShareModal extends UIElement<
     }
 
     render() {
+
+        console.log(this.state.addLinkRoleID)
         return (
             <>
                 <Overlay
@@ -242,6 +248,15 @@ export default class ListShareModal extends UIElement<
                                         </Text>
                                     </AddLinkBoxTextContainer>
                                 </Margin>
+                                {this.state.addLinkRoleID === 800 ? (
+                                    <PermissionDisclaimer bottom="medium">
+                                        <strong>Permission:</strong> Can add pages, highlights, notes and replies
+                                    </PermissionDisclaimer>
+                                ):(
+                                    <PermissionDisclaimer bottom="medium">
+                                        <strong>Permission:</strong> Can view pages, highlights and add replies
+                                    </PermissionDisclaimer>
+                                )}
                                 <ButtonBox>
                                     <Button
                                         type="primary-action"
@@ -396,6 +411,7 @@ const LinkBox = styled.div`
     white-space: nowrap;
     overflow-x: scroll;
     text-align: left;
+    cursor: pointer;
 `
 
 const Link = styled.span`
@@ -418,4 +434,10 @@ const ButtonBox = styled.div`
     display: flex;
     justify-content: flex-start;
     align-items: center;
+`
+
+const PermissionDisclaimer = styled(Margin)`
+    font-size: 12px;
+    color: ${(props) => props.theme.colors.primary};
+    opacity: 0.8;
 `

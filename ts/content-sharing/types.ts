@@ -16,7 +16,7 @@ export type SharedListKeyReference = AutoPkStorageReference<'shared-list-key-ref
 
 
 export enum SharedListRoleID {
-    Reader = 100,
+    Commenter = 100,
     SuggestOnly = 200,
     AddOnly = 400,
     ReadWrite = 800,
