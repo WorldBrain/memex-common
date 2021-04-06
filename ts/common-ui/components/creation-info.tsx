@@ -16,15 +16,16 @@ const AvatarHolder = styled.div`
 `
 
 const Details = styled.div`
-    diplay: flex;
+    display: flex;
     align-items: center;
     justify-content: flex-start;
 `
 
 const Creator = styled.div`
-    font-weight: 600;
+    font-weight: 500;
     color: ${(props) => props.theme.colors.primary};
     font-size: 12px;
+    display: flex;
 `
 const EditedText = styled.span`
     font-weight: bold;
@@ -59,22 +60,26 @@ export default function CreationInfo(props: CreationInfoProps) {
             }
             <Details>
                 {props.creator?.displayName && (
-                    <Margin right="smallest">
                         <Creator>
-                            {props.creator?.displayName ?? <span>&nbsp;</span>}
+                            {props.creator?.displayName ?? <span>&nbsp;</span>} 
+                            <Margin left="smallest">
+                            ·
+                            </Margin>
                         </Creator>
-                    </Margin>
                 )}
-                <CreationDate>
-                    {props.lastEdited && <EditedText>Last Edit: </EditedText>}
-                    {props.createdWhen || props.lastEdited ? (
-                        moment(props.lastEdited ?? props.createdWhen).format(
-                            'LLL',
-                        )
-                    ) : (
-                        <span>&nbsp;</span>
-                    )}
-                </CreationDate>
+
+                <Margin left="smallest">
+                    <CreationDate>
+                        {props.lastEdited && <EditedText>Last Edit: </EditedText>}
+                        {props.createdWhen || props.lastEdited ? (
+                            moment(props.lastEdited ?? props.createdWhen).format(
+                                'LLL',
+                            )
+                        ) : (
+                            <span>&nbsp;</span>
+                        )}
+                    </CreationDate>
+                </Margin>
             </Details>
         </StyledCreationInfo>
     )

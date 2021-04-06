@@ -59,15 +59,16 @@ const ResultContent = styled(Margin)`
 const PageUrl = styled.span`
     font-size: 12px;
     color: #545454;
-    padding-bottom: 5px;
 `
 
 const PageTitle = styled(Margin)`
     font-size: 14px;
-    font-weight: bold;
+    font-weight: 600;
     color: #3a2f45;
     justify-content: flex-start;
 `
+
+const CreatorBox = styled.div``
 
 export type PageInfoBoxAction =
     | {
@@ -109,11 +110,13 @@ export default function PageInfoBox(props: PageInfoBoxProps) {
                     </PageContentBox>
                 </PageInfoBoxLink>
                 <PageContentBoxBottom>
+                    <CreatorBox>
                     {props.creator &&
                         renderCreationInfo({
                             creator: props.creator,
                             createdWhen: pageInfo.createdWhen,
                         })}
+                    </CreatorBox>
                     {props.actions && (
                         <PageInfoBoxRight>
                             <PageInfoBoxActions>
