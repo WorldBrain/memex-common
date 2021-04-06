@@ -1,4 +1,3 @@
-import moment from 'moment'
 import React from 'react'
 import styled from 'styled-components'
 import { Margin } from 'styled-components-spacing'
@@ -7,82 +6,67 @@ import { SharedPageInfo } from '../../content-sharing/types'
 import ItemBox from '../components/item-box'
 import CreationInfo, { CreationInfoProps } from './creation-info'
 
-const PageBox = styled.div`
+const PageContentBox = styled.div`
     display: flex;
-    width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    padding: 15px 15px 10px 15px;
 `
 
-const PageContentBox = styled.div`
-    flex: 1;
-    width: 80%;
-    max-width: 96%;
+const PageContentBoxBottom = styled.div`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #e0e0e0;
+    height: 40px;
+    padding: 0px 15px 0px 15px;
 `
 
 const PageInfoBoxLink = styled.a`
     text-decoration: none;
 `
 
-const PageInfoBoxLeft = styled.div`
-    text-decoration: none;
-    padding: 15px 0px 15px 20px;
-    cursor: pointer;
-`
-
-const PageInfoBoxTop = styled.div`
-    display: flex;
-`
-const PageInfoBoxTitle = styled.div`
-    flex-grow: 2;
-    font-weight: 600;
-    color: ${(props) => props.theme.colors.primary};
-    text-decoration: none;
-    font-size: ${(props) => props.theme.fontSizes.listTitle};
-    text-overflow: ellipsis;
-    overflow-x: hidden;
-    text-decoration: none;
-    overflow-wrap: break-word;
-    white-space: nowrap;
-`
-
-const PageInfoBoxUrl = styled.div`
-    font-weight: 400;
-    font-size: ${(props) => props.theme.fontSizes.url};
-    color: ${(props) => props.theme.colors.subText};
-    text-overflow: ellipsis;
-    overflow-x: hidden;
-    text-decoration: none;
-    overflow-wrap: break-word;
-    white-space: nowrap;
-    max-width: 100%;
-`
-
-const CreatedWhenDate = styled.div`
-    font-family: 'Poppins', sans-serif;
-    font-weight: normal;
-    font-size: 12px;
-    color: ${(props) => props.theme.colors.primary};
-`
-
 const PageInfoBoxRight = styled.div`
     text-decoration: none;
-    padding: 15px 0px 15px 10px;
     cursor: default;
-    width: 50px;
 `
 
 const PageInfoBoxActions = styled.div`
     display: flex;
 `
 const PageInfoBoxAction = styled.div<{ image: string }>`
-  display: block;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  background-image: url("${(props) => props.image}");
-  background-size: contain;
-  background-position: center center;
-  background-repeat: no-repeat;
+    display: block;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    background-image: url('${(props) => props.image}');
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
+`
+
+const StyledPageResult = styled.div`
+    display: flex;
+    flex-direction: column;
+`
+
+const ResultContent = styled(Margin)`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+`
+const PageUrl = styled.span`
+    font-size: 12px;
+    color: #545454;
+    padding-bottom: 5px;
+`
+
+const PageTitle = styled(Margin)`
+    font-size: 14px;
+    font-weight: bold;
+    color: #3a2f45;
+    justify-content: flex-start;
 `
 
 export type PageInfoBoxAction =
@@ -93,7 +77,10 @@ export type PageInfoBoxAction =
     | { node: React.ReactNode }
 
 export interface PageInfoBoxProps {
-    pageInfo: Pick<SharedPageInfo, 'fullTitle' | 'createdWhen' | 'originalUrl' | 'normalizedUrl'>
+    pageInfo: Pick<
+        SharedPageInfo,
+        'fullTitle' | 'createdWhen' | 'originalUrl' | 'normalizedUrl'
+    >
     creator?: Pick<User, 'displayName'> | null
     actions?: Array<PageInfoBoxAction>
     children?: React.ReactNode
@@ -102,52 +89,50 @@ export interface PageInfoBoxProps {
 
 export default function PageInfoBox(props: PageInfoBoxProps) {
     const { pageInfo } = props
-    const renderCreationInfo = props.renderCreationInfo ?? ((props) =>  <CreationInfo {...props} />)
+    const [domain] = pageInfo.normalizedUrl.split('/')
+    const renderCreationInfo =
+        props.renderCreationInfo ?? ((props) => <CreationInfo {...props} />)
 
     return (
         <ItemBox>
-            <PageBox>
-                <PageContentBox>
-                    <PageInfoBoxLink
-                        href={pageInfo.originalUrl}
-                        target="_blank"
-                    >
-                        <PageInfoBoxLeft>
-                            <PageInfoBoxTop>
-                                <PageInfoBoxTitle title={pageInfo.fullTitle}>
-                                    {pageInfo.fullTitle}
-                                </PageInfoBoxTitle>
-                            </PageInfoBoxTop>
-                            <Margin bottom="smallest">
-                                <PageInfoBoxUrl>
-                                    {pageInfo.normalizedUrl}
-                                </PageInfoBoxUrl>
-                            </Margin>
-                            {props.creator && renderCreationInfo({
-                                creator: props.creator,
-                                createdWhen: pageInfo.createdWhen
-                            })}
-                        </PageInfoBoxLeft>
-                    </PageInfoBoxLink>
-                </PageContentBox>
-                {props.actions && (
-                    <PageInfoBoxRight>
-                        <PageInfoBoxActions>
-                            {props.actions.map((action, actionIndex) =>
-                                'image' in action ? (
-                                    <PageInfoBoxAction
-                                        key={actionIndex}
-                                        image={action.image}
-                                        onClick={action.onClick}
-                                    />
-                                ) : (
-                                    action.node
-                                ),
-                            )}
-                        </PageInfoBoxActions>
-                    </PageInfoBoxRight>
-                )}
-            </PageBox>
+            <StyledPageResult>
+                <PageInfoBoxLink href={pageInfo.originalUrl} target="_blank">
+                    <PageContentBox>
+                        <ResultContent>
+                            <PageUrl title={pageInfo.normalizedUrl}>
+                                {domain}
+                            </PageUrl>
+                        </ResultContent>
+                        <PageTitle>
+                            {pageInfo.fullTitle ?? pageInfo.normalizedUrl}
+                        </PageTitle>
+                    </PageContentBox>
+                </PageInfoBoxLink>
+                <PageContentBoxBottom>
+                    {props.creator &&
+                        renderCreationInfo({
+                            creator: props.creator,
+                            createdWhen: pageInfo.createdWhen,
+                        })}
+                    {props.actions && (
+                        <PageInfoBoxRight>
+                            <PageInfoBoxActions>
+                                {props.actions.map((action, actionIndex) =>
+                                    'image' in action ? (
+                                        <PageInfoBoxAction
+                                            key={actionIndex}
+                                            image={action.image}
+                                            onClick={action.onClick}
+                                        />
+                                    ) : (
+                                        action.node
+                                    ),
+                                )}
+                            </PageInfoBoxActions>
+                        </PageInfoBoxRight>
+                    )}
+                </PageContentBoxBottom>
+            </StyledPageResult>
         </ItemBox>
     )
 }
