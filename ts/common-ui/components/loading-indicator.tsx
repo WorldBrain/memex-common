@@ -22,8 +22,8 @@ const Loader = styled.div`
     position: relative;
     font-size: 10px;
     text-indent: -9999em;
-    width: 25px;
-    height: 25px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: #99879f;
     background: gradient(left, #99879f 10%, rgba(60, 46, 71, 0) 42%);

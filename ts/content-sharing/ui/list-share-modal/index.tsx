@@ -154,12 +154,14 @@ export default class ListShareModal extends UIElement<
 
         return (
             <InviteLinksBox>
+            {this.state.inviteLinks.length > 0 &&
                 <Margin top="medium">
                     <Margin bottom="small">
                         <Header>Invite Links</Header>
                     </Margin>
                     <InviteLinksContainer>{renderedLinks}</InviteLinksContainer>
                 </Margin>
+            }
             </InviteLinksBox>
         )
     }
@@ -197,13 +199,13 @@ export default class ListShareModal extends UIElement<
             return
         }
 
-        const iconField = this.state.showSuccessMsg
+        const iconField = this.state.addLinkState !== 'error'
             ? 'checkRound'
             : 'alertRound'
         const msgText =
             this.state.addLinkState !== 'error'
                 ? 'Link created and copied to clipboard'
-                : 'Error creating the link. Try again'
+                : "Only the collection creator can invite people as contributors." //temporary solution to improve UX // TODO
 
         return (
             <Margin left="medium">
