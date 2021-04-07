@@ -11,7 +11,6 @@ export const CONTENT_SHARING_HOOKS: StorageHooks = {
         userField: 'creator',
         function: async context => {
             const listEntry: SharedListEntry & { id: number | string, sharedList: number | string } = await context.getObject()
-            console.log(listEntry, context)
             const listReference = makeStorageReference<SharedListReference>('shared-list-reference', listEntry.sharedList)
             const entryReference = makeStorageReference<SharedListEntryReference>('shared-list-entry-reference', listEntry.id)
             await context.services.activityStreams.addActivity({
