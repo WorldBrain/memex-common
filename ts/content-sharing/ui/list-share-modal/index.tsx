@@ -220,8 +220,6 @@ export default class ListShareModal extends UIElement<
     }
 
     render() {
-
-        console.log(this.state.addLinkRoleID)
         return (
             <>
                 <Overlay
@@ -248,15 +246,13 @@ export default class ListShareModal extends UIElement<
                                         </Text>
                                     </AddLinkBoxTextContainer>
                                 </Margin>
-                                {this.state.addLinkRoleID === 800 ? (
-                                    <PermissionDisclaimer bottom="medium">
-                                        <strong>Permission:</strong> Can add pages, highlights, notes and replies
-                                    </PermissionDisclaimer>
-                                ):(
-                                    <PermissionDisclaimer bottom="medium">
-                                        <strong>Permission:</strong> Can view pages, highlights and add replies
-                                    </PermissionDisclaimer>
-                                )}
+                                <PermissionDisclaimer bottom="medium">
+                                    <strong>Permission: </strong>
+                                    {this.state.addLinkRoleID ===
+                                    SharedListRoleID.ReadWrite
+                                        ? 'Can add pages, highlights, notes and replies'
+                                        : 'Can view pages, highlights and add replies'}
+                                </PermissionDisclaimer>
                                 <ButtonBox>
                                     <Button
                                         type="primary-action"
