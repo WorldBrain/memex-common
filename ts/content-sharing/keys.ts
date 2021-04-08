@@ -12,11 +12,20 @@ export async function processListKey(params: {
     userMessages: UserMessageService
     activityFollows: ActivityFollowsStorage
 }) {
+    console.log(params.keyString, params.listReference.id)
     const { contentSharing } = params
     const key = await contentSharing.getListKey(params)
     if (!key) {
         return false
     }
+    const list = await contentSharing.getListByReference(params.listReference)
+    if (!list) {
+        return false
+    }
+    if (list.creator.id === params.userReference.id) {
+        return true
+    }
+
     const existingRole = await contentSharing.getListRole(params)
     if (!existingRole) {
         await contentSharing.createListRole({ ...params, roleID: key.roleID })

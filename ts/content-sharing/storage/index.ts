@@ -273,13 +273,13 @@ export default class ContentSharingStorage extends StorageModule {
         const retrievedEntry:
             | null
             | (types.SharedListEntry & {
-                  id: number | string
-                  creator: number | string
-                  sharedList: number | string
-              }) = await this.operation('findSingleEntryByUserAndUrl', {
-            creator: this._idFromReference(params.creatorReference),
-            normalizedUrl: params.normalizedUrl,
-        })
+                id: number | string
+                creator: number | string
+                sharedList: number | string
+            }) = await this.operation('findSingleEntryByUserAndUrl', {
+                creator: this._idFromReference(params.creatorReference),
+                normalizedUrl: params.normalizedUrl,
+            })
         if (!retrievedEntry) {
             return null
         }
@@ -340,12 +340,12 @@ export default class ContentSharingStorage extends StorageModule {
         const rawPageInfo:
             | null
             | (types.SharedPageInfo & {
-                  id: number | string
-                  creator: number | string
-              }) = await this.operation('findPageInfoByCreatorAndUrl', {
-            normalizedUrl: params.normalizedUrl,
-            creator: this._idFromReference(params.creatorReference),
-        })
+                id: number | string
+                creator: number | string
+            }) = await this.operation('findPageInfoByCreatorAndUrl', {
+                normalizedUrl: params.normalizedUrl,
+                creator: this._idFromReference(params.creatorReference),
+            })
         return this._preparePageInfoForUser(rawPageInfo)
     }
 
@@ -353,9 +353,9 @@ export default class ContentSharingStorage extends StorageModule {
         rawPageInfo:
             | null
             | (types.SharedPageInfo & {
-                  id: number | string
-                  creator: number | string
-              }),
+                id: number | string
+                creator: number | string
+            }),
     ) {
         if (!rawPageInfo) {
             return null
@@ -669,9 +669,9 @@ export default class ContentSharingStorage extends StorageModule {
         const retrievedAnnotation:
             | null
             | (types.SharedAnnotation & {
-                  id: string | number
-                  creator: string | number
-              }) = await this.operation('findAnnotationById', { id })
+                id: string | number
+                creator: string | number
+            }) = await this.operation('findAnnotationById', { id })
         if (!retrievedAnnotation) {
             return null
         }
@@ -780,9 +780,9 @@ export default class ContentSharingStorage extends StorageModule {
 
             const filtered = listIds
                 ? annotationEntries.filter(
-                      (annotationEntry) =>
-                          !listIds || listIds.has(annotationEntry.sharedList),
-                  )
+                    (annotationEntry) =>
+                        !listIds || listIds.has(annotationEntry.sharedList),
+                )
                 : annotationEntries
             batch.push(
                 ...filtered.map((annotationEntry) => ({
@@ -880,7 +880,7 @@ export default class ContentSharingStorage extends StorageModule {
     }) {
         const retrievedKey = await this.operation('findListKey', {
             sharedList: params.listReference.id,
-            id: params.keyString,
+            id: this.options.autoPkType === 'string' ? params.keyString : parseInt(params.keyString),
         })
         const relations = {
             sharedList: 'shared-list-reference' as types.SharedListReference['type'],
