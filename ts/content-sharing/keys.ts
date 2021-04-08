@@ -12,7 +12,6 @@ export async function processListKey(params: {
     userMessages: UserMessageService
     activityFollows: ActivityFollowsStorage
 }) {
-    console.log(params.keyString, params.listReference.id)
     const { contentSharing } = params
     const key = await contentSharing.getListKey(params)
     if (!key) {
