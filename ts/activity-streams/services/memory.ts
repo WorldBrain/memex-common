@@ -1,7 +1,7 @@
 import ContentConversationStorage from "../../content-conversations/storage";
 import ContentSharingStorage from "../../content-sharing/storage";
 import UserStorage from "../../user-management/storage";
-import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult, UnfollowEntityParams } from "./../types";
+import { ActivityStreamsService, ActivityStream, EntitityActivities, AddActivityParams, FollowEntityParams, FeedType, GetHomeActivitiesResult, GetActivitiesParams, GetHomeFeedInfoResult, UnfollowEntityParams, ConversationReplyActivity } from "./../types";
 import { concretizeActivity } from "../utils";
 
 export interface MemoryFollow {
@@ -75,14 +75,19 @@ export default class MemoryStreamsService implements ActivityStreamsService {
             ...params
         })
 
-        this.activities.push({
+        const storedActivity = {
             id: `act-${++this.activityCounter}`,
             createdWhen: Date.now(),
             entity: { type: params.entityType, id: params.entity.id },
             userId,
             type: params.activityType as string,
             data: activity,
-        })
+        };
+        this.activities.push(storedActivity)
+        if (params.entityType === 'conversationThread' && params.activityType === 'conversationReply') {
+            const replyActivity = activity as ConversationReplyActivity['result']
+            this.activities.push({ ...storedActivity, entity: { type: 'sharedPageInfo', id: replyActivity.pageInfo.reference.id } })
+        }
 
         if (params.follow) {
             await this.followEntity({
