@@ -31,13 +31,16 @@ export async function processListKey(params: {
     } else if (existingRole.roleID < key.roleID) {
         await contentSharing.updateListRole({ ...params, roleID: key.roleID })
     }
-    if (!existingRole) {
-        await params.activityFollows.storeFollow({
-            collection: 'sharedList',
-            objectId: params.listReference.id as string,
-            userReference: params.userReference,
-        })
-    }
+    await params.activityFollows.storeFollow({
+        collection: 'sharedList',
+        objectId: params.listReference.id as string,
+        userReference: params.userReference,
+    })
+    await params.activityFollows.storeFollow({
+        collection: 'sharedList',
+        objectId: params.listReference.id as string,
+        userReference: list.creator,
+    })
     await params.userMessages.pushMessage({ type: 'joined-collection', sharedListId: params.listReference.id })
     return true
 }
