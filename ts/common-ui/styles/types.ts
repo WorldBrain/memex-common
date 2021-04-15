@@ -21,6 +21,7 @@ export type IconKeys =
     | 'checkRound'
     | 'alertRound'
     | 'check'
+    | 'plusIcon'
     | 'people'
     | 'webLogo'
     | 'mediumLogo'

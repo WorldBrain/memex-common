@@ -98,6 +98,7 @@ export default class ListShareModal extends UIElement<
                     <Icon
                         icon="copy"
                         height="16px"
+                        color="primary"
                         onClick={() =>
                             this.processEvent('copyLink', { linkIndex })
                         }
@@ -212,7 +213,7 @@ export default class ListShareModal extends UIElement<
                 <MsgContainer>
                     <AddMsgBox>
                         <Margin right="small">
-                            <Icon icon={iconField} height="20px" />
+                            <Icon color={iconField === 'checkRound' ? 'primary' : 'warning'} icon={iconField} height="20px" />
                         </Margin>
                         <MsgText>{msgText}</MsgText>
                     </AddMsgBox>

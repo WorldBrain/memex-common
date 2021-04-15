@@ -11,7 +11,7 @@ const StyledIcon = styled.div<{
     cursor: pointer;
     height: ${(props) => props.height};
     width: ${(props) => props.width};
-    background-color: ${(props) => props.color === 'purple' ? 'props.theme.color.purple' : 'black'};
+    background-color: ${(props) => props.theme.colors[props.color] ?? props.color}};
     mask-position: center;
     mask-size: contain;
     mask-repeat: no-repeat;
