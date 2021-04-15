@@ -6,20 +6,23 @@ const StyledIcon = styled.div<{
     icon: string
     height: string
     width: string
+    color?: string
 }>`
     cursor: pointer;
     height: ${(props) => props.height};
     width: ${(props) => props.width};
-    background-position: center;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-image: url(${(props) =>
+    background-color: ${(props) => props.color === 'purple' ? 'props.theme.color.purple' : 'black'};
+    mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-image: url(${(props) =>
         props.theme.icons[props.icon] ?? props.icon});
 `
 
 export type IconProps = {
     height: string
     width?: string
+    color?: string
     onClick?: React.MouseEventHandler
 } & ({ icon: IconKeys } | { filePath: string })
 
@@ -33,6 +36,7 @@ export default function Icon(props: IconProps) {
             height={props.height}
             width={width}
             icon={icon}
-        />
+            color={color}
+        />     
     )
 }

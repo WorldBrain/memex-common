@@ -20,6 +20,8 @@ export type IconKeys =
     | 'addPeople'
     | 'checkRound'
     | 'alertRound'
+    | 'check'
+    | 'people'
     | 'webLogo'
     | 'mediumLogo'
     | 'twitterLogo'
