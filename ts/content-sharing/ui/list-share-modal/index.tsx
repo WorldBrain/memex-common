@@ -17,8 +17,9 @@ import {
 } from './types'
 import { sharedListRoleIDToString } from './util'
 import { ViewportBreakpoint } from '../../../common-ui/styles/types'
+import { getViewportBreakpoint } from 'src/common-ui/styles/utils'
 
-export type Props = ListShareModalDependencies & {ViewportBreakpoint}
+export type Props = ListShareModalDependencies
 
 export default class ListShareModal extends UIElement<
     Props,
@@ -156,14 +157,16 @@ export default class ListShareModal extends UIElement<
 
         return (
             <InviteLinksBox>
-            {this.state.inviteLinks.length > 0 &&
-                <Margin top="medium">
-                    <Margin bottom="small">
-                        <Header>Invite Links</Header>
+                {this.state.inviteLinks.length > 0 && (
+                    <Margin top="medium">
+                        <Margin bottom="small">
+                            <Header>Invite Links</Header>
+                        </Margin>
+                        <InviteLinksContainer>
+                            {renderedLinks}
+                        </InviteLinksContainer>
                     </Margin>
-                    <InviteLinksContainer>{renderedLinks}</InviteLinksContainer>
-                </Margin>
-            }
+                )}
             </InviteLinksBox>
         )
     }
@@ -201,20 +204,27 @@ export default class ListShareModal extends UIElement<
             return
         }
 
-        const iconField = this.state.addLinkState !== 'error'
-            ? 'checkRound'
-            : 'alertRound'
+        const iconField =
+            this.state.addLinkState !== 'error' ? 'checkRound' : 'alertRound'
         const msgText =
             this.state.addLinkState !== 'error'
                 ? 'Link created and copied to clipboard'
-                : "Only the collection creator can invite people as contributors." //temporary solution to improve UX // TODO
+                : 'Only the collection creator can invite people as contributors.' //temporary solution to improve UX // TODO
 
         return (
             <Margin left="medium">
                 <MsgContainer>
                     <AddMsgBox>
                         <Margin right="small">
-                            <Icon color={iconField === 'checkRound' ? 'primary' : 'warning'} icon={iconField} height="20px" />
+                            <Icon
+                                color={
+                                    iconField === 'checkRound'
+                                        ? 'primary'
+                                        : 'warning'
+                                }
+                                icon={iconField}
+                                height="20px"
+                            />
                         </Margin>
                         <MsgText>{msgText}</MsgText>
                     </AddMsgBox>
@@ -224,6 +234,10 @@ export default class ListShareModal extends UIElement<
     }
 
     render() {
+        const viewportBreakpoint = getViewportBreakpoint(
+            this.getViewportWidth(),
+        )
+
         return (
             <>
                 <Overlay
@@ -240,7 +254,7 @@ export default class ListShareModal extends UIElement<
                             <AddLinkBox>
                                 <Margin bottom="small">
                                     <AddLinkBoxTextContainer
-                                        ViewportBreakpoint={this.props.ViewportBreakpoint}
+                                        viewportBreakpoint={viewportBreakpoint}
                                     >
                                         <Text>
                                             Create an invite link that grants{' '}
@@ -363,14 +377,15 @@ const AddLinkBox = styled.div`
 `
 
 const AddLinkBoxTextContainer = styled.div<{
-    ViewportBreakpoint: string
+    viewportBreakpoint: string
 }>`
     display: flex;
     align-items: center;
     justify-content: center;
 
     ${(props) =>
-        (props.ViewportBreakpoint === 'small' || props.ViewportBreakpoint === 'mobile') &&
+        (props.viewportBreakpoint === 'small' ||
+            props.viewportBreakpoint === 'mobile') &&
         css`
             flex-direction: column;
         `}
