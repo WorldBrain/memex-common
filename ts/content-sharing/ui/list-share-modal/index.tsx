@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Margin } from 'styled-components-spacing'
 import { UIElement } from '../../../main-ui/classes'
 import { SharedListRoleID } from '../../types'
@@ -16,8 +16,9 @@ import {
     InviteLink,
 } from './types'
 import { sharedListRoleIDToString } from './util'
+import { ViewportBreakpoint } from '../../../common-ui/styles/types'
 
-export type Props = ListShareModalDependencies & {}
+export type Props = ListShareModalDependencies & {ViewportBreakpoint}
 
 export default class ListShareModal extends UIElement<
     Props,
@@ -238,7 +239,9 @@ export default class ListShareModal extends UIElement<
                         <Margin top="medium">
                             <AddLinkBox>
                                 <Margin bottom="small">
-                                    <AddLinkBoxTextContainer>
+                                    <AddLinkBoxTextContainer
+                                        ViewportBreakpoint={this.props.ViewportBreakpoint}
+                                    >
                                         <Text>
                                             Create an invite link that grants{' '}
                                         </Text>
@@ -359,10 +362,18 @@ const AddLinkBox = styled.div`
     flex-direction: column;
 `
 
-const AddLinkBoxTextContainer = styled.div`
+const AddLinkBoxTextContainer = styled.div<{
+    ViewportBreakpoint: string
+}>`
     display: flex;
     align-items: center;
     justify-content: center;
+
+    ${(props) =>
+        (props.ViewportBreakpoint === 'small' || props.ViewportBreakpoint === 'mobile') &&
+        css`
+            flex-direction: column;
+        `}
 `
 
 const LinkContainer = styled.div`
