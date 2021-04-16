@@ -16,7 +16,6 @@ import {
     InviteLink,
 } from './types'
 import { sharedListRoleIDToString } from './util'
-import { ViewportBreakpoint } from '../../../common-ui/styles/types'
 import { getViewportBreakpoint } from '../../../common-ui/styles/utils'
 
 export type Props = ListShareModalDependencies
@@ -105,7 +104,9 @@ export default class ListShareModal extends UIElement<
                             this.processEvent('copyLink', { linkIndex })
                         }
                     />
-                    <Margin horizontal="small">
+                    <LinkAndRoleBox
+                        viewportBreakpoint={viewportBreakpoint}
+                    >
                         <LinkBox
                             onClick={() =>
                                 this.processEvent('copyLink', { linkIndex })
@@ -115,11 +116,11 @@ export default class ListShareModal extends UIElement<
                                 {showCopyMsg ? 'Copied to clipboard' : link}
                             </Link>
                         </LinkBox>
-                    </Margin>
                     <PermissionText>
                         <Margin right="smallest">invite as</Margin>
                         <BoldText>{sharedListRoleIDToString(roleID)}</BoldText>
                     </PermissionText>
+                    </LinkAndRoleBox>
                 </CopyLinkBox>
                 {/*{roleID !== SharedListRoleID.Reader && (
                     <Icon
@@ -244,7 +245,9 @@ export default class ListShareModal extends UIElement<
                     services={this.props.services}
                     onCloseRequested={this.props.onCloseRequested}
                 >
-                    <ModalContainer>
+                    <ModalContainer
+                        viewportBreakpoint={viewportBreakpoint}
+                    >
                         <Header>Invite by Link</Header>
                         <Text>
                             Invite other people to view or collaborate on this
@@ -301,7 +304,9 @@ export default class ListShareModal extends UIElement<
     }
 }
 
-const ModalContainer = styled.div`
+const ModalContainer = styled.div<{
+    viewportBreakpoint: string
+}>`
     width: 100%;
     padding: 20px;
     display: flex;
@@ -312,7 +317,33 @@ const ModalContainer = styled.div`
     & * {
         font-family: ${(props) => props.theme.fonts.primary};
     }
+
+    ${(props) =>
+        (props.viewportBreakpoint === 'small' ||
+            props.viewportBreakpoint === 'mobile') &&
+        css`
+            padding: 0px;
+        `}
 `
+
+const LinkAndRoleBox = styled.div<{
+    viewportBreakpoint: string
+}>`
+    padding-left: 1em;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+     ${(props) =>
+        (props.viewportBreakpoint === 'small' ||
+            props.viewportBreakpoint === 'mobile') &&
+        css`
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        `}
+`
+
 
 const DeleteModalContainer = styled(ModalContainer)`
     align-items: flex-start;
@@ -352,6 +383,8 @@ const PermissionText = styled.span`
     opacity: 0.8;
     display: flex;
     flex-direction: row;
+    width: 250px;
+    padding-left: 20px;
 `
 
 const MsgText = styled.span`
@@ -388,6 +421,7 @@ const AddLinkBoxTextContainer = styled.div<{
             props.viewportBreakpoint === 'mobile') &&
         css`
             flex-direction: column;
+            align-items: flex-start;
         `}
 `
 
@@ -431,12 +465,13 @@ const LinkBox = styled.div`
     background-color: ${(props) => props.theme.colors.grey};
     font-size: 12px;
     border-radius: 3px;
-    width: 350px;
+    width: fill-available;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow-x: scroll;
     text-align: left;
     cursor: pointer;
+    width: 100%;
 `
 
 const Link = styled.span`
@@ -447,6 +482,7 @@ const CopyLinkBox = styled.div`
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    width: 100%;
 `
 
 const MsgContainer = styled.div`
