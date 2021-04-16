@@ -1,5 +1,7 @@
 import { SpacingValue } from 'styled-components-spacing'
 
+export type ViewportBreakpoint = 'mobile' | 'small' | 'big' | 'normal'
+
 export type ColorThemeKeys =
     | 'background'
     | 'warning'
