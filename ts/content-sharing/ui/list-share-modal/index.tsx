@@ -111,35 +111,38 @@ export default class ListShareModal extends UIElement<
         )
 
         return (
-            <Margin key={linkIndex} bottom="smallest">
+            <Margin key={linkIndex} bottom="small">
                 <LinkContainer>
-                    <CopyLinkBox>
-                        <Icon
-                            icon="copy"
-                            height="16px"
-                            color="primary"
-                            onClick={() =>
-                                this.processEvent('copyLink', { linkIndex })
-                            }
-                        />
                         <LinkAndRoleBox viewportBreakpoint={viewportBreakpoint}>
-                            <LinkBox
+                            <CopyLinkBox>
+                                <Icon
+                                icon="copy"
+                                height="16px"
+                                color="primary"
                                 onClick={() =>
                                     this.processEvent('copyLink', { linkIndex })
                                 }
+                                />
+                                <LinkBox
+                                    left="small"
+                                    onClick={() =>
+                                        this.processEvent('copyLink', { linkIndex })
+                                    }
+                                >
+                                    <Link>
+                                        {showCopyMsg ? 'Copied to clipboard' : link}
+                                    </Link>
+                                </LinkBox>
+                            </CopyLinkBox>
+                            <PermissionText
+                                viewportBreakpoint={viewportBreakpoint}
                             >
-                                <Link>
-                                    {showCopyMsg ? 'Copied to clipboard' : link}
-                                </Link>
-                            </LinkBox>
-                            <PermissionText>
                                 <Margin right="smallest">invite as</Margin>
                                 <BoldText>
                                     {sharedListRoleIDToString(roleID)}
                                 </BoldText>
                             </PermissionText>
                         </LinkAndRoleBox>
-                    </CopyLinkBox>
                     {/*{roleID !== SharedListRoleID.Reader && (
                         <Icon
                             icon="removeX"
@@ -346,7 +349,6 @@ const ModalContainer = styled.div<{
 const LinkAndRoleBox = styled.div<{
     viewportBreakpoint: string
 }>`
-    padding-left: 1em;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -393,14 +395,23 @@ const Text = styled.span`
     opacity: 0.8;
 `
 
-const PermissionText = styled.span`
+const PermissionText = styled.span<{
+    viewportBreakpoint: string
+}>`
     font-size: 14px;
     color: ${(props) => props.theme.colors.primary};
     opacity: 0.8;
     display: flex;
     flex-direction: row;
     width: 250px;
-    padding-left: 20px;
+    padding-left: 15px;
+
+    ${(props) =>
+        (props.viewportBreakpoint === 'small' ||
+            props.viewportBreakpoint === 'mobile') &&
+        css`
+            padding-left: 0px;
+        `}
 `
 
 const MsgText = styled.span`
@@ -476,7 +487,7 @@ const InviteLinksBox = styled.div`
     width: 100%;
 `
 
-const LinkBox = styled.div`
+const LinkBox = styled(Margin)`
     display: flex;
     background-color: ${(props) => props.theme.colors.grey};
     font-size: 12px;
