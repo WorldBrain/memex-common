@@ -17,7 +17,7 @@ import {
 } from './types'
 import { sharedListRoleIDToString } from './util'
 import { ViewportBreakpoint } from '../../../common-ui/styles/types'
-import { getViewportBreakpoint } from 'src/common-ui/styles/utils'
+import { getViewportBreakpoint } from '../../../common-ui/styles/utils'
 
 export type Props = ListShareModalDependencies
 
