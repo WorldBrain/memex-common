@@ -41,101 +41,120 @@ export default class ListShareModal extends UIElement<
         )
     }
 
-    private renderDeleteModal = () =>
-        this.state.linkDeleteIndex != null && (
-            <Overlay
-                services={this.props.services}
-                onCloseRequested={() =>
-                    this.processEvent('cancelLinkDelete', null)
-                }
-            >
-                <DeleteModalContainer>
-                    <Header>Sure you want to delete this link?</Header>
-                    <Text>This action cannnot be undone.</Text>
-                    <Margin top="medium">
-                        <DeleteModalBtnContainer>
-                            <Margin right="small">
+    private renderDeleteModal = () => {
+        const viewportBreakpoint = getViewportBreakpoint(
+            this.getViewportWidth(),
+        )
+
+        return (
+            this.state.linkDeleteIndex != null && (
+                <Overlay
+                    services={this.props.services}
+                    onCloseRequested={() =>
+                        this.processEvent('cancelLinkDelete', null)
+                    }
+                >
+                    <DeleteModalContainer
+                        viewportBreakpoint={viewportBreakpoint}
+                    >
+                        <Header>Sure you want to delete this link?</Header>
+                        <Text>This action cannnot be undone.</Text>
+                        <Margin top="medium">
+                            <DeleteModalBtnContainer>
+                                <Margin right="small">
+                                    <Button
+                                        type="primary-action"
+                                        isDisabled={
+                                            this.state.deleteLinkState ===
+                                            'running'
+                                        }
+                                        onClick={() =>
+                                            this.processEvent(
+                                                'confirmLinkDelete',
+                                                null,
+                                            )
+                                        }
+                                    >
+                                        Delete
+                                    </Button>
+                                </Margin>
                                 <Button
-                                    type="primary-action"
+                                    type="alternative-small"
                                     isDisabled={
                                         this.state.deleteLinkState === 'running'
                                     }
                                     onClick={() =>
                                         this.processEvent(
-                                            'confirmLinkDelete',
+                                            'cancelLinkDelete',
                                             null,
                                         )
                                     }
                                 >
-                                    Delete
+                                    Cancel
                                 </Button>
-                            </Margin>
-                            <Button
-                                type="alternative-small"
-                                isDisabled={
-                                    this.state.deleteLinkState === 'running'
-                                }
-                                onClick={() =>
-                                    this.processEvent('cancelLinkDelete', null)
-                                }
-                            >
-                                Cancel
-                            </Button>
-                        </DeleteModalBtnContainer>
-                    </Margin>
-                </DeleteModalContainer>
-            </Overlay>
+                            </DeleteModalBtnContainer>
+                        </Margin>
+                    </DeleteModalContainer>
+                </Overlay>
+            )
         )
+    }
 
     private renderCopyableLink = ({
         link,
         roleID,
         linkIndex,
         showCopyMsg,
-    }: InviteLink & { linkIndex: number }) => (
-        <Margin key={linkIndex} bottom="smallest">
-            <LinkContainer>
-                <CopyLinkBox>
-                    <Icon
-                        icon="copy"
-                        height="16px"
-                        color="primary"
-                        onClick={() =>
-                            this.processEvent('copyLink', { linkIndex })
-                        }
-                    />
-                    <LinkAndRoleBox
-                        viewportBreakpoint={viewportBreakpoint}
-                    >
-                        <LinkBox
+    }: InviteLink & { linkIndex: number }) => {
+        const viewportBreakpoint = getViewportBreakpoint(
+            this.getViewportWidth(),
+        )
+
+        return (
+            <Margin key={linkIndex} bottom="smallest">
+                <LinkContainer>
+                    <CopyLinkBox>
+                        <Icon
+                            icon="copy"
+                            height="16px"
+                            color="primary"
                             onClick={() =>
                                 this.processEvent('copyLink', { linkIndex })
                             }
-                        >
-                            <Link>
-                                {showCopyMsg ? 'Copied to clipboard' : link}
-                            </Link>
-                        </LinkBox>
-                    <PermissionText>
-                        <Margin right="smallest">invite as</Margin>
-                        <BoldText>{sharedListRoleIDToString(roleID)}</BoldText>
-                    </PermissionText>
-                    </LinkAndRoleBox>
-                </CopyLinkBox>
-                {/*{roleID !== SharedListRoleID.Reader && (
-                    <Icon
-                        icon="removeX"
-                        height="12px"
-                        onClick={() =>
-                            this.processEvent('requestLinkDelete', {
-                                linkIndex,
-                            })
-                        }
-                    />
-                )}*/}
-            </LinkContainer>
-        </Margin>
-    )
+                        />
+                        <LinkAndRoleBox viewportBreakpoint={viewportBreakpoint}>
+                            <LinkBox
+                                onClick={() =>
+                                    this.processEvent('copyLink', { linkIndex })
+                                }
+                            >
+                                <Link>
+                                    {showCopyMsg ? 'Copied to clipboard' : link}
+                                </Link>
+                            </LinkBox>
+                            <PermissionText>
+                                <Margin right="smallest">invite as</Margin>
+                                <BoldText>
+                                    {sharedListRoleIDToString(roleID)}
+                                </BoldText>
+                            </PermissionText>
+                        </LinkAndRoleBox>
+                    </CopyLinkBox>
+                    {/*{roleID !== SharedListRoleID.Reader && (
+                        <Icon
+                            icon="removeX"
+                            height="12px"
+                            onClick={() =>
+                                this.processEvent('requestLinkDelete', {
+                                    linkIndex,
+                                })
+                            }
+                        />
+                    )}*/}
+                </LinkContainer>
+            </Margin>
+        )
+    }
 
     private renderInviteLinks = () => {
         if (this.state.loadState === 'running') {
@@ -245,9 +264,7 @@ export default class ListShareModal extends UIElement<
                     services={this.props.services}
                     onCloseRequested={this.props.onCloseRequested}
                 >
-                    <ModalContainer
-                        viewportBreakpoint={viewportBreakpoint}
-                    >
+                    <ModalContainer viewportBreakpoint={viewportBreakpoint}>
                         <Header>Invite by Link</Header>
                         <Text>
                             Invite other people to view or collaborate on this
@@ -334,7 +351,7 @@ const LinkAndRoleBox = styled.div<{
     display: flex;
     flex-direction: row;
     align-items: center;
-     ${(props) =>
+    ${(props) =>
         (props.viewportBreakpoint === 'small' ||
             props.viewportBreakpoint === 'mobile') &&
         css`
@@ -343,7 +360,6 @@ const LinkAndRoleBox = styled.div<{
             justify-content: center;
         `}
 `
-
 
 const DeleteModalContainer = styled(ModalContainer)`
     align-items: flex-start;
