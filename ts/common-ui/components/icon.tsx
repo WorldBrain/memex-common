@@ -11,12 +11,12 @@ const StyledIcon = styled.div<{
     cursor: pointer;
     height: ${(props) => props.height};
     width: ${(props) => props.width};
-    background-color: ${(props) => props.theme.colors[props.color] ?? props.color}};
+    background-color: ${(props) =>
+        props.theme.colors[props.color] ?? props.color}};
     mask-position: center;
     mask-size: contain;
     mask-repeat: no-repeat;
-    mask-image: url(${(props) =>
-        props.theme.icons[props.icon] ?? props.icon});
+    mask-image: url(${(props) => props.theme.icons[props.icon] ?? props.icon});
 `
 
 export type IconProps = {
@@ -36,7 +36,7 @@ export default function Icon(props: IconProps) {
             height={props.height}
             width={width}
             icon={icon}
-            color={color}
-        />     
+            color={props.color}
+        />
     )
 }
