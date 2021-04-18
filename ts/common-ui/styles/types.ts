@@ -23,6 +23,7 @@ export type IconKeys =
     | 'triangle'
     | 'lock'
     | 'shared'
+    | 'shareEmpty'
     | 'person'
     | 'webLogo'
     | 'mediumLogo'
