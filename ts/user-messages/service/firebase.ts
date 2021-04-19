@@ -71,6 +71,7 @@ export class FirebaseUserMessageService implements UserMessageService {
         this._lastSeen = event.timestamp
         await lastSeen.set(event.timestamp)
         delete this._handleIncomingMessage
+        this._handlingIncomingMessage.resolve()
     }
 
     async _getQueueRef() {
