@@ -22,6 +22,7 @@ export type IconKeys =
     | 'alertRound'
     | 'triangle'
     | 'lock'
+    | 'plus'
     | 'shared'
     | 'shareEmpty'
     | 'person'
