@@ -1,5 +1,5 @@
-import * as firebaseModule from 'firebase'
-import * as functionsModule from 'firebase-functions'
+import firebaseModule from 'firebase'
+import functionsModule from 'firebase-functions'
 import { CallableContext } from 'firebase-functions/lib/providers/https'
 import { createStorage, createServices } from '../setup'
 import { FunctionsBackendServices } from '../types'

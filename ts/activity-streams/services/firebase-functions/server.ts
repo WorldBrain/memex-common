@@ -1,5 +1,5 @@
-import * as firebaseModule from 'firebase'
-import * as functionsModule from 'firebase-functions'
+import firebaseModule from 'firebase'
+import functionsModule from 'firebase-functions'
 import { ActivityStreamsService } from '../../types'
 import { serviceMethodAsFunction, serviceMethodsAsFunctions } from '../../../firebase-backend/services/server'
 
