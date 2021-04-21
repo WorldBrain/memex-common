@@ -1,4 +1,4 @@
-import * as firebaseModule from 'firebase'
+import firebaseModule from 'firebase'
 import { UserMessageService, UserMessageEvents } from "./types";
 import { EventEmitter } from "events";
 import TypedEventEmitter from "typed-emitter";

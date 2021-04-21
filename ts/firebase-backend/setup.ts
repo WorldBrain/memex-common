@@ -1,5 +1,5 @@
-import * as firebaseModule from 'firebase'
-import * as functionsModule from 'firebase-functions'
+import firebaseModule from 'firebase'
+import functionsModule from 'firebase-functions'
 import { EventContext } from 'firebase-functions';
 import { QueryDocumentSnapshot } from 'firebase-functions/lib/providers/firestore';
 import StorageManager from '@worldbrain/storex'
@@ -24,9 +24,9 @@ export async function createStorage(options: {
 }): Promise<FunctionsBackendStorage> {
     const storageManager = new StorageManager({
         backend: new FirestoreStorageBackend({
-            firebase: options.firebase,
-            firestore: options.firebase.firestore(),
-            firebaseModule: options.firebase,
+            firebase: options.firebase as any,
+            firestore: options.firebase.firestore() as any,
+            firebaseModule: options.firebase as any,
         })
     })
     const contentSharing = new ContentSharingStorage({ storageManager, autoPkType: 'string' })

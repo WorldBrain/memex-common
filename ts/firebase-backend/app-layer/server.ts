@@ -1,5 +1,5 @@
-import type * as firebaseModule from 'firebase'
-import type * as functionsModule from 'firebase-functions'
+import type firebaseModule from 'firebase'
+import type functionsModule from 'firebase-functions'
 import type { CallableContext } from 'firebase-functions/lib/providers/https'
 import { createStorage } from '../setup'
 import { FunctionsBackendStorage } from '../types'

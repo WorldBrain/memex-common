@@ -1,5 +1,5 @@
-import * as firebaseModule from 'firebase'
-import * as functionsModule from 'firebase-functions'
+import firebaseModule from 'firebase'
+import functionsModule from 'firebase-functions'
 import { serviceMethodsAsFunctions } from '../../firebase-backend/services/server'
 
 export function contentSharingFunctions(options: {
