@@ -12,5 +12,5 @@ export function createClientApplicationLayer(executeCall: ExecuteCall): Firebase
 }
 
 function createMethod(executeCall: ExecuteCall, methodName: string) {
-    return (methodArgs: any) => executeCall(methodName, methodArgs)
+    return (methodArgs: any) => executeCall('applicationLayer', { methodName, methodArgs })
 }
