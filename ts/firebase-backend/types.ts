@@ -18,9 +18,9 @@ export interface FunctionsBackendStorage {
         activityFollows: ActivityFollowsStorage
     }
 }
-
 export interface FunctionsBackendServices {
     activityStreams: ActivityStreamsService
     contentSharing: ContentSharingBackend
     userMessages: UserMessageService
 }
+

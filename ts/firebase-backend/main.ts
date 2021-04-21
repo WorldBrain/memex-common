@@ -14,11 +14,16 @@ import { sendWelcomeEmailOnSignUp } from "./user";
 import { scheduledFirestoreExport } from "./backup";
 import { uninstall, uninstallLog } from "./analytics"
 import { registerBetaUserCall as registerBetaUser } from "./beta"
+import { createServerApplicationLayerAsFunction } from './app-layer/server';
 
 export function main(admin: typeof adminModule, functions: typeof functionsModule) {
     admin.initializeApp((runningInEmulator) ? emulatedConfig : undefined)
 
     return {
+        applicationLayer: createServerApplicationLayerAsFunction({
+            firebase: admin as any,
+            functions,
+        }),
         getLoginToken,
         getCheckoutLink,
         getManageLink,

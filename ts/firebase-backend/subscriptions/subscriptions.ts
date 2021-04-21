@@ -1,4 +1,4 @@
-import { Claims, UserFeature, UserPlan } from '@worldbrain/memex-common/lib/subscriptions/types'
+import { Claims, UserFeature, UserPlan } from '../../subscriptions/types'
 
 export interface SusbcriptionQuery {
     'customer_id[is]': string,
@@ -63,7 +63,7 @@ export const refreshUserSubscriptionStatus = async (userId: string, { getSubscri
                     entry.subscription['cancelled_at']
                 )
                 if (!expiry) {
-                    console.error("Could not determine expiry for subscription:",entry.subscription)
+                    console.error("Could not determine expiry for subscription:", entry.subscription)
                 } else {
                     expiry += expiryGraceSecs
                 }
@@ -126,7 +126,7 @@ const setFeaturesFromSubscriptions = (claims: Claims) => {
 const setFeaturesIfDonated = (claims: Claims) => {
     for (const subscriptionKey of Object.keys(claims.subscriptions)) {
         const subscription = claims.subscriptions[subscriptionKey as UserPlan]
-        if (subscription && (subscription?.donation ?? 0) > 0){
+        if (subscription && (subscription?.donation ?? 0) > 0) {
             claims.features.beta = { expiry: subscription.expiry }
         }
     }
