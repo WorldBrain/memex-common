@@ -231,6 +231,7 @@ export default class UserStorage extends StorageModule {
         options: { knownStatus?: 'exists' | 'new' },
         updates: Partial<UserPublicProfile>,
     ) {
+        const finalUpdates: { [key: string]: string } = {}
         for (const fieldName of [
             'websiteURL',
             'mediumURL',
@@ -240,7 +241,7 @@ export default class UserStorage extends StorageModule {
             'avatarURL',
             'paymentPointer',
         ] as Array<keyof UserPublicProfile>) {
-            updates[fieldName] = updates[fieldName] ?? ''
+            finalUpdates[fieldName] = updates[fieldName] ?? ''
         }
 
         const status =
@@ -253,12 +254,12 @@ export default class UserStorage extends StorageModule {
         if (status === 'new') {
             await this.operation('createUserPublicProfile', {
                 user: userReference.id,
-                ...updates,
+                ...finalUpdates,
             })
         } else {
             await this.operation('updateUserPublicProfile', {
                 user: userReference.id,
-                updates,
+                updates: finalUpdates,
             })
         }
     }

@@ -65,12 +65,13 @@ export class FirebaseUserMessageService implements UserMessageService {
     }
 
     async _handleIncomingMessage(lastSeen: LastSeen, event: { timestamp: number, message: UserMessage }) {
-        await this._handleIncomingMessage
-        this._handlingIncomingMessage = createResolvable()
+        await this._handlingIncomingMessage
+        const resolvable = this._handlingIncomingMessage = createResolvable()
         this.events.emit('message', event)
         this._lastSeen = event.timestamp
         await lastSeen.set(event.timestamp)
-        delete this._handleIncomingMessage
+        delete this._handlingIncomingMessage
+        resolvable.resolve()
     }
 
     async _getQueueRef() {

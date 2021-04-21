@@ -878,9 +878,13 @@ export default class ContentSharingStorage extends StorageModule {
         listReference: types.SharedListReference
         keyString: string
     }) {
+        const id = this.options.autoPkType === 'string' ? params.keyString : parseInt(params.keyString)
+        if (typeof id === 'number' && isNaN(id)) {
+            return null
+        }
         const retrievedKey = await this.operation('findListKey', {
             sharedList: params.listReference.id,
-            id: this.options.autoPkType === 'string' ? params.keyString : parseInt(params.keyString),
+            id,
         })
         const relations = {
             sharedList: 'shared-list-reference' as types.SharedListReference['type'],
