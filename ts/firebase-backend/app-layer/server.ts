@@ -4,12 +4,17 @@ import type { CallableContext } from 'firebase-functions/lib/providers/https'
 import { createStorage } from '../setup'
 import { FunctionsBackendStorage } from '../types'
 import { FirebaseApplicationLayer } from './types'
+import { ALLOWED_STORAGE_MODULE_OPERATIONS } from './allowed-operations'
 
 export function createServerApplicationLayer(options: {
     storage: FunctionsBackendStorage
 }): FirebaseApplicationLayer {
     return {
         executeStorageModuleOperation: async params => {
+            const allowedOperations = ALLOWED_STORAGE_MODULE_OPERATIONS[params.storageModule]
+            if (!allowedOperations || !(allowedOperations as any)[params.operationName]) {
+                return { error: `Access to operation '${params.operationName}' of storage module ${params.storageModule} not allowed or doesn't exist` }
+            }
             const storageModule = options.storage.modules[params.storageModule]
             return (storageModule as any).operation(params.operationName, params.operationArgs)
         }
