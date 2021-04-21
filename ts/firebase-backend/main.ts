@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin'
-import * as functions from 'firebase-functions';
+import * as adminModule from 'firebase-admin'
+import * as functionsModule from 'firebase-functions';
 
 import { activityStreamFunctions } from '../activity-streams/services/firebase-functions/server'
 import { contentSharingFunctions } from '../content-sharing/backend/firebase-functions'
@@ -15,7 +15,7 @@ import { scheduledFirestoreExport } from "./backup";
 import { uninstall, uninstallLog } from "./analytics"
 import { registerBetaUserCall as registerBetaUser } from "./beta"
 
-export function main() {
+export function main(admin: typeof adminModule, functions: typeof functionsModule) {
     admin.initializeApp((runningInEmulator) ? emulatedConfig : undefined)
 
     return {
