@@ -144,8 +144,8 @@ export default class ContentConversationStorage extends StorageModule {
                 },
             },
             permissions: {
-                conversationThread: { list: { rule: true }, read: { rule: true }, create: { rule: true } },
-                conversationReply: { list: { rule: true }, read: { rule: true } },
+                conversationThread: { read: { rule: true }, create: { rule: true } },
+                conversationReply: { read: { rule: true } },
             }
         }
     })
