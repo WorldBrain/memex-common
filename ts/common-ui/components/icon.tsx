@@ -1,18 +1,17 @@
 import React from 'react'
-import styled, { CSSObject } from 'styled-components'
-import { IconKeys } from '../styles/types'
+import styled from 'styled-components'
+import { IconKeys, ColorThemeKeys } from '../styles/types'
 
 const StyledIcon = styled.div<{
     icon: string
     height: string
     width: string
-    color?: string
+    color: ColorThemeKeys
 }>`
     cursor: pointer;
     height: ${(props) => props.height};
     width: ${(props) => props.width};
-    background-color: ${(props) =>
-        props.theme.colors[props.color] ?? props.color}};
+    background-color: ${(props) => props.theme.colors[props.color]}};
     mask-position: center;
     mask-size: contain;
     mask-repeat: no-repeat;
@@ -22,12 +21,13 @@ const StyledIcon = styled.div<{
 export type IconProps = {
     height: string
     width?: string
-    color?: string
+    color?: ColorThemeKeys
     onClick?: React.MouseEventHandler
 } & ({ icon: IconKeys } | { filePath: string })
 
 export default function Icon(props: IconProps) {
     const icon = 'filePath' in props ? props.filePath : props.icon
+    const color = props.color ?? 'black'
 
     const width = props.width ?? props.height
     return (
@@ -36,7 +36,7 @@ export default function Icon(props: IconProps) {
             height={props.height}
             width={width}
             icon={icon}
-            color={props.color}
+            color={color}
         />
     )
 }
