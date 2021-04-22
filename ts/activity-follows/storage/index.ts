@@ -106,7 +106,7 @@ export default class ActivityFollowsStorage extends StorageModule {
         },
       },
       permissions: {
-        activityFollow: { list: { rule: true }, read: { rule: true } },
+        activityFollow: { read: { rule: true } },
       }
     }
   });
