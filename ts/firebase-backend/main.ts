@@ -4,7 +4,7 @@ import * as functionsModule from 'firebase-functions';
 import { activityStreamFunctions } from '../activity-streams/services/firebase-functions/server'
 import { contentSharingFunctions } from '../content-sharing/backend/firebase-functions'
 
-import { runningInEmulator, emulatedConfig } from './constants';
+import { runningInEmulator } from './constants';
 import { createFirestoreTriggers } from './setup';
 
 import { getLoginToken } from './auth'
@@ -17,7 +17,11 @@ import { registerBetaUserCall as registerBetaUser } from "./beta"
 import { createServerApplicationLayerAsFunction } from './app-layer/server';
 
 export function main(admin: typeof adminModule, functions: typeof functionsModule) {
-    admin.initializeApp((runningInEmulator) ? emulatedConfig : undefined)
+    admin.initializeApp((runningInEmulator) ? {
+        credential: admin.credential.applicationDefault(),
+        databaseURL: "https://worldbrain-staging.firebaseio.com",
+        projectId: "worldbrain-staging",
+    } : undefined)
 
     return {
         applicationLayer: createServerApplicationLayerAsFunction({

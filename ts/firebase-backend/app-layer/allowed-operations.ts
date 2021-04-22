@@ -5,7 +5,6 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findListEntriesByUrl: true,
         findListEntriesByUrls: true,
         findSingleEntryByUserAndUrl: true,
-        deleteListEntriesByIds: true,
         findAnnotationsByIds: true,
         findAnnotationsByCreatorAndPageUrl: true,
         findSingleAnnotationEntryByListPage: true,
