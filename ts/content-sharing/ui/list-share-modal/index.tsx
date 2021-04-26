@@ -360,6 +360,7 @@ const LinkAndRoleBox = styled.div<{
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: flex-start;
         `}
 `
 
@@ -403,7 +404,8 @@ const PermissionText = styled.span<{
     opacity: 0.8;
     display: flex;
     flex-direction: row;
-    width: 250px;
+    white-space: nowrap;
+    justify-content: flex-end;
     padding-left: 15px;
 
     ${(props) =>
@@ -493,16 +495,17 @@ const LinkBox = styled(Margin)`
     font-size: 12px;
     border-radius: 3px;
     width: fill-available;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow-x: scroll;
     text-align: left;
     cursor: pointer;
     width: 100%;
+    max-width: 400px;
 `
 
 const Link = styled.span`
     padding: 5px 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-x: scroll;
 `
 
 const CopyLinkBox = styled.div`
