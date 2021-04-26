@@ -11,8 +11,6 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findAnnotationEntriesByListPages: true,
         findAnnotationEntriesByList: true,
         findAnnotationEntriesForAnnotations: true,
-        removeListRole: true,
-        updateListRole: true,
         findListRoles: true,
         findPageInfoByCreatorAndUrl: true,
     },
