@@ -392,20 +392,20 @@ export default class ContentSharingStorage extends StorageModule {
         sharedAnnotationReferences: {
             [localId: string]: types.SharedAnnotationReference
         }
+        sharedAnnotationListEntryReferences: {
+            [localId: string]: types.SharedAnnotationListEntryReference[]
+        }
     }> {
         const batch: OperationBatch = []
         const annotationPlaceholders: { [localId: string]: string } = {}
+        const annotationEntryPlaceholders: { [localId: string]: string[] } = {}
         const objectCounts = { annotations: 0, entries: 0 }
         for (const [normalizedPageUrl, annotations] of Object.entries(
             params.annotationsByPage,
         )) {
-            for (let annotation of annotations) {
-                annotation = { ...annotation }
+            for (const { localId, ...annotation } of annotations) {
                 const annotationPlaceholder = `annotation-${objectCounts.annotations++}`
-                annotationPlaceholders[
-                    annotation.localId
-                ] = annotationPlaceholder
-                delete annotation.localId
+                annotationPlaceholders[localId] = annotationPlaceholder
 
                 batch.push({
                     placeholder: annotationPlaceholder,
@@ -422,8 +422,13 @@ export default class ContentSharingStorage extends StorageModule {
                 })
 
                 for (const listReference of params.listReferences) {
+                    const listEntryPlaceholder = `entry-${objectCounts.entries++}`
+                    annotationEntryPlaceholders[localId] = [
+                        ...(annotationEntryPlaceholders[localId] ?? []),
+                        listEntryPlaceholder,
+                    ]
                     batch.push({
-                        placeholder: `entry-${objectCounts.entries++}`,
+                        placeholder: listEntryPlaceholder,
                         operation: 'createObject',
                         collection: 'sharedAnnotationListEntry',
                         args: {
@@ -449,11 +454,19 @@ export default class ContentSharingStorage extends StorageModule {
             'createAnnotationsAndEntries',
             { batch },
         )
+
         const result: {
             sharedAnnotationReferences: {
                 [localId: string]: types.SharedAnnotationReference
             }
-        } = { sharedAnnotationReferences: {} }
+            sharedAnnotationListEntryReferences: {
+                [localId: string]: types.SharedAnnotationListEntryReference[]
+            }
+        } = {
+            sharedAnnotationReferences: {},
+            sharedAnnotationListEntryReferences: {},
+        }
+
         for (const [localId, annotationPlaceholder] of Object.entries(
             annotationPlaceholders,
         )) {
@@ -462,6 +475,18 @@ export default class ContentSharingStorage extends StorageModule {
                 id: batchResult.info[annotationPlaceholder].object.id,
             }
         }
+
+        for (const [localId, listEntryPlaceholders] of Object.entries(
+            annotationEntryPlaceholders,
+        )) {
+            result.sharedAnnotationListEntryReferences[
+                localId
+            ] = listEntryPlaceholders.map((placeholder) => ({
+                type: 'shared-annotation-list-entry-reference',
+                id: batchResult.info[placeholder].object.id,
+            }))
+        }
+
         return result
     }
 
