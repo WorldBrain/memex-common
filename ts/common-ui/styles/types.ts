@@ -13,6 +13,7 @@ export type ColorThemeKeys =
     | 'grey'
     | 'darkgrey'
     | 'black'
+    | 'white'
     | 'lightblack'
 
 export type IconKeys =
