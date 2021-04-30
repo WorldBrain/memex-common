@@ -1,5 +1,8 @@
 import omit from 'lodash/omit'
 import groupBy from 'lodash/groupBy'
+import orderBy from 'lodash/orderBy'
+import flatten from 'lodash/flatten'
+import chunk from 'lodash/chunk'
 import { StorageModule, StorageModuleConfig, StorageModuleConstructorArgs } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { UserReference } from '../../web-interface/types/users'
@@ -8,7 +11,6 @@ import { ConversationReply, ConversationThread } from '../../web-interface/types
 import ContentSharingStorage from '../../content-sharing/storage'
 import { ConversationReplyReference, ConversationThreadReference } from '../types'
 import { CreateConversationReplyParams } from './types'
-import orderBy from 'lodash/orderBy'
 import { augmentObjectWithReferences } from '../../storage/references'
 
 interface PreparedReply {
@@ -121,7 +123,7 @@ export default class ContentConversationStorage extends StorageModule {
                     sharedAnnotation: '$sharedAnnotation:pk'
                 }
             },
-            findThreadsByPages: {
+            findThreadsByPages: { // TODO: Remove
                 operation: 'findObjects',
                 collection: 'conversationThread',
                 args: {
@@ -133,6 +135,13 @@ export default class ContentConversationStorage extends StorageModule {
                 collection: 'conversationThread',
                 args: {
                     sharedAnnotation: '$sharedAnnotation:pk',
+                }
+            },
+            findThreadsByAnnotations: {
+                operation: 'findObjects',
+                collection: 'conversationThread',
+                args: {
+                    sharedAnnotation: { $in: '$sharedAnnotations:array:pk' },
                 }
             },
         },
@@ -284,7 +293,22 @@ export default class ContentConversationStorage extends StorageModule {
     async getThreadsForPages(params: {
         normalizedPageUrls: string[]
     }): Promise<Array<PreparedThread>> {
-        const rawThreads: RawThread[] = await this.operation('findThreadsByPages', params)
+        const rawThreads: RawThread[] = await fetchInChunks(
+            params.normalizedPageUrls,
+            urls => this.operation('findThreadsByPages', { normalizedPageUrls: urls })
+        )
+        return rawThreads.map(rawThread => this._prepareThread(rawThread))
+    }
+
+    async getThreadsForAnnotations(params: {
+        annotationReferences: SharedAnnotationReference[]
+    }): Promise<Array<PreparedThread>> {
+        const rawThreads: RawThread[] = await fetchInChunks(
+            params.annotationReferences.map(reference => reference.id),
+            ids => this.operation('findThreadsByAnnotations', {
+                sharedAnnotations: ids,
+            })
+        )
         return rawThreads.map(rawThread => this._prepareThread(rawThread))
     }
 
@@ -294,4 +318,8 @@ export default class ContentConversationStorage extends StorageModule {
             sharedAnnotation: { type: 'shared-annotation-reference', id: rawThread.sharedAnnotation },
         }
     }
+}
+
+async function fetchInChunks<T>(elements: T[], fetchChunk: (chunk: T[]) => Promise<any[]>) {
+    return flatten(await Promise.all(chunk(elements, 10).map(chunkElements => fetchChunk(chunkElements))))
 }
