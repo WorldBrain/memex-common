@@ -3,7 +3,7 @@ import groupBy from 'lodash/groupBy'
 import { StorageModule, StorageModuleConfig, StorageModuleConstructorArgs } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { UserReference } from '../../web-interface/types/users'
-import { SharedAnnotationReference } from '../../content-sharing/types'
+import { SharedAnnotationReference, SharedListReference } from '../../content-sharing/types'
 import { ConversationReply, ConversationThread } from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
 import { ConversationReplyReference, ConversationThreadReference } from '../types'
@@ -154,7 +154,7 @@ export default class ContentConversationStorage extends StorageModule {
         pageCreatorReference: UserReference;
         annotationReference: SharedAnnotationReference;
         normalizedPageUrl: string;
-        sharedListReference: SharedAnnotationReference | null;
+        sharedListReference: SharedListReference | null;
     }) {
         let thread = await this.operation('findThreadByAnnotation', {
             sharedAnnotation: params.annotationReference.id,
