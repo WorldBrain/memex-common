@@ -263,6 +263,13 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             sharedList: '$sharedList:pk',
         },
     },
+    findListRolesByUser: {
+        operation: 'findObjects',
+        collection: 'sharedListRoleByUser',
+        args: {
+            user: '$user:pk',
+        },
+    },
     createListKey: {
         operation: 'createObject',
         collection: 'sharedListKey',
