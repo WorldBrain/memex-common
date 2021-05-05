@@ -17,6 +17,7 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
     contentConversations: {
         findThreadsByPages: true,
         findThreadByAnnotation: true,
+        findThreadsByAnnotations: true,
         findRepliesByCreatorAndPageUrl: true,
         findRepliesByAnnotation: true,
         findRepliesByAnnotations: true,

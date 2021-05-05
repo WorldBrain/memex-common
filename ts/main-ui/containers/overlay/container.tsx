@@ -28,6 +28,8 @@ const OverlayContent = styled.div`
     max-height: 90%;
     height: max-content;
     cursor: default;
+    display: flex;
+    justify-content: center;
 `
 
 interface OverlayContainerProps {
