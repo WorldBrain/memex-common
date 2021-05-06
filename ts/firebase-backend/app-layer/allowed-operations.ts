@@ -13,6 +13,7 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findAnnotationEntriesForAnnotations: true,
         findListRoles: true,
         findPageInfoByCreatorAndUrl: true,
+        findListRolesByUser: true,
     },
     contentConversations: {
         findThreadsByPages: true,
@@ -26,5 +27,5 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findFollow: true,
         findFollowsByCollection: true,
         findFollowsByEntity: true,
-    }
+    },
 }
