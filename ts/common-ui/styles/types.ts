@@ -30,6 +30,7 @@ export type IconKeys =
     | 'shareEmpty'
     | 'person'
     | 'check'
+    | 'goTo'
     | 'plusIcon'
     | 'people'
     | 'webLogo'
