@@ -19,6 +19,7 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findThreadByAnnotation: true,
         findThreadsByAnnotations: true,
         findRepliesByCreatorAndPageUrl: true,
+        findAnnotationEntriesByListPages: true,
         findRepliesByAnnotation: true,
         findRepliesByAnnotations: true,
     },
@@ -26,5 +27,5 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findFollow: true,
         findFollowsByCollection: true,
         findFollowsByEntity: true,
-    }
+    },
 }
