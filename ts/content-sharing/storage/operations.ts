@@ -137,6 +137,13 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             { order: [['createdWhen', ANNOTATION_LIST_ENTRY_ORDER]] },
         ],
     },
+    findAnnotationEntriesByLists: {
+        operation: 'findObjects',
+        collection: 'sharedAnnotationListEntry',
+        args: {
+            sharedList: { $in: '$sharedLists:array:pk' },
+        },
+    },
     findAnnotationsByIds: {
         operation: 'findObjects',
         collection: 'sharedAnnotation',
