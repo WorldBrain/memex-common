@@ -19,7 +19,6 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findThreadByAnnotation: true,
         findThreadsByAnnotations: true,
         findRepliesByCreatorAndPageUrl: true,
-        findAnnotationEntriesByListPages: true,
         findRepliesByAnnotation: true,
         findRepliesByAnnotations: true,
     },
