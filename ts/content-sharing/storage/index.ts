@@ -580,6 +580,65 @@ export default class ContentSharingStorage extends StorageModule {
         return result
     }
 
+    async getAnnotationListEntriesForLists(params: {
+        listReferences: types.SharedListReference[]
+    }) {
+        const annotationEntries: Array<
+            types.SharedAnnotationListEntry & {
+                id: number | string
+                creator: number | string
+                sharedAnnotation: number | string
+                sharedList: number | string
+            }
+        > = await this.operation('findAnnotationEntriesByLists', {
+            sharedLists: params.listReferences.map((ref) =>
+                this._idFromReference(ref),
+            ),
+        })
+
+        if ('error' in annotationEntries) {
+            throw new Error(annotationEntries['error'])
+        }
+
+        const returned: {
+            [listId: string]: GetAnnotationListEntriesResult
+        } = {}
+        for (const entry of annotationEntries) {
+            const reference: types.SharedAnnotationListEntryReference = {
+                type: 'shared-annotation-list-entry-reference',
+                id: entry.id,
+            }
+            const sharedAnnotation: types.SharedAnnotationReference = {
+                type: 'shared-annotation-reference',
+                id: entry.sharedAnnotation,
+            }
+            const sharedList: types.SharedListReference = {
+                type: 'shared-list-reference',
+                id: entry.sharedList,
+            }
+            delete entry.id
+
+            returned[entry.sharedList] = {
+                ...(returned[entry.sharedList] ?? {}),
+                [entry.normalizedPageUrl]: [
+                    ...(returned[entry.sharedList][entry.normalizedPageUrl] ??
+                        []),
+                    {
+                        ...entry,
+                        reference,
+                        creator: {
+                            type: 'user-reference',
+                            id: entry.creator,
+                        },
+                        sharedList,
+                        sharedAnnotation,
+                    },
+                ],
+            }
+        }
+        return returned
+    }
+
     async getAnnotationListEntries(params: {
         listReference: types.SharedListReference
     }) {
