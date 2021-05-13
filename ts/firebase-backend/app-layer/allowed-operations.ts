@@ -1,4 +1,6 @@
-export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
+import { FunctionsBackendStorage } from "../types";
+
+export const ALLOWED_STORAGE_MODULE_OPERATIONS: { [K in keyof FunctionsBackendStorage['modules']]?: { [operation: string]: true } } = {
     contentSharing: {
         findListsByIDs: true,
         findListEntriesByList: true,
@@ -29,7 +31,7 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findFollowsByCollection: true,
         findFollowsByEntity: true,
     },
-    userManagement: {
+    users: {
         findUsersByIds: true,
         findUserPublicProfilesByIds: true,
     },
