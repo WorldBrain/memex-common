@@ -8,7 +8,10 @@ import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { User, UserReference } from '../../web-interface/types/users'
 import { UserPublicProfile } from '../../web-interface/types/storex-generated/user-management'
 import { augmentObjectWithReferences } from '../../storage/references'
-import { UserPublicProfileReference } from '../types'
+import {
+    UserPublicProfileReference,
+    GetUsersPublicDetailsResult,
+} from '../types'
 
 export default class UserStorage extends StorageModule {
     private storageManager: StorageManager
@@ -85,6 +88,11 @@ export default class UserStorage extends StorageModule {
                     collection: 'user',
                     args: { id: '$id:pk' },
                 },
+                findUsersByIds: {
+                    operation: 'findObjects',
+                    collection: 'user',
+                    args: { id: '$ids:array:pk' },
+                },
                 createUserPublicProfile: {
                     operation: 'createObject',
                     collection: 'userPublicProfile',
@@ -98,6 +106,11 @@ export default class UserStorage extends StorageModule {
                     operation: 'findObject',
                     collection: 'userPublicProfile',
                     args: { user: '$user:pk' },
+                },
+                findUserPublicProfilesByIds: {
+                    operation: 'findObjects',
+                    collection: 'userPublicProfile',
+                    args: { user: '$ids:array:pk' },
                 },
                 // findUserRights: {
                 //     operation: 'findObject',
@@ -212,18 +225,42 @@ export default class UserStorage extends StorageModule {
         ).object
     }
 
-    async getUserPublicProfile(
-        userReference: UserReference,
-    ) {
+    async getUserPublicProfile(userReference: UserReference) {
         const foundProfile = await this.operation('findUserPublicProfileById', {
             user: userReference.id,
         })
         const relations = {
-            user: 'user-reference' as UserReference['type']
+            user: 'user-reference' as UserReference['type'],
         }
-        return augmentObjectWithReferences<UserPublicProfile, UserPublicProfileReference, typeof relations>(
-            foundProfile, 'user-public-profile-reference', relations,
-        )
+        return augmentObjectWithReferences<
+            UserPublicProfile,
+            UserPublicProfileReference,
+            typeof relations
+        >(foundProfile, 'user-public-profile-reference', relations)
+    }
+
+    async getUsersPublicDetails(
+        userReferences: UserReference[],
+    ): Promise<GetUsersPublicDetailsResult> {
+        const ids = userReferences.map((ref) => ref.id)
+        const foundUsers: Array<
+            User & { id: string }
+        > = await this.operation('findUsersByIds', { ids })
+        const foundProfiles: Array<
+            UserPublicProfile & { user: string }
+        > = await this.operation('findUserPublicProfilesByIds', { ids })
+
+        const returned = {}
+        for (const user of foundUsers) {
+            returned[user.id] = { user }
+        }
+        for (const profile of foundProfiles) {
+            returned[profile.user] = {
+                ...(returned[profile.user] ?? {}),
+                profile,
+            }
+        }
+        return returned
     }
 
     async createOrUpdateUserPublicProfile(

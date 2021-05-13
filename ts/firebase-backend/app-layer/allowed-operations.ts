@@ -29,4 +29,8 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS = {
         findFollowsByCollection: true,
         findFollowsByEntity: true,
     },
+    userManagement: {
+        findUsersByIds: true,
+        findUserPublicProfilesByIds: true,
+    },
 }
