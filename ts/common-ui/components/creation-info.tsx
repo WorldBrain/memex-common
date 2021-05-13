@@ -70,7 +70,7 @@ export default function CreationInfo(props: CreationInfoProps) {
 
                 <Margin left="smallest">
                     <CreationDate>
-                        {props.lastEdited && <EditedText>Last Edit: </EditedText>}
+                        {/*{props.lastEdited && <EditedText>Last Edit: </EditedText>}*/}
                         {props.createdWhen || props.lastEdited ? (
                             moment(props.lastEdited ?? props.createdWhen).format(
                                 'LLL',

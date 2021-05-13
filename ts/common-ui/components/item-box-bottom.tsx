@@ -7,8 +7,10 @@ import ButtonTooltip from './button-tooltip'
 const Bottom = styled.div`
     display: flex;
     flex-direction: row;
-    padding: 0 15px;
     height: 40px;
+    justify-content: space-between;
+    padding: 0 15px;
+    width: 100%;
     align-items: center;
     border-top: 1px solid #e0e0e0;
 `
