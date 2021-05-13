@@ -2,7 +2,7 @@ import mapValues from 'lodash/mapValues'
 import { StorageModuleCollections } from "@worldbrain/storex-pattern-modules";
 import { STORAGE_VERSIONS } from "../../web-interface/storage/versions";
 
-export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections => x({
+export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections => ({
     ...PERSONAL_CLIENT_COLLECTIONS(),
     ...PERSONAL_ANNOTATION_COLLECTIONS(),
     ...PERSONAL_EXPORT_COLLECTIONS(),
@@ -54,17 +54,21 @@ export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections => addC
     personalListShare: {
         version: STORAGE_VERSIONS[8].date,
         fields: {
-            personalId: { type: 'string' },
-            sharedId: { type: 'string' },
         },
+        relationships: [
+            { singleChildOf: 'personalAnnotation' },
+            { singleChildOf: 'sharedAnnotation' },
+        ]
     },
     personalAnnotationShare: {
         version: STORAGE_VERSIONS[8].date,
         fields: {
-            personalId: { type: 'string' },
-            sharedId: { type: 'string' },
             excludeFromLists: { type: 'boolean', optional: true },
         },
+        relationships: [
+            { singleChildOf: 'personalAnnotation' },
+            { singleChildOf: 'sharedAnnotation' },
+        ]
     },
 })
 export const PERSONAL_TAG_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
@@ -172,7 +176,7 @@ export const PERSONAL_ANNOTATION_COLLECTIONS = (): StorageModuleCollections => a
             selector: { type: 'json' },
         },
         relationships: [
-            { childOf: 'personalAnnotation' }
+            { singleChildOf: 'personalAnnotation' }
         ]
     },
 })
