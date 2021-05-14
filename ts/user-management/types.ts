@@ -7,6 +7,8 @@ export type UserPublicProfileReference = AutoPkStorageReference<
     'user-public-profile-reference'
 >
 
+export type UserPublicDetails = { user: User; profile: UserPublicProfile }
+
 export type GetUsersPublicDetailsResult = {
-    [userId: string]: { user: User; profile: UserPublicProfile }
+    [userId: string]: UserPublicDetails
 }

@@ -91,7 +91,7 @@ export default class UserStorage extends StorageModule {
                 findUsersByIds: {
                     operation: 'findObjects',
                     collection: 'user',
-                    args: { id: '$ids:array:pk' },
+                    args: { id: { $in: '$ids:array:pk' } },
                 },
                 createUserPublicProfile: {
                     operation: 'createObject',
@@ -110,7 +110,7 @@ export default class UserStorage extends StorageModule {
                 findUserPublicProfilesByIds: {
                     operation: 'findObjects',
                     collection: 'userPublicProfile',
-                    args: { user: '$ids:array:pk' },
+                    args: { id: { $in: '$ids:array:pk' } },
                 },
                 // findUserRights: {
                 //     operation: 'findObject',
