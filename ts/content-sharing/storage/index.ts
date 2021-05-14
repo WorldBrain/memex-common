@@ -621,7 +621,7 @@ export default class ContentSharingStorage extends StorageModule {
             returned[entry.sharedList] = {
                 ...(returned[entry.sharedList] ?? {}),
                 [entry.normalizedPageUrl]: [
-                    ...(returned[entry.sharedList][entry.normalizedPageUrl] ??
+                    ...(returned[entry.sharedList]?.[entry.normalizedPageUrl] ??
                         []),
                     {
                         ...entry,
