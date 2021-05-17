@@ -537,14 +537,11 @@ export default class ContentSharingStorage extends StorageModule {
         const result: {
             [normalizedPageUrl: string]: Array<{
                 // entry: types.SharedAnnotationListEntry
-                annotation: types.SharedAnnotation & {
-                    reference: types.SharedAnnotationReference
-                    creatorReference: UserReference
-                }
+                annotation: types.SharedAnnotation
             }>
         } = {}
         const annotationChunks: Array<Array<
-            types.SharedAnnotation & { id: string; creator: string }
+            types.SharedAnnotation
         >> = await Promise.all(
             chunkedEntries.map((chunk) =>
                 this.operation('findAnnotationsByIds', {
@@ -556,19 +553,7 @@ export default class ContentSharingStorage extends StorageModule {
             for (const annotation of annotationChunk) {
                 const pageAnnotations = (result[annotation.normalizedPageUrl] =
                     result[annotation.normalizedPageUrl] ?? [])
-                pageAnnotations.push({
-                    annotation: {
-                        ...annotation,
-                        reference: this._referenceFromLinkId(
-                            'shared-annotation-reference',
-                            annotation.id,
-                        ),
-                        creatorReference: this._referenceFromLinkId(
-                            'user-reference',
-                            annotation.creator,
-                        ),
-                    },
-                })
+                pageAnnotations.push({ annotation })
             }
         }
         for (const normalizedPageUrl of Object.keys(result)) {
