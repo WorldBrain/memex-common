@@ -26,7 +26,13 @@ const Creator = styled.div`
     color: ${(props) => props.theme.colors.primary};
     font-size: 12px;
     display: flex;
+    align-items: center;
 `
+const CreatorName = styled.div`
+    font-weight: 600;
+`
+
+
 const EditedText = styled.span`
     font-weight: bold;
     margin-right: 5px;
@@ -61,25 +67,25 @@ export default function CreationInfo(props: CreationInfoProps) {
             <Details>
                 {props.creator?.displayName && (
                         <Creator>
+                            <CreatorName>
                             {props.creator?.displayName ?? <span>&nbsp;</span>} 
-                            <Margin left="smallest">
+                            </CreatorName>
+                            <Margin horizontal="smallest">
                             ·
                             </Margin>
                         </Creator>
                 )}
 
-                <Margin left="smallest">
-                    <CreationDate>
-                        {/*{props.lastEdited && <EditedText>Last Edit: </EditedText>}*/}
-                        {props.createdWhen || props.lastEdited ? (
-                            moment(props.lastEdited ?? props.createdWhen).format(
-                                'LLL',
-                            )
-                        ) : (
-                            <span>&nbsp;</span>
-                        )}
-                    </CreationDate>
-                </Margin>
+                <CreationDate>
+                    {/*{props.lastEdited && <EditedText>Last Edit: </EditedText>}*/}
+                    {props.createdWhen || props.lastEdited ? (
+                        moment(props.lastEdited ?? props.createdWhen).format(
+                            'LLL',
+                        )
+                    ) : (
+                        <span>&nbsp;</span>
+                    )}
+                </CreationDate>
             </Details>
         </StyledCreationInfo>
     )
