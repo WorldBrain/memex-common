@@ -1,3 +1,4 @@
+import omit from 'lodash/omit'
 import StorageManager from '@worldbrain/storex'
 import {
     StorageModule,
@@ -110,7 +111,7 @@ export default class UserStorage extends StorageModule {
                 findUserPublicProfilesByIds: {
                     operation: 'findObjects',
                     collection: 'userPublicProfile',
-                    args: { id: { $in: '$ids:array:pk' } },
+                    args: { user: { $in: '$ids:array:pk' } },
                 },
                 // findUserRights: {
                 //     operation: 'findObject',
@@ -249,15 +250,16 @@ export default class UserStorage extends StorageModule {
         const foundProfiles: Array<
             UserPublicProfile & { user: string }
         > = await this.operation('findUserPublicProfilesByIds', { ids })
+        console.log('found profiles:', foundProfiles)
 
         const returned = {}
         for (const user of foundUsers) {
-            returned[user.id] = { user }
+            returned[user.id] = { user: omit(user, ['id']) }
         }
         for (const profile of foundProfiles) {
             returned[profile.user] = {
                 ...(returned[profile.user] ?? {}),
-                profile,
+                profile: omit(profile, ['user']),
             }
         }
         return returned
