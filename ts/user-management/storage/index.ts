@@ -250,7 +250,6 @@ export default class UserStorage extends StorageModule {
         const foundProfiles: Array<
             UserPublicProfile & { user: string }
         > = await this.operation('findUserPublicProfilesByIds', { ids })
-        console.log('found profiles:', foundProfiles)
 
         const returned = {}
         for (const user of foundUsers) {
