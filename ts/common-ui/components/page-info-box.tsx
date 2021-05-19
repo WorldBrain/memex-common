@@ -93,6 +93,7 @@ export default function PageInfoBox(props: PageInfoBoxProps) {
     const [domain] = pageInfo.normalizedUrl.split('/')
     const renderCreationInfo =
         props.renderCreationInfo ?? ((props) => <CreationInfo {...props} />)
+    const hasTitle = pageInfo.fullTitle && pageInfo.fullTitle.length > 0
 
     return (
         <ItemBox>
@@ -105,7 +106,7 @@ export default function PageInfoBox(props: PageInfoBoxProps) {
                             </PageUrl>
                         </ResultContent>
                         <PageTitle>
-                            {pageInfo.fullTitle ?? pageInfo.normalizedUrl}
+                            {hasTitle ? pageInfo.fullTitle : pageInfo.normalizedUrl}
                         </PageTitle>
                     </PageContentBox>
                 </PageInfoBoxLink>
