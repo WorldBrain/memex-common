@@ -3,12 +3,12 @@ import { StorageModuleCollections } from "@worldbrain/storex-pattern-modules";
 import { STORAGE_VERSIONS } from "../../web-interface/storage/versions";
 
 export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections => ({
-    ...PERSONAL_CLIENT_COLLECTIONS(),
+    ...PERSONAL_DEVICE_COLLECTIONS(),
     ...PERSONAL_ANNOTATION_COLLECTIONS(),
     ...PERSONAL_EXPORT_COLLECTIONS(),
     ...PERSONAL_SHARING_COLLECTIONS(),
     ...PERSONAL_LIST_COLLECTIONS(),
-    ...PERSONAL_PAGE_COLLECTIONS(),
+    ...PERSONAL_CONTENT_COLLECTIONS(),
     ...PERSONAL_TAG_COLLECTIONS(),
 })
 
@@ -23,7 +23,7 @@ function addCommonalities(collections: StorageModuleCollections): StorageModuleC
         relationships: [
             ...(collectionDefinition.relationships ?? []),
             { childOf: 'user' },
-            { childOf: 'personalClientInfo', alias: 'createdByClient' },
+            { childOf: 'personalDeviceInfo', alias: 'createdByDevice' },
         ],
         groupBy: [
             { subcollectionName: 'objects', key: 'user' },
@@ -32,11 +32,15 @@ function addCommonalities(collections: StorageModuleCollections): StorageModuleC
     }))
 }
 
-export const PERSONAL_CLIENT_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
-    personalClientInfo: {
+export const PERSONAL_DEVICE_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
+    personalDeviceInfo: {
         version: STORAGE_VERSIONS[8].date,
         fields: {
-            name: { type: 'string' }
+            type: { type: 'string' },
+            os: { type: 'string' },
+            browser: { type: 'string' },
+            product: { type: 'string' },
+            name: { type: 'string', optional: true },
         },
     }
 })
@@ -124,18 +128,60 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections => addComm
         ]
     },
 })
-export const PERSONAL_PAGE_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
-    personalPageInfo: {
+
+export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
+    personalContentMetadata: {
         version: STORAGE_VERSIONS[8].date,
         fields: {
-            normalizedUrl: { type: 'string' },
-            originalUrl: { type: 'text' },
-            domain: { type: 'string' },
-            hostname: { type: 'string' },
-            fullTitle: { type: 'text', optional: true },
-            lang: { type: 'string', optional: true },
-            canonicalUrl: { type: 'string', optional: true },
+            // NOTE: We don't have a 'type' field for a piece of content, like 'video' or 'audio'
+            // instead preferring to deduce that from the formats of the locators attached to it.
+            // Display and interaction in the UI will depend more on the formats.
+
+            // This is what we consider the 'home' of the content, which we display regardless
+            // of the different ways it might have been accessed (locators).
+            canonicalUrl: { type: 'string' },
+
+            title: { type: 'string' },
         },
+    },
+    personalContentLocator: {
+        version: STORAGE_VERSIONS[8].date,
+        fields: {
+            locationType: { type: 'string' },
+            format: { type: 'string' },
+            originalLocation: { type: 'string' },
+            locationScheme: { type: 'string' },
+            location: { type: 'string' },
+            fingerprint: { type: 'string' },
+            primary: { type: 'boolean' },
+            valid: { type: 'boolean' },
+            version: { type: 'timestamp' },
+            lastVisited: { type: 'timestamp', optional: true },
+            contentSize: { type: 'int', optional: true }, // in bytes
+        },
+        relationships: [
+            { childOf: 'personalContentMetadata' },
+        ]
+    },
+    personalContentRead: {
+        version: STORAGE_VERSIONS[8].date,
+        fields: {
+            // progress is the units of the total, like 400px of 1200px total
+
+            readWhen: { type: 'timestamp' },
+            readDuration: { type: 'int', optional: true },
+            progressPercentage: { type: 'float', optional: true },
+            scrollTotal: { type: 'int', optional: true },
+            scrollProgress: { type: 'int', optional: true },
+            pageTotal: { type: 'int', optional: true },
+            pageProgress: { type: 'int', optional: true },
+            durationTotal: { type: 'int', optional: true },
+            durationProgress: { type: 'int', optional: true },
+        },
+        relationships: [
+            { childOf: 'personalContentMetadata' },
+            { childOf: 'personalContentLocator' },
+        ]
     },
     personalBookmark: {
         version: STORAGE_VERSIONS[8].date,
@@ -143,23 +189,10 @@ export const PERSONAL_PAGE_COLLECTIONS = (): StorageModuleCollections => addComm
             normalizedPageUrl: { type: 'string' },
         },
         relationships: [
-            { singleChildOf: 'personalPageInfo' }
+            { singleChildOf: 'personalContentMetadata' }
         ]
     },
-    personalVisit: {
-        version: STORAGE_VERSIONS[8].date,
-        fields: {
-            normalizedPageUrl: { type: 'string' },
-            duration: { type: 'int', optional: true },
-            scrollMaxPerc: { type: 'float', optional: true },
-            scrollMaxPx: { type: 'float', optional: true },
-            scrollPerc: { type: 'float', optional: true },
-            scrollPx: { type: 'float', optional: true },
-        },
-        relationships: [
-            { childOf: 'personalPageInfo' }
-        ]
-    },
+
 })
 export const PERSONAL_ANNOTATION_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
     personalAnnotation: {
