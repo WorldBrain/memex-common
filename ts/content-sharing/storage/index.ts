@@ -266,6 +266,19 @@ export default class ContentSharingStorage extends StorageModule {
         >(retrievedEntry, 'shared-list-entry-reference', relations)
     }
 
+    async getListReferencesByCreator(
+        creatorReference: UserReference,
+    ): Promise<types.SharedListReference[]> {
+        const creatorId = this._idFromReference(creatorReference)
+        const rawSharedLists: Array<{
+            id: string | number
+        }> = await this.operation('findListsByCreator', { creatorId })
+        return rawSharedLists.map((rawSharedList) => ({
+            id: rawSharedList.id,
+            type: 'shared-list-reference',
+        }))
+    }
+
     async getRandomUserListEntryForUrl(params: {
         creatorReference: UserReference
         normalizedUrl: string

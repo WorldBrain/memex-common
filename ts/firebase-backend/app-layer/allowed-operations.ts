@@ -1,6 +1,10 @@
-import { FunctionsBackendStorage } from "../types";
+import { FunctionsBackendStorage } from '../types'
 
-export const ALLOWED_STORAGE_MODULE_OPERATIONS: { [K in keyof FunctionsBackendStorage['modules']]?: { [operation: string]: true } } = {
+export const ALLOWED_STORAGE_MODULE_OPERATIONS: {
+    [K in keyof FunctionsBackendStorage['modules']]?: {
+        [operation: string]: true
+    }
+} = {
     contentSharing: {
         findListsByIDs: true,
         findListEntriesByList: true,
@@ -17,6 +21,7 @@ export const ALLOWED_STORAGE_MODULE_OPERATIONS: { [K in keyof FunctionsBackendSt
         findListRoles: true,
         findPageInfoByCreatorAndUrl: true,
         findListRolesByUser: true,
+        findListsByCreator: true,
     },
     contentConversations: {
         findThreadsByPages: true,
