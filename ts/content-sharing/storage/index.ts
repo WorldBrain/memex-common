@@ -266,6 +266,19 @@ export default class ContentSharingStorage extends StorageModule {
         >(retrievedEntry, 'shared-list-entry-reference', relations)
     }
 
+    async getListReferencesByCreator(
+        creatorReference: UserReference,
+    ): Promise<types.SharedListReference[]> {
+        const creatorId = this._idFromReference(creatorReference)
+        const rawSharedLists: Array<{
+            id: string | number
+        }> = await this.operation('findListsByCreator', { creatorId })
+        return rawSharedLists.map((rawSharedList) => ({
+            id: rawSharedList.id,
+            type: 'shared-list-reference',
+        }))
+    }
+
     async getRandomUserListEntryForUrl(params: {
         creatorReference: UserReference
         normalizedUrl: string
@@ -540,9 +553,9 @@ export default class ContentSharingStorage extends StorageModule {
                 annotation: types.SharedAnnotation
             }>
         } = {}
-        const annotationChunks: Array<
-            Array<types.SharedAnnotation>
-        > = await Promise.all(
+        const annotationChunks: Array<Array<
+            types.SharedAnnotation
+        >> = await Promise.all(
             chunkedEntries.map((chunk) =>
                 this.operation('findAnnotationsByIds', {
                     ids: chunk.map((entry) => entry.sharedAnnotation),
@@ -563,6 +576,65 @@ export default class ContentSharingStorage extends StorageModule {
             ])
         }
         return result
+    }
+
+    async getAnnotationListEntriesForLists(params: {
+        listReferences: types.SharedListReference[]
+    }) {
+        const annotationEntries: Array<
+            types.SharedAnnotationListEntry & {
+                id: number | string
+                creator: number | string
+                sharedAnnotation: number | string
+                sharedList: number | string
+            }
+        > = await this.operation('findAnnotationEntriesByLists', {
+            sharedLists: params.listReferences.map((ref) =>
+                this._idFromReference(ref),
+            ),
+        })
+
+        if ('error' in annotationEntries) {
+            throw new Error(annotationEntries['error'])
+        }
+
+        const returned: {
+            [listId: string]: GetAnnotationListEntriesResult
+        } = {}
+        for (const entry of annotationEntries) {
+            const reference: types.SharedAnnotationListEntryReference = {
+                type: 'shared-annotation-list-entry-reference',
+                id: entry.id,
+            }
+            const sharedAnnotation: types.SharedAnnotationReference = {
+                type: 'shared-annotation-reference',
+                id: entry.sharedAnnotation,
+            }
+            const sharedList: types.SharedListReference = {
+                type: 'shared-list-reference',
+                id: entry.sharedList,
+            }
+            delete entry.id
+
+            returned[entry.sharedList] = {
+                ...(returned[entry.sharedList] ?? {}),
+                [entry.normalizedPageUrl]: [
+                    ...(returned[entry.sharedList]?.[entry.normalizedPageUrl] ??
+                        []),
+                    {
+                        ...entry,
+                        reference,
+                        creator: {
+                            type: 'user-reference',
+                            id: entry.creator,
+                        },
+                        sharedList,
+                        sharedAnnotation,
+                    },
+                ],
+            }
+        }
+        return returned
     }
 
     async getAnnotationListEntries(params: {

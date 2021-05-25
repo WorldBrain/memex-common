@@ -26,6 +26,13 @@ export const CONTENT_SHARING_OPERATIONS: StorageOperationDefinitions = {
             id: { $in: '$ids:pk[]' },
         },
     },
+    findListsByCreator: {
+        operation: 'findObjects',
+        collection: 'sharedList',
+        args: {
+            creator: '$creatorId:pk',
+        },
+    },
     findListEntriesByList: {
         operation: 'findObjects',
         collection: 'sharedListEntry',
