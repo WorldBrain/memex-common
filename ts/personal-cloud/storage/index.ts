@@ -7,7 +7,7 @@ import { PERSONAL_CLOUD_STORAGE_COLLECTIONS } from './collections'
 import { PERSONAL_CLOUD_OPERATIONS } from './operations'
 // import { PERSONAL_CLOUD_STORAGE_ACCESS_RULES } from './access-rules'
 
-export default class ContentSharingStorage extends StorageModule {
+export default class PersonalCloudStorage extends StorageModule {
     constructor(
         private options: StorageModuleConstructorArgs & {
             autoPkType: 'number' | 'string'
