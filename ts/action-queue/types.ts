@@ -7,7 +7,8 @@ export type ActionQueueInteraction =
     | 'queue-and-return'
     | 'skip-queue'
 
-export type ActionExecutor<Action> = (params: { action: Action }) => Promise<void>
+export type ActionExecutor<Action> = (params: { action: Action }) => Promise<void | ActionExecutorResult>
+export type ActionExecutorResult = { pauseAndRetry?: boolean }
 export type ActionPreprocessor<Action> = (params: { action: Action }) => ActionPreprocessorResult<Action>
 export type ActionPreprocessorResult<Action> = {
     valid: false

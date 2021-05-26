@@ -10,6 +10,7 @@ export default class ActionQueue<Action extends { type: string }> {
     _queingAction?: Resolvable<void>
     _executingPendingActions?: Resolvable<{ result: 'success' | 'error' }>
 
+    _paused?: Resolvable<void>
     _pendingActionsRetry?: Resolvable<void>
     _scheduledRetry: () => Promise<void>
     _scheduledRetryTimeout: ReturnType<typeof setTimeout>
@@ -27,13 +28,27 @@ export default class ActionQueue<Action extends { type: string }> {
         this.storage = new ActionQueueStorage<Action>(options)
     }
 
-    async setup() {
+    async setup(options?: { paused?: boolean }) {
         try {
             await this.executePendingActions()
         } catch (e) {
             // Log the error, but don't stop the entire extension setup
             // when we can't reach the sharing back-end
             console.error(e)
+        }
+    }
+
+    pause() {
+        if (!this._paused) {
+            this._paused = createResolvable()
+        }
+    }
+
+    unpause() {
+        const paused = this._paused
+        if (paused) {
+            delete this._paused
+            paused.resolve()
         }
     }
 
@@ -84,6 +99,7 @@ export default class ActionQueue<Action extends { type: string }> {
 
     async executePendingActions() {
         await this._executingPendingActions
+        await this._paused
 
         const executingPendingActions = (this._executingPendingActions = createResolvable())
         if (this._pendingActionsRetry) {
@@ -91,21 +107,7 @@ export default class ActionQueue<Action extends { type: string }> {
             delete this._pendingActionsRetry
         }
 
-        try {
-            while (true) {
-                await this._queingAction
-
-                const action = await this.storage.peekAction()
-                if (!action) {
-                    break
-                }
-
-                await this.options.executeAction({ action })
-                await this.storage.removeAction({ actionId: action.id })
-            }
-            this._hasPendingActions = false
-            executingPendingActions.resolve({ result: 'success' })
-        } catch (e) {
+        const scheduleRetry = () => {
             this._pendingActionsRetry = createResolvable()
             executingPendingActions.resolve({ result: 'error' })
             this._scheduledRetry = async () => {
@@ -117,6 +119,29 @@ export default class ActionQueue<Action extends { type: string }> {
                 this._scheduledRetry,
                 this.options.retryIntervalInMs,
             )
+        }
+
+        try {
+            while (true) {
+                await this._queingAction
+
+                const action = await this.storage.peekAction()
+                if (!action) {
+                    break
+                }
+
+                const result = await this.options.executeAction({ action })
+                if (result && result.pauseAndRetry) {
+                    this.pause()
+                    scheduleRetry()
+                    return
+                }
+                await this.storage.removeAction({ actionId: action.id })
+            }
+            this._hasPendingActions = false
+            executingPendingActions.resolve({ result: 'success' })
+        } catch (e) {
+            scheduleRetry()
             throw e
         } finally {
             delete this._executingPendingActions

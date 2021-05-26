@@ -1,9 +1,11 @@
 import mapValues from 'lodash/mapValues'
+import { CollectionFields } from "@worldbrain/storex/lib/types/collections"
+import { Relationships } from "@worldbrain/storex/lib/types/relationships"
 import { StorageModuleCollections } from "@worldbrain/storex-pattern-modules";
 import { STORAGE_VERSIONS } from "../../web-interface/storage/versions";
 
 export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections => ({
-    ...PERSONAL_DEVICE_COLLECTIONS(),
+    ...PERSONAL_META_COLLECTIONS(),
     ...PERSONAL_ANNOTATION_COLLECTIONS(),
     ...PERSONAL_EXPORT_COLLECTIONS(),
     ...PERSONAL_SHARING_COLLECTIONS(),
@@ -12,37 +14,64 @@ export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections =
     ...PERSONAL_TAG_COLLECTIONS(),
 })
 
-function addCommonalities(collections: StorageModuleCollections): StorageModuleCollections {
-    return mapValues(collections, (collectionDefinition): StorageModuleCollections['collections'] => ({
-        ...collectionDefinition,
-        fields: {
+function addCommonalities(collections: StorageModuleCollections, options?: {
+    excludeCreationDevice?: boolean,
+    excludeUpdatedTimestamp?: boolean
+}): StorageModuleCollections {
+    return mapValues(collections, (collectionDefinition) => {
+        const fields: CollectionFields = {
             ...collectionDefinition.fields,
             createdWhen: { type: 'timestamp' },
-            updatedWhen: { type: 'timestamp' },
-        },
-        relationships: [
+        };
+        if (!options?.excludeUpdatedTimestamp) {
+            fields.updatedWhen = { type: 'timestamp' }
+        }
+        const relationships: Relationships = [
             ...(collectionDefinition.relationships ?? []),
             { childOf: 'user' },
-            { childOf: 'personalDeviceInfo', alias: 'createdByDevice' },
-        ],
-        groupBy: [
-            { subcollectionName: 'objects', key: 'user' },
-            ...(collectionDefinition.groupBy ?? [])
-        ]
-    }))
+        ];
+        if (!options?.excludeCreationDevice) {
+            relationships.push({ childOf: 'personalDeviceInfo', alias: 'createdByDevice' })
+        }
+
+        const collections: StorageModuleCollections['collections'] = {
+            ...collectionDefinition,
+            fields: fields,
+            relationships,
+            groupBy: [
+                { subcollectionName: 'objects', key: 'user' },
+                ...(collectionDefinition.groupBy ?? [])
+            ]
+        };
+        return collections;
+    });
 }
 
-export const PERSONAL_DEVICE_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
-    personalDeviceInfo: {
-        version: STORAGE_VERSIONS[8].date,
-        fields: {
-            type: { type: 'string' },
-            os: { type: 'string' },
-            browser: { type: 'string' },
-            product: { type: 'string' },
-            name: { type: 'string', optional: true },
+export const PERSONAL_META_COLLECTIONS = (): StorageModuleCollections => ({
+    ...addCommonalities({
+        personalDeviceInfo: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                type: { type: 'string' },
+                os: { type: 'string' },
+                browser: { type: 'string' },
+                product: { type: 'string' },
+                name: { type: 'string', optional: true },
+            },
+        }
+    }, { excludeCreationDevice: true }),
+    ...addCommonalities({
+        personalDataChange: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                type: { type: 'string' },
+                os: { type: 'string' },
+                browser: { type: 'string' },
+                product: { type: 'string' },
+                name: { type: 'string', optional: true },
+            },
         },
-    }
+    }, { excludeUpdatedTimestamp: true })
 })
 
 export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
