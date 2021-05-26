@@ -41,7 +41,7 @@ export class MemoryAuthService implements AuthService {
         if (password !== 'password') {
             throw new Error(
                 `Tried to log in with invalid password (use 'password'): ` +
-                    password,
+                password,
             )
         }
 
@@ -53,7 +53,7 @@ export class MemoryAuthService implements AuthService {
         })
     }
 
-    async refreshUserInfo(): Promise<void> {}
+    async refreshUserInfo(): Promise<void> { }
 
     signOut() {
         this.setUser(null)
