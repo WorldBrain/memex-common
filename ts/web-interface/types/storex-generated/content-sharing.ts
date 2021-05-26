@@ -15,7 +15,7 @@ export type SharedListEntry =
     {
         createdWhen: number
         updatedWhen: number
-        entryTitle: string
+        entryTitle?: string
         normalizedUrl: string
         originalUrl: string
     }
@@ -48,7 +48,7 @@ export type SharedPageInfo =
         updatedWhen: number
         normalizedUrl: string
         originalUrl: string
-        fullTitle: string
+        fullTitle?: string
     }
 
 export type SharedAnnotation =
