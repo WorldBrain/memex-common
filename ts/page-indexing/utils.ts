@@ -3,7 +3,7 @@ const mergeStringArrays = (left: string[], right: string[]) => {
 }
 
 export const mergeTermFields = (fieldName: string, left: any, right: any) => {
-    const oldTerms = left[fieldName] || []
-    const addedTerms = right[fieldName] || []
+    const oldTerms = left?.[fieldName] ?? []
+    const addedTerms = right?.[fieldName] ?? []
     return mergeStringArrays(oldTerms, addedTerms)
 }
