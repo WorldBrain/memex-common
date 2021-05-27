@@ -117,6 +117,9 @@ export const PERSONAL_TAG_COLLECTIONS = (): StorageModuleCollections => addCommo
             collection: { type: 'string' },
             objectId: { type: 'string' },
         },
+        relationships: [
+            { singleChildOf: 'personalTag' }
+        ]
     },
 })
 export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections => addCommonalities({
@@ -177,14 +180,14 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections => addC
         version: STORAGE_VERSIONS[8].date,
         fields: {
             locationType: { type: 'string' },
+            location: { type: 'string' },
             format: { type: 'string' },
             originalLocation: { type: 'string' },
             locationScheme: { type: 'string' },
-            location: { type: 'string' },
-            fingerprint: { type: 'string' },
             primary: { type: 'boolean' },
             valid: { type: 'boolean' },
             version: { type: 'timestamp' },
+            fingerprint: { type: 'string', optional: true },
             lastVisited: { type: 'timestamp', optional: true },
             contentSize: { type: 'int', optional: true }, // in bytes
         },
