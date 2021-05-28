@@ -3,6 +3,7 @@ import StorageManager, {
     UpdateObjectsBatchOperation,
 } from '@worldbrain/storex'
 import extractTerms from '@worldbrain/memex-stemmer/lib/index'
+import { SPECIAL_LIST_IDS } from '@worldbrain/memex-storage/lib/lists/constants'
 import { getTermsField } from '../storage/utils'
 import { mergeTermFields } from '../page-indexing/utils'
 
@@ -12,10 +13,9 @@ export function createMemexReconciliationProcessor(
     return async (reconciliation: OperationBatch) => {
         for (const step of reconciliation) {
             if (
-                step.operation !== 'updateObjects' ||
-                !(
-                    step.collection === 'customLists' ||
-                    step.collection === 'pages'
+                !['updateObjects', 'createObject'].includes(step.operation) ||
+                !['customLists', 'pages', 'pageListEntries'].includes(
+                    step.collection,
                 )
             ) {
                 continue
@@ -39,6 +39,20 @@ export function createMemexReconciliationProcessor(
                     .findObject({ id: step.where.id })
 
                 mergeTerms(step, existingList)
+            } else if (
+                step.collection === 'pageListEntries' &&
+                step.operation === 'createObject'
+            ) {
+                // If a new list entry is coming which points to a non-existent list, point it to the mobile list
+                const foundList = await storageManager
+                    .collection('customLists')
+                    .findObject({ id: step.args.listId })
+
+                if (foundList) {
+                    continue
+                }
+
+                step.args.listId = SPECIAL_LIST_IDS.MOBILE
             }
         }
 
