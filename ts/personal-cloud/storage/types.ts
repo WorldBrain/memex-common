@@ -21,6 +21,11 @@ export enum PersonalDeviceProduct {
     MobileApp = 'mobile-app',
     WebUI = 'web-ui',
 }
+export enum DataChangeType {
+    Create = 'create',
+    Modify = 'modify',
+    Delete = 'delete'
+}
 export enum ContentLocatorType {
     Local = 'local',
     Remote = 'remote',

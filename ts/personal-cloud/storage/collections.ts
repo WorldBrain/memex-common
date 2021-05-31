@@ -65,10 +65,8 @@ export const PERSONAL_META_COLLECTIONS = (): StorageModuleCollections => ({
             version: STORAGE_VERSIONS[8].date,
             fields: {
                 type: { type: 'string' },
-                os: { type: 'string' },
-                browser: { type: 'string' },
-                product: { type: 'string' },
-                name: { type: 'string', optional: true },
+                collection: { type: 'string' },
+                objectId: { type: 'string' }
             },
         },
     }, { excludeUpdatedTimestamp: true })
