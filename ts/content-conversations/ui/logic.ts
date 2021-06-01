@@ -35,7 +35,12 @@ export function annotationConversationInitialState(): AnnotationConversationsSta
 export async function detectAnnotationConversationThreads(
     logic: UILogic<AnnotationConversationsState, AnnotationConversationEvent>,
     dependencies: {
-        storage: { contentConversations: ContentConversationStorage }
+        storage: {
+            contentConversations: Pick<
+                ContentConversationStorage,
+                'getThreadsForAnnotations'
+            >
+        }
         annotationReferences: SharedAnnotationReference[]
         normalizedPageUrls: string[]
     },
@@ -82,8 +87,14 @@ export function annotationConversationEventHandlers<
     dependencies: {
         services: Pick<Services, 'contentConversations'>
         storage: {
-            contentConversations: ContentConversationStorage
-            contentSharing: ContentSharingStorage
+            contentSharing: Pick<
+                ContentSharingStorage,
+                'getSharedAnnotationLinkID' | 'createAnnotations'
+            >
+            contentConversations: Pick<
+                ContentConversationStorage,
+                'getOrCreateThread' | 'getRepliesByAnnotation'
+            >
         }
         getCurrentUser(): Promise<(User & { reference: UserReference }) | null>
         loadUserByReference(reference: UserReference): Promise<User | null>
