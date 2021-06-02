@@ -576,11 +576,11 @@ export default class ContentSharingStorage extends StorageModule {
                 sharedAnnotation: number | string
                 sharedList: number | string
             }
-        > = await this.operation('findAnnotationEntriesByLists', {
-            sharedLists: params.listReferences.map((ref) =>
-                this._idFromReference(ref),
-            ),
-        })
+        > = await mapByChunk(params.listReferences, (listRefs) =>
+            this.operation('findAnnotationEntriesByLists', {
+                sharedLists: listRefs.map((ref) => this._idFromReference(ref)),
+            }),
+        )
 
         if ('error' in annotationEntries) {
             throw new Error(annotationEntries['error'])
