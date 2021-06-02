@@ -165,7 +165,9 @@ export default class ContentSharingStorage extends StorageModule {
         if (!ids.length) {
             return
         }
-        await this.operation('deleteListEntriesByIds', { ids })
+        await mapByChunk(ids, (idChunk) =>
+            this.operation('deleteListEntriesByIds', { ids: idChunk }),
+        )
     }
 
     async retrieveList(listReference: types.SharedListReference) {
@@ -676,9 +678,11 @@ export default class ContentSharingStorage extends StorageModule {
                 id: number | string
                 creator: number | string
             }
-        > = await this.operation('findAnnotationsByIds', {
-            ids: params.references.map((ref) => ref.id),
-        })
+        > = await mapByChunk(params.references, (refChunk) =>
+            this.operation('findAnnotationsByIds', {
+                ids: refChunk.map((ref) => ref.id),
+            }),
+        )
 
         const returned: GetAnnotationsResult = {}
         for (const annotation of annotations) {

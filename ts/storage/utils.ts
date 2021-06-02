@@ -24,6 +24,19 @@ export const forEachChunkAsync = async <T>(
     }
 }
 
+export async function fetchInChunks<T, ReturnType = any>(
+    elements: T[],
+    fetchChunk: (chunk: T[]) => Promise<ReturnType[]>,
+) {
+    return flatten(
+        await Promise.all(
+            chunk(elements, 10).map((chunkElements) =>
+                fetchChunk(chunkElements),
+            ),
+        ),
+    )
+}
+
 export function isTermsField(params: {
     collection: string
     field: string
@@ -37,7 +50,7 @@ export function isTermsField(params: {
 
 export function removeTermFieldsFromObject(
     object: any,
-    options: { collectionName: string }
+    options: { collectionName: string },
 ) {
     for (const fieldName of Object.keys(object)) {
         if (
@@ -77,13 +90,8 @@ export function getTermsField(collection: string, fieldName: string) {
 
 export function createPassiveDataChecker(dependencies: {
     storageManager: StorageManager
-}): (
-        params: {
-            collection: string
-            pk: any
-        },
-    ) => Promise<boolean> {
-    return async params => {
+}): (params: { collection: string; pk: any }) => Promise<boolean> {
+    return async (params) => {
         if (params.collection !== 'pages') {
             return false
         }
@@ -98,10 +106,10 @@ export function createPassiveDataChecker(dependencies: {
         }
 
         return !(
-            await check('tags', { url: params.pk }) ||
-            await check('bookmarks', { url: params.pk }) ||
-            await check('annotations', { pageUrl: params.pk }) ||
-            await check('pageListEntries', { pageUrl: params.pk })
+            (await check('tags', { url: params.pk })) ||
+            (await check('bookmarks', { url: params.pk })) ||
+            (await check('annotations', { pageUrl: params.pk })) ||
+            (await check('pageListEntries', { pageUrl: params.pk }))
         )
     }
 }
@@ -128,7 +136,8 @@ export async function getStorageContents(
 }
 
 export function getCurrentSchemaVersion(storageManager: StorageManager): Date {
-    const schemaVersions = storageManager.registry.getSchemaHistory()
+    const schemaVersions = storageManager.registry
+        .getSchemaHistory()
         .map(({ version }) => version.getTime())
         .sort()
 

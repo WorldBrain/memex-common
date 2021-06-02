@@ -1,22 +1,34 @@
 import omit from 'lodash/omit'
 import groupBy from 'lodash/groupBy'
 import orderBy from 'lodash/orderBy'
-import flatten from 'lodash/flatten'
-import chunk from 'lodash/chunk'
-import { StorageModule, StorageModuleConfig, StorageModuleConstructorArgs } from '@worldbrain/storex-pattern-modules'
+import {
+    StorageModule,
+    StorageModuleConfig,
+    StorageModuleConstructorArgs,
+} from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../web-interface/storage/versions'
 import { UserReference } from '../../web-interface/types/users'
-import { SharedAnnotationReference, SharedListReference } from '../../content-sharing/types'
-import { ConversationReply, ConversationThread } from '../../web-interface/types/storex-generated/content-conversations'
+import {
+    SharedAnnotationReference,
+    SharedListReference,
+} from '../../content-sharing/types'
+import {
+    ConversationReply,
+    ConversationThread,
+} from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
-import { ConversationReplyReference, ConversationThreadReference } from '../types'
 import {
     PreparedAnnotationReply as PreparedReply,
     CreateConversationReplyParams,
     PreparedAnnotationReplies,
     PreparedThread,
 } from './types'
+import {
+    ConversationReplyReference,
+    ConversationThreadReference,
+} from '../types'
 import { augmentObjectWithReferences } from '../../storage/references'
+import { fetchInChunks } from '../../storage/utils'
 
 type RawReply = ConversationReply & {
     id: number | string
@@ -33,10 +45,12 @@ type RawThread = ConversationThread & {
 }
 
 export default class ContentConversationStorage extends StorageModule {
-    constructor(private options: StorageModuleConstructorArgs & {
-        autoPkType: 'number' | 'string'
-        contentSharing: ContentSharingStorage
-    }) {
+    constructor(
+        private options: StorageModuleConstructorArgs & {
+            autoPkType: 'number' | 'string'
+            contentSharing: ContentSharingStorage
+        },
+    ) {
         super(options)
     }
 
@@ -59,7 +73,7 @@ export default class ContentConversationStorage extends StorageModule {
                 fields: {
                     createdWhen: { type: 'timestamp' },
                     normalizedPageUrl: { type: 'string' },
-                    content: { type: 'string' }
+                    content: { type: 'string' },
                 },
                 relationships: [
                     { childOf: 'user' },
@@ -70,7 +84,7 @@ export default class ContentConversationStorage extends StorageModule {
                     { childOf: 'sharedList' },
                 ],
                 groupBy: [
-                    { subcollectionName: 'replies', key: 'sharedAnnotation' }
+                    { subcollectionName: 'replies', key: 'sharedAnnotation' },
                 ],
             },
         },
@@ -89,50 +103,53 @@ export default class ContentConversationStorage extends StorageModule {
                 args: {
                     pageCreator: '$pageCreator:pk',
                     normalizedPageUrl: '$normalizedPageUrl:string',
-                }
+                },
             },
             findRepliesByAnnotation: {
                 operation: 'findObjects',
                 collection: 'conversationReply',
                 args: {
                     sharedAnnotation: '$sharedAnnotation:pk',
-                }
+                },
             },
             findRepliesByAnnotations: {
                 operation: 'findObjects',
                 collection: 'conversationReply',
                 args: {
                     sharedAnnotation: { $in: '$sharedAnnotations:pk' },
-                }
+                },
             },
             findReplyById: {
                 operation: 'findObject',
                 collection: 'conversationReply',
                 args: {
                     id: '$id:pk',
-                    sharedAnnotation: '$sharedAnnotation:pk'
-                }
+                    sharedAnnotation: '$sharedAnnotation:pk',
+                },
             },
-            findThreadsByPages: { // TODO: Remove
+            findThreadsByPages: {
+                // TODO: Remove
                 operation: 'findObjects',
                 collection: 'conversationThread',
                 args: {
-                    normalizedPageUrl: { $in: '$normalizedPageUrls:array:string' },
-                }
+                    normalizedPageUrl: {
+                        $in: '$normalizedPageUrls:array:string',
+                    },
+                },
             },
             findThreadByAnnotation: {
                 operation: 'findObject',
                 collection: 'conversationThread',
                 args: {
                     sharedAnnotation: '$sharedAnnotation:pk',
-                }
+                },
             },
             findThreadsByAnnotations: {
                 operation: 'findObjects',
                 collection: 'conversationThread',
                 args: {
                     sharedAnnotation: { $in: '$sharedAnnotations:array:pk' },
-                }
+                },
             },
         },
         accessRules: {
@@ -143,44 +160,67 @@ export default class ContentConversationStorage extends StorageModule {
                 },
             },
             permissions: {
-                conversationThread: { read: { rule: true }, create: { rule: true } },
+                conversationThread: {
+                    read: { rule: true },
+                    create: { rule: true },
+                },
                 conversationReply: { read: { rule: true } },
-            }
-        }
+            },
+        },
     })
 
     async getOrCreateThread(params: {
-        pageCreatorReference: UserReference;
-        annotationReference: SharedAnnotationReference;
-        normalizedPageUrl: string;
-        sharedListReference: SharedListReference | null;
+        pageCreatorReference: UserReference
+        annotationReference: SharedAnnotationReference
+        normalizedPageUrl: string
+        sharedListReference: SharedListReference | null
     }) {
         let thread = await this.operation('findThreadByAnnotation', {
             sharedAnnotation: params.annotationReference.id,
         })
         if (!thread) {
-            thread = (await this.operation('createThread', {
-                sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
-                sharedList: params.sharedListReference?.id ?? null,
-                updatedWhen: Date.now(),
-                pageCreator: params.pageCreatorReference.id,
-                normalizedPageUrl: params.normalizedPageUrl,
-            })).object
+            thread = (
+                await this.operation('createThread', {
+                    sharedAnnotation: this.options.contentSharing._idFromReference(
+                        params.annotationReference,
+                    ),
+                    sharedList: params.sharedListReference?.id ?? null,
+                    updatedWhen: Date.now(),
+                    pageCreator: params.pageCreatorReference.id,
+                    normalizedPageUrl: params.normalizedPageUrl,
+                })
+            ).object
         }
 
-        return augmentObjectWithReferences<ConversationThread, ConversationThreadReference, {}>(thread, 'conversation-thread-reference', {})
+        return augmentObjectWithReferences<
+            ConversationThread,
+            ConversationThreadReference,
+            {}
+        >(thread, 'conversation-thread-reference', {})
     }
 
-    async createReply(params: CreateConversationReplyParams): Promise<{ reference: ConversationReplyReference, threadReference: ConversationThreadReference }> {
+    async createReply(
+        params: CreateConversationReplyParams,
+    ): Promise<{
+        reference: ConversationReplyReference
+        threadReference: ConversationThreadReference
+    }> {
         // NOTE: We don't create thread and reply in parellel so the storage hook has access to both
         // the reply and the thread when the reply is created
 
-        const thread = await this.getOrCreateThread({ ...params, sharedListReference: null })
+        const thread = await this.getOrCreateThread({
+            ...params,
+            sharedListReference: null,
+        })
         const { object } = await this.operation('createReply', {
             user: params.userReference.id,
             conversationThread: thread.reference.id,
-            previousReply: params.previousReplyReference ? params.previousReplyReference.id : null,
-            sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference),
+            previousReply: params.previousReplyReference
+                ? params.previousReplyReference.id
+                : null,
+            sharedAnnotation: this.options.contentSharing._idFromReference(
+                params.annotationReference,
+            ),
             sharedList: null,
             createdWhen: Date.now(),
             pageCreator: params.pageCreatorReference.id,
@@ -198,17 +238,25 @@ export default class ContentConversationStorage extends StorageModule {
     }
 
     async getRepliesByCreatorPage(params: {
-        pageCreatorReference: UserReference,
+        pageCreatorReference: UserReference
         normalizedPageUrl: string
     }) {
-        const rawReplies: Array<RawReply> = await this.operation('findRepliesByCreatorAndPageUrl', {
-            pageCreator: this.options.contentSharing._idFromReference(params.pageCreatorReference),
-            normalizedPageUrl: params.normalizedPageUrl,
-        })
+        const rawReplies: Array<RawReply> = await this.operation(
+            'findRepliesByCreatorAndPageUrl',
+            {
+                pageCreator: this.options.contentSharing._idFromReference(
+                    params.pageCreatorReference,
+                ),
+                normalizedPageUrl: params.normalizedPageUrl,
+            },
+        )
 
         const grouped: {
             [annotationId: string]: Array<PreparedReply>
-        } = groupBy(this._prepareReplies(rawReplies), (reply => reply.sharedAnnotation.id))
+        } = groupBy(
+            this._prepareReplies(rawReplies),
+            (reply) => reply.sharedAnnotation.id,
+        )
 
         return grouped
     }
@@ -216,9 +264,14 @@ export default class ContentConversationStorage extends StorageModule {
     async getRepliesByAnnotation(params: {
         annotationReference: SharedAnnotationReference
     }): Promise<PreparedReply[]> {
-        const rawReplies: Array<RawReply> = await this.operation('findRepliesByAnnotation', {
-            sharedAnnotation: this.options.contentSharing._idFromReference(params.annotationReference)
-        })
+        const rawReplies: Array<RawReply> = await this.operation(
+            'findRepliesByAnnotation',
+            {
+                sharedAnnotation: this.options.contentSharing._idFromReference(
+                    params.annotationReference,
+                ),
+            },
+        )
         return this._prepareReplies(rawReplies)
     }
 
@@ -229,9 +282,15 @@ export default class ContentConversationStorage extends StorageModule {
         annotationReferences: SharedAnnotationReference[]
         sortingFn?: (a: PreparedReply, b: PreparedReply) => number
     }): Promise<PreparedAnnotationReplies> {
-        const rawReplies: Array<Array<RawReply>> = await Promise.all(annotationReferences.map(annotationReference => this.operation('findRepliesByAnnotation', {
-            sharedAnnotation: this.options.contentSharing._idFromReference(annotationReference)
-        })))
+        const rawReplies: Array<Array<RawReply>> = await Promise.all(
+            annotationReferences.map((annotationReference) =>
+                this.operation('findRepliesByAnnotation', {
+                    sharedAnnotation: this.options.contentSharing._idFromReference(
+                        annotationReference,
+                    ),
+                }),
+            ),
+        )
 
         const preparedReplies: PreparedAnnotationReplies = {}
 
@@ -239,7 +298,7 @@ export default class ContentConversationStorage extends StorageModule {
             for (const rawReply of annotationReplies) {
                 preparedReplies[rawReply.sharedAnnotation] = [
                     ...(preparedReplies[rawReply.sharedAnnotation] ?? []),
-                    this._prepareReply(rawReply)
+                    this._prepareReply(rawReply),
                 ]
             }
         }
@@ -255,28 +314,42 @@ export default class ContentConversationStorage extends StorageModule {
         annotationReference: SharedAnnotationReference
         replyReference: ConversationReplyReference
     }) {
-        const rawReply: RawReply | null = await this.operation('findReplyById', {
-            id: params.replyReference.id,
-            sharedAnnotation: params.annotationReference.id,
-        })
+        const rawReply: RawReply | null = await this.operation(
+            'findReplyById',
+            {
+                id: params.replyReference.id,
+                sharedAnnotation: params.annotationReference.id,
+            },
+        )
         return rawReply && this._prepareReply(rawReply)
     }
 
     _prepareReplies(rawReplies: Array<RawReply>) {
         return orderBy(
-            rawReplies.map(rawReply => this._prepareReply(rawReply)),
-            preparedReply => preparedReply.reply.createdWhen,
-            'asc'
+            rawReplies.map((rawReply) => this._prepareReply(rawReply)),
+            (preparedReply) => preparedReply.reply.createdWhen,
+            'asc',
         )
     }
 
     _prepareReply(rawReply: RawReply): PreparedReply {
         return {
-            reference: { type: 'conversation-reply-reference', id: rawReply.id },
-            previousReply: rawReply.previousReply ? { type: 'conversation-reply-reference', id: rawReply.previousReply } : null,
+            reference: {
+                type: 'conversation-reply-reference',
+                id: rawReply.id,
+            },
+            previousReply: rawReply.previousReply
+                ? {
+                      type: 'conversation-reply-reference',
+                      id: rawReply.previousReply,
+                  }
+                : null,
             reply: omit(rawReply, 'sharedPageInfo', 'sharedAnnotation', 'user'),
-            sharedAnnotation: { type: 'shared-annotation-reference', id: rawReply.sharedAnnotation },
-            userReference: { type: 'user-reference', id: rawReply.user }
+            sharedAnnotation: {
+                type: 'shared-annotation-reference',
+                id: rawReply.sharedAnnotation,
+            },
+            userReference: { type: 'user-reference', id: rawReply.user },
         }
     }
 
@@ -285,31 +358,34 @@ export default class ContentConversationStorage extends StorageModule {
     }): Promise<Array<PreparedThread>> {
         const rawThreads: RawThread[] = await fetchInChunks(
             params.normalizedPageUrls,
-            urls => this.operation('findThreadsByPages', { normalizedPageUrls: urls })
+            (urls) =>
+                this.operation('findThreadsByPages', {
+                    normalizedPageUrls: urls,
+                }),
         )
-        return rawThreads.map(rawThread => this._prepareThread(rawThread))
+        return rawThreads.map((rawThread) => this._prepareThread(rawThread))
     }
 
     async getThreadsForAnnotations(params: {
         annotationReferences: SharedAnnotationReference[]
     }): Promise<Array<PreparedThread>> {
         const rawThreads: RawThread[] = await fetchInChunks(
-            params.annotationReferences.map(reference => reference.id),
-            ids => this.operation('findThreadsByAnnotations', {
-                sharedAnnotations: ids,
-            })
+            params.annotationReferences.map((reference) => reference.id),
+            (ids) =>
+                this.operation('findThreadsByAnnotations', {
+                    sharedAnnotations: ids,
+                }),
         )
-        return rawThreads.map(rawThread => this._prepareThread(rawThread))
+        return rawThreads.map((rawThread) => this._prepareThread(rawThread))
     }
 
     _prepareThread(rawThread: RawThread): PreparedThread {
         return {
             thread: omit(rawThread, 'id', 'sharedAnnotation', 'pageCreator'),
-            sharedAnnotation: { type: 'shared-annotation-reference', id: rawThread.sharedAnnotation },
+            sharedAnnotation: {
+                type: 'shared-annotation-reference',
+                id: rawThread.sharedAnnotation,
+            },
         }
     }
-}
-
-async function fetchInChunks<T>(elements: T[], fetchChunk: (chunk: T[]) => Promise<any[]>) {
-    return flatten(await Promise.all(chunk(elements, 10).map(chunkElements => fetchChunk(chunkElements))))
 }
