@@ -1,6 +1,28 @@
+import chunk from 'lodash/chunk'
+import flatten from 'lodash/flatten'
 import StorageManager from '@worldbrain/storex'
 
 export type StorageContents = { [collection: string]: any[] }
+
+export const mapByChunk = async <T, ReturnType = any>(
+    array: T[],
+    callback: (chunkEntries: T[], chunkIndex: number) => Promise<ReturnType[]>,
+    chunkSize = 10,
+): Promise<ReturnType[]> =>
+    flatten(await Promise.all(chunk(array, chunkSize).map(callback)))
+
+export const forEachChunkAsync = async <T>(
+    array: T[],
+    callback: (chunkEntries: T[], chunkIndex: number) => Promise<void>,
+    chunkSize = 10,
+): Promise<void> => {
+    for (const [chunkIndex, chunkEntries] of chunk(
+        array,
+        chunkSize,
+    ).entries()) {
+        await callback(chunkEntries, chunkIndex)
+    }
+}
 
 export function isTermsField(params: {
     collection: string

@@ -12,10 +12,8 @@ export type PersonalDeviceInfo =
 export type PersonalDataChange =
     {
         type: string
-        os: string
-        browser: string
-        product: string
-        name?: string
+        collection: string
+        objectId: string
         createdWhen: number
     }
 
@@ -106,14 +104,14 @@ export type PersonalContentMetadata =
 export type PersonalContentLocator =
     {
         locationType: string
+        location: string
         format: string
         originalLocation: string
         locationScheme: string
-        location: string
-        fingerprint: string
         primary: boolean
         valid: boolean
         version: number
+        fingerprint?: string
         lastVisited?: number
         contentSize?: number
         createdWhen: number
