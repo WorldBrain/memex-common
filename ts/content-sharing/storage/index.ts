@@ -1,12 +1,9 @@
-import flatten from 'lodash/flatten'
-import chunk from 'lodash/chunk'
 import orderBy from 'lodash/orderBy'
 import { OperationBatch } from '@worldbrain/storex'
 import {
     StorageModule,
     StorageModuleConstructorArgs,
     StorageModuleConfig,
-    PermissionRule,
 } from '@worldbrain/storex-pattern-modules'
 import * as types from '../types'
 import { UserReference } from '../../web-interface/types/users'
@@ -15,12 +12,12 @@ import {
     idFromAutoPkReference,
     autoPkReferenceFromLinkId,
     augmentObjectWithReferences,
-    ObjectWithReferences,
 } from '../../storage/references'
 import { CONTENT_SHARING_STORAGE_COLLECTIONS } from './collections'
 import { CONTENT_SHARING_OPERATIONS } from './operations'
 import { CONTENT_SHARING_STORAGE_ACCESS_RULES } from './access-rules'
 import { ANNOTATION_LIST_ENTRY_ORDER } from './constants'
+import { mapByChunk, forEachChunkAsync } from '../../storage/utils'
 
 export default class ContentSharingStorage extends StorageModule {
     constructor(
@@ -118,18 +115,17 @@ export default class ContentSharingStorage extends StorageModule {
         >
         userReference: UserReference
     }) {
-        const existingEntryList = flatten(
-            await Promise.all(
-                chunk(options.listEntries, 10).map((entryChunk) =>
-                    this.operation('findListEntriesByUrls', {
-                        sharedList: options.listReference.id,
-                        normalizedUrls: entryChunk.map(
-                            (entry) => entry.normalizedUrl,
-                        ),
-                    }),
-                ),
-            ),
+        const existingEntryList = await mapByChunk(
+            options.listEntries,
+            (entryChunk) =>
+                this.operation('findListEntriesByUrls', {
+                    sharedList: options.listReference.id,
+                    normalizedUrls: entryChunk.map(
+                        (entry) => entry.normalizedUrl,
+                    ),
+                }),
         )
+
         const existingEntrySet = new Set<string>(
             existingEntryList.map((entry) => entry.normalizedUrl),
         )
@@ -230,15 +226,12 @@ export default class ContentSharingStorage extends StorageModule {
     }
 
     async getListsByReferences(references: types.SharedListReference[]) {
-        const retrievedLists = flatten(
-            await Promise.all(
-                chunk(references, 10).map((referenceChunk) =>
-                    this.operation('findListsByIDs', {
-                        ids: referenceChunk.map((ref) => ref.id),
-                    }),
-                ),
-            ),
+        const retrievedLists = await mapByChunk(references, (referenceChunk) =>
+            this.operation('findListsByIDs', {
+                ids: referenceChunk.map((ref) => ref.id),
+            }),
         )
+
         const relations = {
             creator: 'user-reference' as UserReference['type'],
         }
@@ -542,33 +535,28 @@ export default class ContentSharingStorage extends StorageModule {
             normalizedPageUrls: params.normalizedPageUrls,
         })
 
-        const chunkedEntries: Array<typeof annotationEntries> = chunk(
-            annotationEntries,
-            chunkSize,
-        )
-
         const result: {
             [normalizedPageUrl: string]: Array<{
                 // entry: types.SharedAnnotationListEntry
                 annotation: types.SharedAnnotation
             }>
         } = {}
-        const annotationChunks: Array<Array<
-            types.SharedAnnotation
-        >> = await Promise.all(
-            chunkedEntries.map((chunk) =>
+
+        const annotations: types.SharedAnnotation[] = await mapByChunk(
+            annotationEntries,
+            (chunk) =>
                 this.operation('findAnnotationsByIds', {
                     ids: chunk.map((entry) => entry.sharedAnnotation),
                 }),
-            ),
+            chunkSize,
         )
-        for (const annotationChunk of annotationChunks) {
-            for (const annotation of annotationChunk) {
-                const pageAnnotations = (result[annotation.normalizedPageUrl] =
-                    result[annotation.normalizedPageUrl] ?? [])
-                pageAnnotations.push({ annotation })
-            }
+
+        for (const annotation of annotations) {
+            const pageAnnotations = (result[annotation.normalizedPageUrl] =
+                result[annotation.normalizedPageUrl] ?? [])
+            pageAnnotations.push({ annotation })
         }
+
         for (const normalizedPageUrl of Object.keys(result)) {
             result[normalizedPageUrl] = orderBy(result[normalizedPageUrl], [
                 ({ annotation }) => annotation.createdWhen,
@@ -797,17 +785,15 @@ export default class ContentSharingStorage extends StorageModule {
             sharedList: number | string
             normalizedPageUrl: string
         }) => `${entry.sharedList}-${entry.normalizedPageUrl}`
-        const existingEntryList = flatten(
-            await Promise.all(
-                chunk(params.sharedAnnotations, 10).map((annotations) =>
-                    this.operation('findAnnotationEntriesForAnnotations', {
-                        sharedAnnotations: annotations.map(
-                            (a) => a.reference.id,
-                        ),
-                    }),
-                ),
-            ),
+
+        const existingEntryList = await mapByChunk(
+            params.sharedAnnotations,
+            (annotations) =>
+                this.operation('findAnnotationEntriesForAnnotations', {
+                    sharedAnnotations: annotations.map((a) => a.reference.id),
+                }),
         )
+
         const existingEntrySet = new Set(
             existingEntryList.map((entry) => entryHash(entry)),
         )
@@ -861,43 +847,53 @@ export default class ContentSharingStorage extends StorageModule {
                     this._idFromReference(reference),
                 ),
             )
-        for (const sharedAnnotationChuck of chunk(
+
+        await forEachChunkAsync(
             params.sharedAnnotationReferences,
-            10,
-        )) {
-            const annotationEntries: Array<{
-                id: string | number
-                sharedList: string | number
-            }> = await this.operation('findAnnotationEntriesForAnnotations', {
-                sharedAnnotations: sharedAnnotationChuck.map(
-                    (sharedAnnotationReference) =>
-                        this._idFromReference(sharedAnnotationReference),
-                ),
-            })
-
-            const filtered = listIds
-                ? annotationEntries.filter(
-                      (annotationEntry) =>
-                          !listIds || listIds.has(annotationEntry.sharedList),
-                  )
-                : annotationEntries
-            batch.push(
-                ...filtered.map((annotationEntry) => ({
-                    placeholder: `deletion-${placeholderCount++}`,
-                    operation: 'deleteObjects' as 'deleteObjects',
-                    collection: 'sharedAnnotationListEntry',
-                    where: {
-                        id: annotationEntry.id,
+            async (sharedAnnotationChunk) => {
+                const annotationEntries: Array<{
+                    id: string | number
+                    sharedList: string | number
+                }> = await this.operation(
+                    'findAnnotationEntriesForAnnotations',
+                    {
+                        sharedAnnotations: sharedAnnotationChunk.map(
+                            (sharedAnnotationReference) =>
+                                this._idFromReference(
+                                    sharedAnnotationReference,
+                                ),
+                        ),
                     },
-                })),
-            )
-        }
+                )
 
-        for (const batchChuck of chunk(batch, 400)) {
-            await this.operation('deleteAnnotationEntries', {
-                batch: batchChuck,
-            })
-        }
+                const filtered = listIds
+                    ? annotationEntries.filter(
+                          (annotationEntry) =>
+                              !listIds ||
+                              listIds.has(annotationEntry.sharedList),
+                      )
+                    : annotationEntries
+                batch.push(
+                    ...filtered.map((annotationEntry) => ({
+                        placeholder: `deletion-${placeholderCount++}`,
+                        operation: 'deleteObjects' as 'deleteObjects',
+                        collection: 'sharedAnnotationListEntry',
+                        where: {
+                            id: annotationEntry.id,
+                        },
+                    })),
+                )
+            },
+        )
+
+        await forEachChunkAsync(
+            batch,
+            (batchChunk) =>
+                this.operation('deleteAnnotationEntries', {
+                    batch: batchChunk,
+                }),
+            400,
+        )
     }
 
     async removeAnnotations(params: {
@@ -917,9 +913,12 @@ export default class ContentSharingStorage extends StorageModule {
             }),
         )
 
-        for (const batchChuck of chunk(batch, 400)) {
-            await this.operation('deleteAnnotations', { batch: batchChuck })
-        }
+        await forEachChunkAsync(
+            batch,
+            (batchChunk) =>
+                this.operation('deleteAnnotations', { batch: batchChunk }),
+            400,
+        )
     }
 
     async updateAnnotationComment(params: {
