@@ -66,7 +66,8 @@ export const PERSONAL_META_COLLECTIONS = (): StorageModuleCollections => ({
             fields: {
                 type: { type: 'string' },
                 collection: { type: 'string' },
-                objectId: { type: 'string' }
+                objectId: { type: 'string' },
+                info: { type: 'json', optional: true },
             },
         },
     }, { excludeUpdatedTimestamp: true })
