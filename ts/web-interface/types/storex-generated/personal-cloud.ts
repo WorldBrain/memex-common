@@ -14,6 +14,7 @@ export type PersonalDataChange =
         type: string
         collection: string
         objectId: string
+        info?: any
         createdWhen: number
     }
 
