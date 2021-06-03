@@ -97,6 +97,8 @@ export type PersonalContentMetadata =
     {
         canonicalUrl: string
         title: string
+        lang?: string
+        description?: string
         createdWhen: number
         updatedWhen: number
     }
