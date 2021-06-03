@@ -172,6 +172,8 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections => addC
             canonicalUrl: { type: 'string' },
 
             title: { type: 'string' },
+            lang: { type: 'string', optional: true },
+            description: { type: 'string', optional: true },
         },
     },
     personalContentLocator: {
