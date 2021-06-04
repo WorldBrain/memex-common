@@ -23,9 +23,10 @@ export default class PersonalCloudStorage extends StorageModule {
         // accessRules: PERSONAL_CLOUD_STORAGE_ACCESS_RULES,
     })
 
-    async createDeviceInfo(device: Omit<PersonalDeviceInfo, 'createdWhen' | 'updatedWhen'>): Promise<{ id: number | string }> {
+    async createDeviceInfo(params: { userId: number | string, device: Omit<PersonalDeviceInfo, 'createdWhen' | 'updatedWhen'> }): Promise<{ id: number | string }> {
         const { object } = await this.operation('createDeviceInfo', {
-            ...device,
+            ...params.device,
+            user: params.userId,
             createdWhen: '$now',
             updatedWhen: '$now',
         })
