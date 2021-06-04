@@ -222,7 +222,9 @@ export function ConversationReplies({
         return (
             <Margin left="small">
                 <ReplyContainer>
-                    <LoadingIndicator />
+                    <CenteredContent>
+                        <LoadingIndicator />
+                    </CenteredContent>
                 </ReplyContainer>
             </Margin>
         )
