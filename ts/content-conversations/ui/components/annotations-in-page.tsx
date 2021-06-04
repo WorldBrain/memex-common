@@ -77,29 +77,29 @@ interface SharedProps {
     }) => React.ReactNode
 }
 
-export default function AnnotationsInPage(
-    props: {
-        loadState: UITaskState
-        newPageReply?: NewReplyState
-        newPageReplyEventHandlers: NewReplyEventHandlers
-        newAnnotationReplyEventHandlers: NewAnnotationReplyEventHandlers
-        annotations?: Array<SharedAnnotationInPage | null> | null
-        annotationConversations?: AnnotationConversationStates | null
+export interface AnnotationsInPageProps extends SharedProps {
+    loadState: UITaskState
+    newPageReply?: NewReplyState
+    newPageReplyEventHandlers: NewReplyEventHandlers
+    newAnnotationReplyEventHandlers: NewAnnotationReplyEventHandlers
+    annotations?: Array<SharedAnnotationInPage | null> | null
+    annotationConversations?: AnnotationConversationStates | null
 
-        onToggleReplies(event: {
-            annotationReference: SharedAnnotationReference
-        }): void
-        getAnnotationConversation?: (
-            annotationReference: SharedAnnotationReference,
-        ) => AnnotationConversationState | null
-        getAnnotationCreator: (
-            annotationReference: SharedAnnotationReference,
-        ) => Pick<User, 'displayName'> | null | undefined
-        getAnnotationCreatorRef: (
-            annotationReference: SharedAnnotationReference,
-        ) => UserReference | null | undefined
-    } & SharedProps,
-) {
+    onToggleReplies(event: {
+        annotationReference: SharedAnnotationReference
+    }): void
+    getAnnotationConversation?: (
+        annotationReference: SharedAnnotationReference,
+    ) => AnnotationConversationState | null
+    getAnnotationCreator: (
+        annotationReference: SharedAnnotationReference,
+    ) => Pick<User, 'displayName'> | null | undefined
+    getAnnotationCreatorRef: (
+        annotationReference: SharedAnnotationReference,
+    ) => UserReference | null | undefined
+}
+
+export default function AnnotationsInPage(props: AnnotationsInPageProps) {
     if (props.loadState === 'pristine' || props.loadState === 'running') {
         return (
             <AnnotationContainer left="small" bottom="large">
