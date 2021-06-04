@@ -32,12 +32,25 @@ export function annotationConversationInitialState(): AnnotationConversationsSta
     }
 }
 
+export function intializeNewPageReplies(
+    logic: UILogic<AnnotationConversationsState, AnnotationConversationEvent>,
+    dependencies: { normalizedPageUrls: string[] },
+) {
+    logic.emitMutation({
+        newPageReplies: fromPairs(
+            [...dependencies.normalizedPageUrls].map((normalizedPageUrl) => [
+                normalizedPageUrl,
+                { $set: getInitialNewReplyState() },
+            ]),
+        ),
+    })
+}
+
 export async function detectAnnotationConversationThreads(
     logic: UILogic<AnnotationConversationsState, AnnotationConversationEvent>,
     dependencies: {
         getThreadsForAnnotations: ContentConversationStorage['getThreadsForAnnotations']
         annotationReferences: SharedAnnotationReference[]
-        normalizedPageUrls: string[]
     },
 ) {
     const threads = await dependencies.getThreadsForAnnotations({
@@ -64,12 +77,6 @@ export async function detectAnnotationConversationThreads(
                 },
             ]),
         ]),
-        newPageReplies: fromPairs(
-            [...dependencies.normalizedPageUrls].map((normalizedPageUrl) => [
-                normalizedPageUrl,
-                { $set: getInitialNewReplyState() },
-            ]),
-        ),
     })
 }
 
