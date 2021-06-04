@@ -23,7 +23,7 @@ import type {
     SharedAnnotationListEntryReference,
     SharedAnnotationListEntry,
 } from '../../content-sharing/types'
-import type { Services } from '../../services/types'
+import type { ContentConversationsServiceInterface } from '../service/types'
 
 export function annotationConversationInitialState(): AnnotationConversationsState {
     return {
@@ -35,21 +35,14 @@ export function annotationConversationInitialState(): AnnotationConversationsSta
 export async function detectAnnotationConversationThreads(
     logic: UILogic<AnnotationConversationsState, AnnotationConversationEvent>,
     dependencies: {
-        storage: {
-            contentConversations: Pick<
-                ContentConversationStorage,
-                'getThreadsForAnnotations'
-            >
-        }
+        getThreadsForAnnotations: ContentConversationStorage['getThreadsForAnnotations']
         annotationReferences: SharedAnnotationReference[]
         normalizedPageUrls: string[]
     },
 ) {
-    const threads = await dependencies.storage.contentConversations.getThreadsForAnnotations(
-        {
-            annotationReferences: dependencies.annotationReferences,
-        },
-    )
+    const threads = await dependencies.getThreadsForAnnotations({
+        annotationReferences: dependencies.annotationReferences,
+    })
     logic.emitMutation({
         conversations: fromPairs([
             ...dependencies.annotationReferences.map((ref) => [
@@ -85,20 +78,21 @@ export function annotationConversationEventHandlers<
 >(
     logic: UILogic<AnnotationConversationsState, AnnotationConversationEvent>,
     dependencies: {
-        services: Pick<Services, 'contentConversations'>
-        storage: {
-            contentSharing: Pick<
-                ContentSharingStorage,
-                'getSharedAnnotationLinkID' | 'createAnnotations'
-            >
-            contentConversations: Pick<
-                ContentConversationStorage,
-                'getOrCreateThread' | 'getRepliesByAnnotation'
-            >
-        }
+        createAnnotations?: ContentSharingStorage['createAnnotations']
+        submitNewReply: ContentConversationsServiceInterface['submitReply']
+        getRepliesByAnnotation: ContentConversationStorage['getRepliesByAnnotation']
+        getSharedAnnotationLinkID: ContentSharingStorage['getSharedAnnotationLinkID']
+        getOrCreateConversationThread: ContentConversationStorage['getOrCreateThread']
         getCurrentUser(): Promise<(User & { reference: UserReference }) | null>
         loadUserByReference(reference: UserReference): Promise<User | null>
         isAuthorizedToConverse(): Promise<boolean>
+        selectAnnotationData(
+            state: State,
+            reference: SharedAnnotationReference,
+        ): {
+            pageCreatorReference: UserReference
+            normalizedPageUrl: string
+        } | null
         onNewAnnotationCreate?(
             pageReplyId: string,
             annotation: SharedAnnotation & {
@@ -111,18 +105,11 @@ export function annotationConversationEventHandlers<
                 sharedList: SharedListReference
             },
         ): void
-        getAnnotation(
-            state: State,
-            reference: SharedAnnotationReference,
-        ): {
-            pageCreatorReference?: UserReference | null
-            annotation: Pick<SharedAnnotation, 'normalizedPageUrl'>
-        } | null
     },
 ): AnnotationConversationsHandlers {
     return {
         toggleAnnotationReplies: async ({ event, previousState }) => {
-            const annotationId = dependencies.storage.contentSharing.getSharedAnnotationLinkID(
+            const annotationId = dependencies.getSharedAnnotationLinkID(
                 event.annotationReference,
             )
             const conversationId = event.conversationId ?? annotationId
@@ -152,11 +139,9 @@ export function annotationConversationEventHandlers<
                     },
                 }),
                 async () => {
-                    const replies = await dependencies.storage.contentConversations.getRepliesByAnnotation(
-                        {
-                            annotationReference: event.annotationReference!,
-                        },
-                    )
+                    const replies = await dependencies.getRepliesByAnnotation({
+                        annotationReference: event.annotationReference!,
+                    })
                     return {
                         mutation: {
                             conversations: {
@@ -190,7 +175,7 @@ export function annotationConversationEventHandlers<
                 }
             }
 
-            const annotationId = dependencies.storage.contentSharing.getSharedAnnotationLinkID(
+            const annotationId = dependencies.getSharedAnnotationLinkID(
                 event.annotationReference,
             )
             const conversationId = event.conversationId ?? annotationId
@@ -204,7 +189,7 @@ export function annotationConversationEventHandlers<
             }
         },
         editNewReplyToAnnotation: ({ event }) => {
-            const annotationId = dependencies.storage.contentSharing.getSharedAnnotationLinkID(
+            const annotationId = dependencies.getSharedAnnotationLinkID(
                 event.annotationReference,
             )
             const conversationId = event.conversationId ?? annotationId
@@ -217,7 +202,7 @@ export function annotationConversationEventHandlers<
             }
         },
         cancelNewReplyToAnnotation: ({ event }) => {
-            const annotationId = dependencies.storage.contentSharing.getSharedAnnotationLinkID(
+            const annotationId = dependencies.getSharedAnnotationLinkID(
                 event.annotationReference,
             )
             const conversationId = event.conversationId ?? annotationId
@@ -230,11 +215,11 @@ export function annotationConversationEventHandlers<
             }
         },
         confirmNewReplyToAnnotation: async ({ event, previousState }) => {
-            const annotationId = dependencies.storage.contentSharing.getSharedAnnotationLinkID(
+            const annotationId = dependencies.getSharedAnnotationLinkID(
                 event.annotationReference,
             )
             const conversationId = event.conversationId ?? annotationId
-            const annotationData = dependencies.getAnnotation(
+            const annotationData = dependencies.selectAnnotationData(
                 previousState as any,
                 event.annotationReference,
             )
@@ -273,17 +258,13 @@ export function annotationConversationEventHandlers<
                     logic.emitSignal<AnnotationConversationSignal>({
                         type: 'reply-submitting',
                     })
-                    const result = await dependencies.services.contentConversations.submitReply(
-                        {
-                            annotationReference: event.annotationReference,
-                            normalizedPageUrl:
-                                annotationData.annotation.normalizedPageUrl,
-                            pageCreatorReference,
-                            reply: { content: conversation.newReply.content },
-                            previousReplyReference:
-                                lastReply?.reference ?? null,
-                        },
-                    )
+                    const result = await dependencies.submitNewReply({
+                        annotationReference: event.annotationReference,
+                        normalizedPageUrl: annotationData.normalizedPageUrl,
+                        pageCreatorReference,
+                        reply: { content: conversation.newReply.content },
+                        previousReplyReference: lastReply?.reference ?? null,
+                    })
                     if (result.status === 'not-authenticated') {
                         return { status: 'pristine' }
                     }
@@ -301,8 +282,7 @@ export function annotationConversationEventHandlers<
                                             reply: {
                                                 createdWhen: Date.now(),
                                                 normalizedPageUrl:
-                                                    annotationData.annotation
-                                                        .normalizedPageUrl,
+                                                    annotationData.normalizedPageUrl,
                                                 content:
                                                     conversation.newReply
                                                         .content,
@@ -353,13 +333,15 @@ export function annotationConversationEventHandlers<
         }),
         confirmNewReplyToPage: async ({ event, previousState }) => {
             const {
-                storage,
+                getOrCreateConversationThread,
+                getSharedAnnotationLinkID,
                 onNewAnnotationCreate,
+                createAnnotations,
                 getCurrentUser,
             } = dependencies
 
             const user = await getCurrentUser()
-            if (!user) {
+            if (!user || !createAnnotations) {
                 return
             }
 
@@ -396,7 +378,7 @@ export function annotationConversationEventHandlers<
                     const {
                         sharedAnnotationReferences,
                         sharedAnnotationListEntryReferences,
-                    } = await storage.contentSharing.createAnnotations({
+                    } = await createAnnotations({
                         listReferences,
                         creator: user.reference,
                         annotationsByPage: {
@@ -409,7 +391,7 @@ export function annotationConversationEventHandlers<
                     const annotationReference =
                         sharedAnnotationReferences[localId]
 
-                    await storage.contentConversations.getOrCreateThread({
+                    await getOrCreateConversationThread({
                         annotationReference,
                         normalizedPageUrl: event.normalizedPageUrl,
                         pageCreatorReference: event.pageCreatorReference,
@@ -435,7 +417,7 @@ export function annotationConversationEventHandlers<
                             ...annotation,
                             creator: user.reference,
                             reference: annotationReference,
-                            linkId: storage.contentSharing.getSharedAnnotationLinkID(
+                            linkId: getSharedAnnotationLinkID(
                                 annotationReference,
                             ),
                         },
