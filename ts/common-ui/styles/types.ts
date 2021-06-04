@@ -23,6 +23,8 @@ export type IconKeys =
     | 'addPeople'
     | 'checkRound'
     | 'alertRound'
+    | 'comment'
+    | 'commentEmpty'
     | 'triangle'
     | 'lock'
     | 'plus'

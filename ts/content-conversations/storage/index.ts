@@ -18,22 +18,17 @@ import {
 } from '../../web-interface/types/storex-generated/content-conversations'
 import ContentSharingStorage from '../../content-sharing/storage'
 import {
+    PreparedAnnotationReply as PreparedReply,
+    CreateConversationReplyParams,
+    PreparedAnnotationReplies,
+    PreparedThread,
+} from './types'
+import {
     ConversationReplyReference,
     ConversationThreadReference,
 } from '../types'
-import { CreateConversationReplyParams } from './types'
 import { augmentObjectWithReferences } from '../../storage/references'
 import { fetchInChunks } from '../../storage/utils'
-
-interface PreparedReply {
-    reference: ConversationReplyReference
-    previousReply: ConversationReplyReference | null
-    reply: ConversationReply
-    sharedAnnotation: SharedAnnotationReference
-    userReference: UserReference
-}
-
-type PreparedAnnotationReplies = { [annotationId: string]: PreparedReply[] }
 
 type RawReply = ConversationReply & {
     id: number | string
@@ -41,11 +36,6 @@ type RawReply = ConversationReply & {
     sharedPageInfo: number | string
     sharedAnnotation: number | string
     user: number | string
-}
-
-interface PreparedThread {
-    thread: ConversationThread
-    sharedAnnotation: SharedAnnotationReference
 }
 
 type RawThread = ConversationThread & {

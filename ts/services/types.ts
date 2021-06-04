@@ -3,6 +3,7 @@ import type { OverlayServiceInterface } from './overlay/types'
 import type { ClipboardServiceInterface } from './clipboard/types'
 import type { LogicRegistryServiceInterface } from './logic-registry/types'
 import type { ContentSharingServiceInterface } from '../content-sharing/service/types'
+import type { ContentConversationsServiceInterface } from '../content-conversations/service/types'
 
 type UIServices = 'logicRegistry' | 'device'
 export type UIElementServices<Wanted extends keyof Services = never> = Pick<
@@ -18,4 +19,5 @@ export interface Services {
 
     // Feature specific services
     contentSharing: ContentSharingServiceInterface
+    contentConversations: ContentConversationsServiceInterface
 }
