@@ -218,6 +218,16 @@ export function ConversationReplies({
         return null
     }
 
+    if (conversation.loadState === 'running') {
+        return (
+            <Margin left="small">
+                <ReplyContainer>
+                    <LoadingIndicator />
+                </ReplyContainer>
+            </Margin>
+        )
+    }
+
     return (
         <>
             {props.renderBeforeReplies && (
