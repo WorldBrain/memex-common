@@ -10,7 +10,7 @@ const Bottom = styled.div`
     height: 40px;
     justify-content: space-between;
     padding: 0 15px;
-    width: 100%;
+    width: fill-available;
     align-items: center;
     border-top: 1px solid #e0e0e0;
 `

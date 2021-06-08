@@ -9,7 +9,7 @@ import TextArea from '../../../common-ui/components/text-area'
 import { NewReplyState } from '../types'
 
 const NewReplyTextArea = styled.textarea<{ editing: boolean }>`
-    width: 100%;
+    width: fill-available;
     height: ${(props) => (props.editing ? '150px' : '40px')};
     border: 0;
     background: #fff;
