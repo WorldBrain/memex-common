@@ -21,6 +21,7 @@ const Actions = styled.div`
     align-items: center;
     justify-content: flex-end;
 `
+
 const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     display: block;
     width: 20px;
@@ -32,6 +33,12 @@ const Action = styled.div<{ image: string; isDisabled?: boolean }>`
     background-size: auto 14px;
     background-position: center center;
     background-repeat: no-repeat;
+`
+
+const ActionNode = styled.div`
+    display: block;
+    width: 20px;
+    height: 20px !important;
 `
 
 export type AllowedDivProps = Pick<
@@ -47,6 +54,7 @@ export type ItemBoxBottomAction =
           tooltipText?: string
           onClick?: React.MouseEventHandler<HTMLDivElement>
       }
+    | { node: React.ReactNode }
     | null
     | false
     | undefined
@@ -71,7 +79,10 @@ export default function ItemBoxBottom(props: ItemBoxBottomProps) {
             <Actions>
                 {props.actions?.map?.(
                     (actionProps) =>
-                        actionProps && (
+                        actionProps &&
+                        ('node' in actionProps ? (
+                            <ActionNode>{actionProps.node}</ActionNode>
+                        ) : (
                             <Margin key={actionProps.key} left="5px">
                                 {actionProps.tooltipText ? (
                                     <ButtonTooltip
@@ -84,7 +95,7 @@ export default function ItemBoxBottom(props: ItemBoxBottomProps) {
                                     <Action {...actionProps} />
                                 )}
                             </Margin>
-                        ),
+                        )),
                 )}
             </Actions>
         </Bottom>
