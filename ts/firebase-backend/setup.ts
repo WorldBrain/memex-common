@@ -17,6 +17,7 @@ import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
 import { ContentSharingBackend } from '../content-sharing/backend';
 import { FirebaseUserMessageService } from '../user-messages/service/firebase';
+import StorexPersonalCloudService from 'src/personal-cloud/service/storex';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
@@ -69,7 +70,12 @@ export function createServices(options: {
             activityFollows: options.storage.modules.activityFollows,
             userMessages,
         }),
-        userMessages
+        userMessages,
+        personalCloud: new StorexPersonalCloudService({
+            storageManager: options.storage.manager,
+            getCurrentUserId: options.getCurrentUserId,
+            getNow: () => Date.now()
+        })
     }
 }
 

@@ -15,6 +15,7 @@ import { scheduledFirestoreExport } from "./backup";
 import { uninstall, uninstallLog } from "./analytics"
 import { registerBetaUserCall as registerBetaUser } from "./beta"
 import { createServerApplicationLayerAsFunction } from './app-layer/server';
+import { personalCloudFunctions } from 'src/personal-cloud/service/firebase-functions';
 
 export function main(admin: typeof adminModule, functions: typeof functionsModule) {
     admin.initializeApp((runningInEmulator) ? {
@@ -44,6 +45,10 @@ export function main(admin: typeof adminModule, functions: typeof functionsModul
             functions,
         }),
         contentSharing: contentSharingFunctions({
+            firebase: admin as any,
+            functions,
+        }),
+        personalCloud: personalCloudFunctions({
             firebase: admin as any,
             functions,
         }),

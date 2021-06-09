@@ -5,6 +5,20 @@ export interface PersonalCloudBackend {
     streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch>
 }
 
+export interface PersonalCloudService {
+    uploadClientUpdates(
+        params: {
+            updates: PersonalCloudUpdatePushBatch
+        },
+    ): Promise<void>
+    downloadClientUpdates(
+        params: {
+            clientSchemaVersion: Date
+            startTime: number
+        },
+    ): Promise<{ batch: PersonalCloudUpdateBatch, maybeHasMore: boolean }>
+}
+
 export type PersonalCloudUpdate =
     | PersonalCloudOverwriteUpdate
     | PersonalCloudDeleteUpdate

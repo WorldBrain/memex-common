@@ -157,7 +157,7 @@ export async function downloadClientUpdatesV24(
 
     return {
         batch,
-        mayHaveMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
+        maybeHasMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
     }
 }
 
