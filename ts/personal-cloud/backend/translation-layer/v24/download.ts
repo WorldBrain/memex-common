@@ -52,12 +52,15 @@ export async function downloadClientUpdatesV24(
         { limit: DOWNLOAD_CHANGE_BATCH_SIZE },
     )) as PersonalDataChange[]
 
+    let lastSeen = 0
     const batch: PersonalCloudUpdateBatch = []
     for (const change of changes) {
         if (
             change.type === DataChangeType.Create ||
             change.type === DataChangeType.Modify
         ) {
+            lastSeen = change.createdWhen
+
             if (change.collection === 'personalContentLocator') {
                 continue
             }
@@ -157,6 +160,7 @@ export async function downloadClientUpdatesV24(
 
     return {
         batch,
+        lastSeen,
         maybeHasMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
     }
 }

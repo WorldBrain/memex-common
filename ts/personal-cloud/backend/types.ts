@@ -16,7 +16,7 @@ export interface PersonalCloudService {
             clientSchemaVersion: Date
             startTime: number
         },
-    ): Promise<{ batch: PersonalCloudUpdateBatch, maybeHasMore: boolean }>
+    ): Promise<{ batch: PersonalCloudUpdateBatch, lastSeen: number, maybeHasMore: boolean }>
 }
 
 export type PersonalCloudUpdate =

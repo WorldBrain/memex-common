@@ -1,6 +1,6 @@
+import StorageManager from "@worldbrain/storex";
 import { PersonalCloudService, TranslationLayerDependencies, PersonalCloudUpdatePushBatch, PersonalCloudUpdateBatch } from "../backend/types";
 import { uploadClientUpdates, downloadClientUpdates } from "../backend/translation-layer";
-import StorageManager from "@worldbrain/storex";
 
 export default class StorexPersonalCloudService implements PersonalCloudService {
     constructor(public options: {
@@ -33,7 +33,7 @@ export default class StorexPersonalCloudService implements PersonalCloudService 
             clientSchemaVersion: Date
             startTime: number
         },
-    ): Promise<{ batch: PersonalCloudUpdateBatch, maybeHasMore: boolean }> {
+    ) {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to upload client updates without being logged in`)
