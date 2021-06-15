@@ -9,8 +9,8 @@ import {
     LocationSchemeType,
     ContentLocatorType,
     ContentLocatorFormat,
-} from '@worldbrain/memex-common/lib/personal-cloud/storage/types'
-import { PersonalContentLocator } from '@worldbrain/memex-common/lib/web-interface/types/storex-generated/personal-cloud'
+} from '../../../storage/types'
+import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,

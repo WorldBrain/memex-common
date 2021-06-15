@@ -1,4 +1,5 @@
 import extractUrlParts from '@worldbrain/memex-url-utils/lib/extract-parts'
+import { FindManyOptions } from '@worldbrain/storex'
 import {
     PersonalDataChange,
     PersonalContentLocator,
@@ -6,18 +7,17 @@ import {
     PersonalContentRead,
     PersonalTagConnection,
     PersonalTag,
-} from '@worldbrain/memex-common/lib/web-interface/types/storex-generated/personal-cloud'
+} from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
     LocationSchemeType,
-} from '@worldbrain/memex-common/lib/personal-cloud/storage/types'
+} from '../../../../personal-cloud/storage/types'
 import { DOWNLOAD_CHANGE_BATCH_SIZE } from '../constants'
 import {
     TranslationLayerDependencies,
     PersonalCloudUpdateBatch,
     PersonalCloudUpdateType,
 } from '../../types'
-import { FindManyOptions } from '@worldbrain/storex'
 
 export async function downloadClientUpdatesV24(
     params: TranslationLayerDependencies & {
