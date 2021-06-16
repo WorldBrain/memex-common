@@ -303,8 +303,8 @@ export class ContentSharingClientStorage extends StorageModule {
         const firstAction = await this.operation('getOldestAction', {})
         return firstAction
             ? {
-                  id: firstAction.id,
                   ...firstAction.action,
+                  id: firstAction.id,
               }
             : null
     }
