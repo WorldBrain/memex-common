@@ -117,7 +117,7 @@ export const PERSONAL_TAG_COLLECTIONS = (): StorageModuleCollections => addCommo
             objectId: { type: 'string' },
         },
         relationships: [
-            { singleChildOf: 'personalTag' }
+            { childOf: 'personalTag' }
         ]
     },
 })
@@ -136,7 +136,7 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections => addComm
             description: { type: 'text' },
         },
         relationships: [
-            { childOf: 'personalList' }
+            { singleChildOf: 'personalList' }
         ]
     },
     personalPageEntry: {
@@ -155,7 +155,7 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections => addComm
         fields: {
         },
         relationships: [
-            { childOf: 'personalPageEntry' }
+            { singleChildOf: 'personalPageEntry' }
         ]
     },
 })
@@ -235,6 +235,9 @@ export const PERSONAL_ANNOTATION_COLLECTIONS = (): StorageModuleCollections => a
             body: { type: 'text', optional: true },
             comment: { type: 'text', optional: true },
         },
+        relationships: [
+            { singleChildOf: 'personalContentMetadata' }
+        ]
     },
     personalAnnotationSelector: {
         version: STORAGE_VERSIONS[8].date,
