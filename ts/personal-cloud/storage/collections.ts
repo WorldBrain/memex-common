@@ -41,7 +41,7 @@ function addCommonalities(collections: StorageModuleCollections, options?: {
             groupBy: [
                 { subcollectionName: 'objects', key: 'user' },
                 ...(collectionDefinition.groupBy ?? [])
-            ]
+            ],
         };
         return collections;
     });

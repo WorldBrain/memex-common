@@ -6,7 +6,7 @@ import {
 import { PersonalDeviceInfo } from '../../web-interface/types/storex-generated/personal-cloud'
 import { PERSONAL_CLOUD_STORAGE_COLLECTIONS } from './collections'
 import { PERSONAL_CLOUD_OPERATIONS } from './operations'
-// import { PERSONAL_CLOUD_STORAGE_ACCESS_RULES } from './access-rules'
+import { PERSONAL_CLOUD_STORAGE_ACCESS_RULES } from './access-rules'
 
 export default class PersonalCloudStorage extends StorageModule {
     constructor(
@@ -17,11 +17,15 @@ export default class PersonalCloudStorage extends StorageModule {
         super(options)
     }
 
-    getConfig = (): StorageModuleConfig => ({
-        collections: PERSONAL_CLOUD_STORAGE_COLLECTIONS(),
-        operations: PERSONAL_CLOUD_OPERATIONS,
-        // accessRules: PERSONAL_CLOUD_STORAGE_ACCESS_RULES,
-    })
+    getConfig = (): StorageModuleConfig => {
+        const collections = PERSONAL_CLOUD_STORAGE_COLLECTIONS()
+        const accessRules = PERSONAL_CLOUD_STORAGE_ACCESS_RULES(collections)
+        return {
+            collections,
+            operations: PERSONAL_CLOUD_OPERATIONS,
+            accessRules,
+        };
+    }
 
     async createDeviceInfo(params: { userId: number | string, device: Omit<PersonalDeviceInfo, 'createdWhen' | 'updatedWhen'> }): Promise<{ id: number | string }> {
         const { object } = await this.operation('createDeviceInfo', {
