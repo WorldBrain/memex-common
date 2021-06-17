@@ -307,6 +307,23 @@ export async function uploadClientUpdateV24(
                 scrollProgress: visit.scrollPx ?? null,
             })
         } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const time = update.where.time
+            const normalizedUrl = update.where.url as string
+
+            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            if (!contentMetadata) {
+                return
+            }
+
+            const contentRead = await findOne('personalContentRead', {
+                readWhen: time,
+                personalContentMetadata: contentMetadata.id,
+            })
+            if (!contentRead) {
+                return
+            }
+
+            await deleteById('personalContentRead', contentRead.id)
         }
     } else if (update.collection === 'tags') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
