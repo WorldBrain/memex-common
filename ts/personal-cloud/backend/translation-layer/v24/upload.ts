@@ -297,7 +297,7 @@ export async function uploadClientUpdateV24(
             if (!contentMetadata) {
                 return
             }
-            await create('personalContentRead', {
+            const updates = {
                 personalContentMetadata: contentMetadata.id,
                 personalContentLocator: contentLocator.id,
                 readWhen: visit.time,
@@ -305,7 +305,16 @@ export async function uploadClientUpdateV24(
                 progressPercentage: visit.scrollPerc ?? null,
                 scrollTotal: visit.scrollMaxPx ?? null,
                 scrollProgress: visit.scrollPx ?? null,
+            }
+            const contentRead = await findOne('personalContentRead', {
+                readWhen: visit.time,
+                personalContentMetadata: contentMetadata.id,
             })
+            if (!contentRead) {
+                await create('personalContentRead', updates)
+            } else {
+                await updateById('personalContentRead', contentRead.id, updates)
+            }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const time = update.where.time
             const normalizedUrl = update.where.url as string
