@@ -340,8 +340,9 @@ export async function uploadClientUpdateV24(
             }
 
             const tagConnection = await findOne('personalTagConnection', {
-                peronalTag: tag.id,
-                personalContentMetadata: contentMetadata.id,
+                collection: 'personalContentMetadata',
+                objectId: contentMetadata.id,
+                personalTag: tag.id,
             })
             await deleteById('personalTagConnection', tagConnection.id)
         }
