@@ -11,6 +11,7 @@ import {
     ContentLocatorFormat,
 } from '../../../storage/types'
 import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
+import { extractIdFromAnnotationUrl } from '../utils'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -285,6 +286,36 @@ export async function uploadClientUpdateV24(
                 },
                 ...references,
             ])
+        }
+    } else if (update.collection === 'annotations') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const annotation = update.object
+            const normalizedUrl = annotation.pageUrl
+            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            if (!contentMetadata) {
+                return
+            }
+            const updates = {
+                personalContentMetadata: contentMetadata.id,
+                localId: extractIdFromAnnotationUrl(annotation.url),
+                body: annotation.body,
+                comment: annotation.comment,
+            }
+
+            const existingAnnotation = await findOne('personalAnnotation', {
+                localId: updates.localId,
+                personalContentMetadata: updates.personalContentMetadata,
+            })
+            if (!existingAnnotation) {
+                await create('personalAnnotation', updates)
+            } else {
+                await updateById(
+                    'personalAnnotation',
+                    existingAnnotation.id,
+                    updates,
+                )
+            }
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
         }
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
