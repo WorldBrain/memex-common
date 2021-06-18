@@ -370,17 +370,32 @@ export async function uploadClientUpdateV24(
             const tagName = update.object.name
             const normalizedUrl = update.object.url
 
-            const tag = await findOrCreate('personalTag', { name: tagName })
+            let objectId: string
+            let collection: string
+            const annotationId = extractIdFromAnnotationUrl(normalizedUrl)
+            if (annotationId != null) {
+                const annotation = await findOne('personalAnnotation', {
+                    localId: annotationId,
+                })
+                objectId = annotation?.id
+                collection = 'personalAnnotation'
+            } else {
+                const { contentMetadata } = await findContentMetadata(
+                    normalizedUrl,
+                )
+                objectId = contentMetadata?.id
+                collection = 'personalContentMetadata'
+            }
 
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
-            if (!contentMetadata) {
+            if (!objectId) {
                 return
             }
 
+            const tag = await findOrCreate('personalTag', { name: tagName })
             await findOrCreate('personalTagConnection', {
                 personalTag: tag.id,
-                collection: 'personalContentMetadata',
-                objectId: contentMetadata.id,
+                collection,
+                objectId,
             })
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const tagName = update.where.name
