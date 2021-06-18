@@ -4,7 +4,7 @@ import {
     StorageModuleConfig,
 } from '@worldbrain/storex-pattern-modules'
 import { STORAGE_VERSIONS } from '../../browser-extension/storage/versions'
-import { ContentSharingAction, SharedListMetadata } from './types'
+import { SharedListMetadata, StoredContentSharingAction } from './types'
 
 export class ContentSharingClientStorage extends StorageModule {
     getConfig = (): StorageModuleConfig => {
@@ -288,7 +288,8 @@ export class ContentSharingClientStorage extends StorageModule {
     }
 
     async queueAction(params: {
-        action: ContentSharingAction
+        action: StoredContentSharingAction
+        id?: number
     }): Promise<{ actionId: number }> {
         const { object } = await this.operation('createAction', {
             createdWhen: '$now',
@@ -298,7 +299,7 @@ export class ContentSharingClientStorage extends StorageModule {
     }
 
     async peekAction(): Promise<
-        (ContentSharingAction & { id: number }) | null
+        (StoredContentSharingAction & { id: number }) | null
     > {
         const firstAction = await this.operation('getOldestAction', {})
         return firstAction

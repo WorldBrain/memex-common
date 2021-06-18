@@ -1,3 +1,7 @@
+export type StoredContentSharingAction = {
+    retryCount: number
+} & ContentSharingAction
+
 export type ContentSharingAction =
     | AddSharedListEntriesAction
     | RemoveSharedListEntryAction
