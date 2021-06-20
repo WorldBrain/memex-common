@@ -298,14 +298,15 @@ export class ContentSharingClientStorage extends StorageModule {
         return { actionId: object.id }
     }
 
-    async peekAction(): Promise<
-        (StoredContentSharingAction & { id: number }) | null
-    > {
+    async peekAction(): Promise<{
+        action: StoredContentSharingAction
+        id: number
+    } | null> {
         const firstAction = await this.operation('getOldestAction', {})
         return firstAction
             ? {
-                  ...firstAction.action,
                   id: firstAction.id,
+                  action: firstAction.action,
               }
             : null
     }
