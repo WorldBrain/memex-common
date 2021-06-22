@@ -1,4 +1,4 @@
-import type { LocationSchemeType } from 'src/personal-cloud/storage/types'
+import type { LocationSchemeType } from '../../../personal-cloud/storage/types'
 
 export type PersonalDeviceInfo =
     {
