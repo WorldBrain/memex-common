@@ -1,4 +1,3 @@
-import extractUrlParts from '@worldbrain/memex-url-utils/lib/extract-parts'
 import { FindManyOptions } from '@worldbrain/storex'
 import {
     PersonalDataChange,
@@ -6,7 +5,6 @@ import {
     PersonalContentMetadata,
     PersonalContentRead,
     PersonalTagConnection,
-    PersonalTag,
     PersonalAnnotation,
     PersonalAnnotationSelector,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
@@ -20,6 +18,11 @@ import {
     PersonalCloudUpdateBatch,
     PersonalCloudUpdateType,
 } from '../../types'
+import {
+    constructAnnotationUrl,
+    constructPageFromRemote,
+    constructAnnotationFromRemote,
+} from '../utils'
 
 export async function downloadClientUpdatesV24(
     params: TranslationLayerDependencies & {
@@ -47,6 +50,31 @@ export async function downloadClientUpdatesV24(
             },
             options,
         )
+    }
+
+    const findLocatorForMetadata = async (
+        metadataId: string | number,
+        locationScheme = LocationSchemeType.NormalizedUrlV1,
+    ): Promise<{
+        metadata?: PersonalContentMetadata
+        locator?: PersonalContentLocator
+    }> => {
+        const metadata = await findOne<
+            PersonalContentMetadata & { id: string | number }
+        >('personalContentMetadata', { id: metadataId })
+        if (!metadata) {
+            return {}
+        }
+        const allContentLocators = await findMany<PersonalContentLocator>(
+            'personalContentLocator',
+            {
+                personalContentMetadata: metadata.id,
+            },
+        )
+        const locator = allContentLocators.find(
+            (locator) => locator.locationScheme === locationScheme,
+        )
+        return { metadata, locator }
     }
 
     const changes = (await findMany(
@@ -94,7 +122,7 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'pages',
-                    object: getPageFromRemote(metadata, locatorArray[0]),
+                    object: constructPageFromRemote(metadata, locatorArray[0]),
                 })
             } else if (change.collection === 'personalContentRead') {
                 const read = object as PersonalContentRead & {
@@ -127,25 +155,10 @@ export async function downloadClientUpdatesV24(
                     id: string | number
                     personalContentMetadata: number | string
                 }
-                const metadata = await findOne<
-                    PersonalContentMetadata & { id: string | number }
-                >('personalContentMetadata', {
-                    id: annotation.personalContentMetadata,
-                })
-                if (!metadata) {
-                    continue
-                }
-                const locators = await findMany<PersonalContentLocator>(
-                    'personalContentLocator',
-                    {
-                        personalContentMetadata: metadata.id,
-                    },
+                const { locator, metadata } = await findLocatorForMetadata(
+                    annotation.personalContentMetadata,
                 )
-                const locator = locators.find(
-                    (l) =>
-                        l.locationScheme === LocationSchemeType.NormalizedUrlV1,
-                )
-                if (!locator) {
+                if (!locator || !metadata) {
                     continue
                 }
                 const selector = await findOne<PersonalAnnotationSelector>(
@@ -157,7 +170,7 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'annotations',
-                    object: getAnnotationFromRemote(
+                    object: constructAnnotationFromRemote(
                         annotation,
                         metadata,
                         locator,
@@ -168,29 +181,43 @@ export async function downloadClientUpdatesV24(
                 const tagConnection = object as PersonalTagConnection & {
                     personalTag: number | string
                 }
-                const [allContentLocators, tag] = await Promise.all<
-                    PersonalContentLocator[],
-                    PersonalTag
-                >([
-                    findOne('personalContentMetadata', {
-                        id: object.objectId,
-                    }).then((metadata) =>
-                        findMany('personalContentLocator', {
-                            personalContentMetadata: metadata.id,
-                        }),
-                    ) as Promise<PersonalContentLocator[]>,
-                    findOne('personalTag', { id: tagConnection.personalTag }),
-                ])
-                const normalizedContentLocator = allContentLocators.find(
-                    (locator) =>
-                        locator.locationScheme ===
-                        LocationSchemeType.NormalizedUrlV1,
-                )
+
+                let tagUrl: string
+                if (tagConnection.collection === 'personalContentMetadata') {
+                    const { locator } = await findLocatorForMetadata(
+                        tagConnection.objectId,
+                    )
+                    tagUrl = locator?.location
+                } else if (tagConnection.collection === 'personalAnnotation') {
+                    const annotation = await findOne<
+                        PersonalAnnotation & { personalContentMetadata: string }
+                    >(tagConnection.collection, {
+                        id: tagConnection.objectId,
+                    })
+
+                    const { locator } = await findLocatorForMetadata(
+                        annotation.personalContentMetadata,
+                    )
+                    tagUrl =
+                        locator != null &&
+                        constructAnnotationUrl(
+                            locator.location,
+                            annotation.localId,
+                        )
+                }
+                if (!tagUrl) {
+                    continue
+                }
+
+                const tag = await findOne('personalTag', {
+                    id: tagConnection.personalTag,
+                })
+
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'tags',
                     object: {
-                        url: normalizedContentLocator.location,
+                        url: tagUrl,
                         name: tag.name,
                     },
                 })
@@ -224,42 +251,4 @@ export async function downloadClientUpdatesV24(
         maybeHasMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
     }
     return result
-}
-
-function getPageFromRemote(
-    metadata: PersonalContentMetadata,
-    locator: PersonalContentLocator,
-) {
-    const urlParts = extractUrlParts(locator.originalLocation, {
-        supressParseError: false,
-    })
-    return {
-        url: locator.location,
-        fullUrl: locator.originalLocation,
-        domain: urlParts.domain,
-        hostname: urlParts.hostname,
-        fullTitle: metadata.title,
-        text: '',
-        lang: metadata.lang,
-        canonicalUrl: metadata.canonicalUrl,
-        description: metadata.description,
-    }
-}
-
-function getAnnotationFromRemote(
-    annotation: PersonalAnnotation,
-    { title }: PersonalContentMetadata,
-    { location }: PersonalContentLocator,
-    { selector }: PersonalAnnotationSelector = {} as PersonalAnnotationSelector,
-) {
-    return {
-        url: location + '#' + annotation.localId,
-        pageUrl: location,
-        pageTitle: title,
-        body: annotation.body,
-        comment: annotation.comment,
-        createdWhen: new Date(annotation.createdWhen),
-        lastEdited: new Date(annotation.updatedWhen),
-        selector,
-    }
 }
