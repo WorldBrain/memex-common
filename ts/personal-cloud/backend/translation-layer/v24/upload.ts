@@ -206,6 +206,29 @@ export async function uploadClientUpdateV24(
         }
         await storageManager.operation('executeBatch', batch)
     }
+    const findTagAssociatedData = async (
+        normalizedUrl: string,
+    ): Promise<{
+        objectId?: string
+        collection: 'personalAnnotation' | 'personalContentMetadata'
+    }> => {
+        const annotationId = extractIdFromAnnotationUrl(normalizedUrl)
+        if (annotationId == null) {
+            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            return {
+                objectId: contentMetadata?.id,
+                collection: 'personalContentMetadata',
+            }
+        }
+
+        const annotation = await findOne('personalAnnotation', {
+            localId: annotationId,
+        })
+        return {
+            objectId: annotation?.id,
+            collection: 'personalAnnotation',
+        }
+    }
 
     const { update } = params
     if (update.collection === 'pages') {
@@ -381,23 +404,9 @@ export async function uploadClientUpdateV24(
             const tagName = update.object.name
             const normalizedUrl = update.object.url
 
-            let objectId: string
-            let collection: string
-            const annotationId = extractIdFromAnnotationUrl(normalizedUrl)
-            if (annotationId != null) {
-                const annotation = await findOne('personalAnnotation', {
-                    localId: annotationId,
-                })
-                objectId = annotation?.id
-                collection = 'personalAnnotation'
-            } else {
-                const { contentMetadata } = await findContentMetadata(
-                    normalizedUrl,
-                )
-                objectId = contentMetadata?.id
-                collection = 'personalContentMetadata'
-            }
-
+            const { objectId, collection } = await findTagAssociatedData(
+                normalizedUrl,
+            )
             if (!objectId) {
                 return
             }
@@ -410,24 +419,30 @@ export async function uploadClientUpdateV24(
             })
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const tagName = update.where.name
-            const normalizedUrl = update.where.url
+            const normalizedUrl = update.where.url as string
 
-            const [tag, { contentMetadata }] = await Promise.all([
-                findOne('personalTag', {
-                    name: tagName,
-                }),
-                findContentMetadata(normalizedUrl as string),
-            ])
-            if (!tag || !contentMetadata) {
+            const tag = await findOne('personalTag', { name: tagName })
+            if (!tag) {
+                return
+            }
+
+            const { objectId, collection } = await findTagAssociatedData(
+                normalizedUrl,
+            )
+            if (!objectId) {
                 return
             }
 
             const tagConnection = await findOne('personalTagConnection', {
-                collection: 'personalContentMetadata',
-                objectId: contentMetadata.id,
                 personalTag: tag.id,
+                collection,
+                objectId,
             })
-            await deleteById('personalTagConnection', tagConnection.id)
+            await deleteById(
+                'personalTagConnection',
+                tagConnection.id,
+                update.where,
+            )
         }
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {

@@ -202,6 +202,12 @@ export async function downloadClientUpdatesV24(
                     collection: 'pages',
                     where: { url: change.info?.normalizedUrl },
                 })
+            } else if (change.collection === 'personalTagConnection') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'tags',
+                    where: change.info,
+                })
             }
         }
     }
