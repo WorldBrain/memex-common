@@ -1,3 +1,4 @@
+import type firebaseModule from 'firebase/app'
 import { EventEmitter } from 'events'
 import TypedEventEmitter from 'typed-emitter'
 import { AuthService, AuthenticatedUser, AuthServiceEvents } from './types'
@@ -5,7 +6,7 @@ import { AuthService, AuthenticatedUser, AuthServiceEvents } from './types'
 export class WorldbrainAuthService implements AuthService {
     public events = new EventEmitter() as TypedEventEmitter<AuthServiceEvents>
 
-    constructor(protected firebase: any) {
+    constructor(public firebase: typeof firebaseModule) {
         firebase.auth().onAuthStateChanged((firebaseUser: any) => {
             const user = this._getUserFromFirebaseUser(firebaseUser)
             this.events.emit('changed', { user })
@@ -29,7 +30,7 @@ export class WorldbrainAuthService implements AuthService {
     async _waitForCurrentUser(ms: number): Promise<any> {
         let unsubscribe: () => void;
 
-        const currentUser = new Promise<void>((resolve, reject) => {
+        const currentUser = new Promise<firebaseModule.User>((resolve, reject) => {
             unsubscribe = this.firebase.auth().onAuthStateChanged(async () => {
                 const firebaseUser = this.firebase.auth().currentUser
                 if (!firebaseUser) {
@@ -58,7 +59,11 @@ export class WorldbrainAuthService implements AuthService {
             return
         }
 
-        await this._callFirebaseFunction('refreshUserClaims')
+        try {
+            await this._callFirebaseFunction('refreshUserClaims')
+        } catch (e) {
+            console.error('Failed to refresh user claims:', e)
+        }
         await firebaseUser.reload()
         await firebaseUser.getIdToken(true)
         this.events.emit('changed', { user: await this.getCurrentUser() })
