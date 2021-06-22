@@ -52,7 +52,7 @@ export async function downloadClientUpdatesV24(
         { limit: DOWNLOAD_CHANGE_BATCH_SIZE },
     )) as PersonalDataChange[]
 
-    let lastSeen = 0
+    let lastSeen = params.startTime
     const batch: PersonalCloudUpdateBatch = []
     for (const change of changes) {
         if (
@@ -111,8 +111,9 @@ export async function downloadClientUpdatesV24(
                         duration: read.readDuration,
                         scrollMaxPerc: 100,
                         scrollMaxPx: read.scrollTotal,
-                        scrollPerc:
-                            (read.scrollProgress / read.scrollTotal) * 100,
+                        scrollPerc: typeof read.scrollProgress === 'number' && typeof read.scrollTotal === 'number'
+                            ? (read.scrollProgress / read.scrollTotal) * 100
+                            : undefined,
                         scrollPx: read.scrollProgress,
                     },
                 })
@@ -158,11 +159,12 @@ export async function downloadClientUpdatesV24(
         }
     }
 
-    return {
+    const result = {
         batch,
         lastSeen,
         maybeHasMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
     }
+    return result
 }
 
 function getPageFromRemote(

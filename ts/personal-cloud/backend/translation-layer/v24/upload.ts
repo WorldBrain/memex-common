@@ -217,10 +217,10 @@ export async function uploadClientUpdateV24(
                 normalizedUrl,
             )
             const updates = {
-                canonicalUrl: page.canonicalUrl,
+                canonicalUrl: page.canonicalUrl ?? page.fullUrl,
                 title: page.fullTitle,
-                lang: page.lang,
-                description: page.description,
+                lang: page.lang ?? null,
+                description: page.description ?? null,
             }
 
             if (!contentLocator) {

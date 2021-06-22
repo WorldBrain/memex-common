@@ -17,7 +17,8 @@ import ActivityFollowsStorage from '../activity-follows/storage';
 import StorexActivityStreamsStorage from '../activity-streams/storage';
 import { ContentSharingBackend } from '../content-sharing/backend';
 import { FirebaseUserMessageService } from '../user-messages/service/firebase';
-import StorexPersonalCloudService from 'src/personal-cloud/service/storex';
+import StorexPersonalCloudService from '../personal-cloud/service/storex';
+import PersonalCloudStorage from '../personal-cloud/storage';
 
 export async function createStorage(options: {
     firebase: typeof firebaseModule,
@@ -31,14 +32,15 @@ export async function createStorage(options: {
         })
     })
     const contentSharing = new ContentSharingStorage({ storageManager, autoPkType: 'string' })
-    const modules = {
+    const modules: FunctionsBackendStorage['modules'] = {
         users: new UserStorage({ storageManager }),
         activityFollows: new ActivityFollowsStorage({ storageManager }),
         activityStreams: new StorexActivityStreamsStorage({ storageManager }),
         contentSharing: contentSharing,
         contentConversations: new ContentConversationStorage({ storageManager, contentSharing, autoPkType: 'string' }),
+        personalCloud: new PersonalCloudStorage({ storageManager, autoPkType: 'string' })
     }
-    registerModuleMapCollections(storageManager.registry, modules)
+    registerModuleMapCollections(storageManager.registry, modules as any)
     await storageManager.finishInitialization()
 
     return {

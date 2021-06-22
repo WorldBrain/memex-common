@@ -3,19 +3,19 @@ import * as functionsModule from 'firebase-functions';
 
 import { activityStreamFunctions } from '../activity-streams/services/firebase-functions/server'
 import { contentSharingFunctions } from '../content-sharing/backend/firebase-functions'
+import { personalCloudFunctions } from '../personal-cloud/service/firebase-functions';
 
 import { runningInEmulator } from './constants';
 import { createFirestoreTriggers } from './setup';
 
-import { getLoginToken } from './auth'
-import { getCheckoutLink, getManageLink, userSubscriptionChanged, refreshUserClaims } from './subscriptions'
+import { authFunctions } from './auth'
+import { subscriptionFunctions } from './subscriptions'
 import { generateTwilioNTSToken } from './twilio'
 import { sendWelcomeEmailOnSignUp } from "./user";
 import { scheduledFirestoreExport } from "./backup";
 import { uninstall, uninstallLog } from "./analytics"
 import { registerBetaUserCall as registerBetaUser } from "./beta"
 import { createServerApplicationLayerAsFunction } from './app-layer/server';
-import { personalCloudFunctions } from 'src/personal-cloud/service/firebase-functions';
 
 export function main(admin: typeof adminModule, functions: typeof functionsModule) {
     admin.initializeApp((runningInEmulator) ? {
@@ -29,11 +29,8 @@ export function main(admin: typeof adminModule, functions: typeof functionsModul
             firebase: admin as any,
             functions,
         }),
-        getLoginToken,
-        getCheckoutLink,
-        getManageLink,
-        userSubscriptionChanged,
-        refreshUserClaims,
+        ...authFunctions(admin, functions),
+        ...subscriptionFunctions(admin, functions),
         generateTwilioNTSToken,
         sendWelcomeEmailOnSignUp,
         scheduledFirestoreExport,

@@ -26,10 +26,10 @@ export class WorldbrainAuthService implements AuthService {
         return { token: await user.getIdToken() }
     }
 
-    async _waitForCurrentUser(ms:number): Promise<any> {
-        let unsubscribe : () => void;
+    async _waitForCurrentUser(ms: number): Promise<any> {
+        let unsubscribe: () => void;
 
-        const currentUser = new Promise<void>((resolve,reject) => {
+        const currentUser = new Promise<void>((resolve, reject) => {
             unsubscribe = this.firebase.auth().onAuthStateChanged(async () => {
                 const firebaseUser = this.firebase.auth().currentUser
                 if (!firebaseUser) {

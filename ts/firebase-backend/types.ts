@@ -8,6 +8,7 @@ import { UserMessageService } from '../user-messages/service/types'
 import ActivityFollowsStorage from '../activity-follows/storage'
 import { ActivityStreamsStorage } from '../activity-streams/storage/types'
 import { PersonalCloudService } from '../personal-cloud/backend/types'
+import PersonalCloudStorage from '../personal-cloud/storage'
 
 export interface FunctionsBackendStorage {
     manager: StorageManager
@@ -16,7 +17,8 @@ export interface FunctionsBackendStorage {
         contentSharing: ContentSharingStorage,
         contentConversations: ContentConversationStorage,
         activityStreams: ActivityStreamsStorage
-        activityFollows: ActivityFollowsStorage
+        activityFollows: ActivityFollowsStorage,
+        personalCloud: PersonalCloudStorage,
     }
 }
 export interface FunctionsBackendServices {

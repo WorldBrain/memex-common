@@ -16,9 +16,9 @@ export const notAuthenticatedResponse = errorResponse('auth', 'Not Authenticated
  * @param context
  */
 export const helpTesting = (context: CallableContext) => {
-    if (runningInEmulator) {
-        context.auth = testUserDetails as any
-    }
+    // if (runningInEmulator) {
+    //     context.auth = testUserDetails as any
+    // }
     return context;
 }
 
