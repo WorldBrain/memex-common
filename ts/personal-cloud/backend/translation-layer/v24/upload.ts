@@ -42,11 +42,11 @@ export async function uploadClientUpdateV24(
                 operation: 'createObject',
                 collection,
                 args: {
+                    createdWhen: now,
+                    updatedWhen: now,
                     ...toCreate,
                     user: params.userId,
                     createdByDevice: params.update.deviceId,
-                    createdWhen: now,
-                    updatedWhen: now,
                 },
             },
             {
@@ -300,6 +300,8 @@ export async function uploadClientUpdateV24(
                 localId: extractIdFromAnnotationUrl(annotation.url),
                 body: annotation.body,
                 comment: annotation.comment,
+                createdWhen: annotation.createdWhen.getTime(),
+                updatedWhen: annotation.lastEdited?.getTime(),
             }
 
             const existingAnnotation = await findOne('personalAnnotation', {
@@ -307,7 +309,16 @@ export async function uploadClientUpdateV24(
                 personalContentMetadata: updates.personalContentMetadata,
             })
             if (!existingAnnotation) {
-                await create('personalAnnotation', updates)
+                const remoteAnnotation = await create(
+                    'personalAnnotation',
+                    updates,
+                )
+                if (annotation.selector != null) {
+                    await create('personalAnnotationSelector', {
+                        selector: annotation.selector,
+                        personalAnnotation: remoteAnnotation.id,
+                    })
+                }
             } else {
                 await updateById(
                     'personalAnnotation',
