@@ -1,3 +1,5 @@
+import type { LocationSchemeType } from 'src/personal-cloud/storage/types'
+
 export type PersonalDeviceInfo =
     {
         type: string
@@ -20,7 +22,7 @@ export type PersonalDataChange =
 
 export type PersonalAnnotation =
     {
-        normalizedPageUrl: string
+        localId: string
         body?: string
         comment?: string
         createdWhen: number
@@ -110,7 +112,7 @@ export type PersonalContentLocator =
         location: string
         format: string
         originalLocation: string
-        locationScheme: string
+        locationScheme: LocationSchemeType
         primary: boolean
         valid: boolean
         version: number

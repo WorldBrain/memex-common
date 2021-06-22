@@ -7,6 +7,8 @@ import {
     PersonalContentRead,
     PersonalTagConnection,
     PersonalTag,
+    PersonalAnnotation,
+    PersonalAnnotationSelector,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -25,16 +27,19 @@ export async function downloadClientUpdatesV24(
     },
 ) {
     const { storageManager } = params
-    const findOne = async (collection: string, where: any) => {
+    const findOne = async <T = any>(
+        collection: string,
+        where: any,
+    ): Promise<T> => {
         return storageManager
             .collection(collection)
             .findObject({ ...where, user: params.userId }) as any
     }
-    const findMany = async (
+    const findMany = async <T = any>(
         collection: string,
         where: any,
         options?: FindManyOptions,
-    ) => {
+    ): Promise<T[]> => {
         return params.storageManager.collection(collection).findObjects(
             {
                 ...where,
@@ -117,6 +122,48 @@ export async function downloadClientUpdatesV24(
                         scrollPx: read.scrollProgress,
                     },
                 })
+            } else if (change.collection === 'personalAnnotation') {
+                const annotation = object as PersonalAnnotation & {
+                    id: string | number
+                    personalContentMetadata: number | string
+                }
+                const metadata = await findOne<
+                    PersonalContentMetadata & { id: string | number }
+                >('personalContentMetadata', {
+                    id: annotation.personalContentMetadata,
+                })
+                if (!metadata) {
+                    continue
+                }
+                const locators = await findMany<PersonalContentLocator>(
+                    'personalContentLocator',
+                    {
+                        personalContentMetadata: metadata.id,
+                    },
+                )
+                const locator = locators.find(
+                    (l) =>
+                        l.locationScheme === LocationSchemeType.NormalizedUrlV1,
+                )
+                if (!locator) {
+                    continue
+                }
+                const selector = await findOne<PersonalAnnotationSelector>(
+                    'personalAnnotationSelector',
+                    {
+                        personalAnnotation: annotation.id,
+                    },
+                )
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'annotations',
+                    object: getAnnotationFromRemote(
+                        annotation,
+                        metadata,
+                        locator,
+                        selector,
+                    ),
+                })
             } else if (change.collection === 'personalTagConnection') {
                 const tagConnection = object as PersonalTagConnection & {
                     personalTag: number | string
@@ -184,5 +231,23 @@ function getPageFromRemote(
         lang: metadata.lang,
         canonicalUrl: metadata.canonicalUrl,
         description: metadata.description,
+    }
+}
+
+function getAnnotationFromRemote(
+    annotation: PersonalAnnotation,
+    { title }: PersonalContentMetadata,
+    { location }: PersonalContentLocator,
+    { selector }: PersonalAnnotationSelector = {} as PersonalAnnotationSelector,
+) {
+    return {
+        url: location + '#' + annotation.localId,
+        pageUrl: location,
+        pageTitle: title,
+        body: annotation.body,
+        comment: annotation.comment,
+        createdWhen: new Date(annotation.createdWhen),
+        lastEdited: new Date(annotation.updatedWhen),
+        selector,
     }
 }
