@@ -397,7 +397,11 @@ export async function uploadClientUpdateV24(
                 return
             }
 
-            await deleteById('personalContentRead', contentRead.id)
+            await deleteById(
+                'personalContentRead',
+                contentRead.id,
+                update.where,
+            )
         }
     } else if (update.collection === 'tags') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
