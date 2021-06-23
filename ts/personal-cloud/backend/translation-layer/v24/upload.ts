@@ -140,8 +140,8 @@ export async function uploadClientUpdateV24(
                 collection,
                 where: { id, user: params.userId },
                 updates: {
-                    ...updates,
                     updatedWhen: now,
+                    ...updates,
                     user: params.userId,
                 },
             },
