@@ -481,6 +481,30 @@ export async function uploadClientUpdateV24(
         if (update.type === PersonalCloudUpdateType.Overwrite) {
         } else if (update.type === PersonalCloudUpdateType.Delete) {
         }
+    } else if (update.collection === 'templates') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const localId = update.object.id
+            const updates = {
+                isFavourite: update.object.isFavourite,
+                title: update.object.title,
+                code: update.object.code,
+                localId,
+            }
+
+            const existing = await findOne('personalTextTemplate', { localId })
+            if (existing) {
+                await updateById('personalTextTemplate', localId, updates)
+            } else {
+                await create('personalTextTemplate', updates)
+            }
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const localId = update.where.id
+            const existing = await findOne('personalTextTemplate', { localId })
+
+            await deleteById('personalTextTemplate', existing.id, {
+                id: localId,
+            })
+        }
     }
 }
 

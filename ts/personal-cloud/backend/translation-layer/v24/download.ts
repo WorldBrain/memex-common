@@ -7,6 +7,7 @@ import {
     PersonalTagConnection,
     PersonalAnnotation,
     PersonalAnnotationSelector,
+    PersonalTextTemplate,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -223,6 +224,18 @@ export async function downloadClientUpdatesV24(
                         name: tag.name,
                     },
                 })
+            } else if (change.collection === 'personalTextTemplate') {
+                const template = object as PersonalTextTemplate
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'templates',
+                    object: {
+                        id: template.localId,
+                        title: template.title,
+                        code: template.code,
+                        isFavourite: template.isFavourite,
+                    },
+                })
             }
         } else if (change.type === DataChangeType.Delete) {
             if (change.collection === 'personalContentMetadata') {
@@ -247,6 +260,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'tags',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalTextTemplate') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'templates',
                     where: change.info,
                 })
             }

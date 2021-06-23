@@ -38,6 +38,7 @@ export type PersonalAnnotationSelector =
 
 export type PersonalTextTemplate =
     {
+        localId: string
         title: string
         code: string
         isFavourite: boolean

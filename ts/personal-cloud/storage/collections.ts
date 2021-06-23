@@ -250,6 +250,7 @@ export const PERSONAL_EXPORT_COLLECTIONS = (): StorageModuleCollections =>
         personalTextTemplate: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
+                localId: { type: 'string' },
                 title: { type: 'string' },
                 code: { type: 'string' },
                 isFavourite: { type: 'boolean' },
