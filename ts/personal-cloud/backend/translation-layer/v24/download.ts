@@ -144,9 +144,11 @@ export async function downloadClientUpdatesV24(
                         duration: read.readDuration,
                         scrollMaxPerc: 100,
                         scrollMaxPx: read.scrollTotal,
-                        scrollPerc: typeof read.scrollProgress === 'number' && typeof read.scrollTotal === 'number'
-                            ? (read.scrollProgress / read.scrollTotal) * 100
-                            : undefined,
+                        scrollPerc:
+                            typeof read.scrollProgress === 'number' &&
+                            typeof read.scrollTotal === 'number'
+                                ? (read.scrollProgress / read.scrollTotal) * 100
+                                : undefined,
                         scrollPx: read.scrollProgress,
                     },
                 })
@@ -233,6 +235,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'visits',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalAnnotation') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'annotations',
                     where: change.info,
                 })
             } else if (change.collection === 'personalTagConnection') {

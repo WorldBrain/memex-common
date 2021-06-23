@@ -39,16 +39,16 @@ export function constructAnnotationFromRemote(
     annotation: PersonalAnnotation,
     { title }: PersonalContentMetadata,
     { location }: PersonalContentLocator,
-    { selector }: PersonalAnnotationSelector = {} as PersonalAnnotationSelector,
+    annotationSelector?: PersonalAnnotationSelector,
 ) {
     return {
         url: constructAnnotationUrl(location, annotation.localId),
-        pageUrl: location,
         pageTitle: title,
+        pageUrl: location,
         body: annotation.body,
         comment: annotation.comment,
-        createdWhen: new Date(annotation.createdWhen),
+        selector: annotationSelector?.selector,
         lastEdited: new Date(annotation.updatedWhen),
-        selector,
+        createdWhen: new Date(annotation.createdWhen),
     }
 }

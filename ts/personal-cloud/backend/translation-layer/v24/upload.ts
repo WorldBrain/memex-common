@@ -13,6 +13,12 @@ import {
 import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 
+type DeleteReference = {
+    collection: string
+    id: number | string
+    changeInfo?: any
+}
+
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
 // any use of data coming from `updates` should be handled with care. There are
@@ -167,13 +173,7 @@ export async function uploadClientUpdateV24(
     ) => {
         await deleteMany([{ collection, id, changeInfo }])
     }
-    const deleteMany = async (
-        references: Array<{
-            collection: string
-            id: number | string
-            changeInfo?: any
-        }>,
-    ) => {
+    const deleteMany = async (references: DeleteReference[]) => {
         const batch: OperationBatch = []
         for (const [index, reference] of references.entries()) {
             batch.push({
@@ -350,6 +350,31 @@ export async function uploadClientUpdateV24(
                 )
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const annotationUrl = update.where.url as string
+            const localId = extractIdFromAnnotationUrl(annotationUrl)
+            const annotation = await findOne('personalAnnotation', { localId })
+            if (!annotation) {
+                return
+            }
+            const selector = await findOne('personalAnnotationSelector', {
+                personalAnnotation: annotation.id,
+            })
+
+            const toDelete: DeleteReference[] = [
+                {
+                    collection: 'personalAnnotation',
+                    id: annotation.id,
+                    changeInfo: { url: annotationUrl },
+                },
+            ]
+            if (selector != null) {
+                toDelete.push({
+                    collection: 'personalAnnotationSelector',
+                    id: selector.id,
+                })
+            }
+
+            await deleteMany(toDelete)
         }
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
