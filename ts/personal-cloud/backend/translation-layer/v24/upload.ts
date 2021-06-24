@@ -505,7 +505,43 @@ export async function uploadClientUpdateV24(
         }
     } else if (update.collection === 'pageListEntries') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const localListEntry = update.object
+            const normalizedPageUrl = localListEntry.pageUrl
+
+            const [{ contentMetadata }, list] = await Promise.all([
+                findContentMetadata(normalizedPageUrl),
+                findOne('personalList', { localId: localListEntry.listId }),
+            ])
+            if (!contentMetadata || !list) {
+                return
+            }
+
+            await findOrCreate('personalListEntry', {
+                personalContentMetadata: contentMetadata.id,
+                personalList: list.id,
+                createdWhen: localListEntry.createdAt.getTime(),
+            })
         } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const normalizedPageUrl = update.where.pageUrl as string
+            const localListId = update.where.listId
+
+            const [{ contentMetadata }, list] = await Promise.all([
+                findContentMetadata(normalizedPageUrl),
+                findOne('personalList', { localId: localListId }),
+            ])
+            const existing = await findOne('personalListEntry', {
+                personalContentMetadata: contentMetadata.id,
+                personalList: list.id,
+            })
+
+            if (!existing) {
+                return
+            }
+
+            await deleteById('personalListEntry', existing.id, {
+                pageUrl: normalizedPageUrl,
+                listId: localListId,
+            })
         }
     } else if (update.collection === 'templates') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
