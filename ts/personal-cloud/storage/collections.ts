@@ -135,7 +135,8 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections =>
         personalList: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
-                name: { type: 'string' },
+                name: { type: 'text' },
+                localId: { type: 'string' },
                 isDeletable: { type: 'boolean', optional: true },
                 isNestable: { type: 'boolean', optional: true },
             },
@@ -147,19 +148,20 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections =>
             },
             relationships: [{ singleChildOf: 'personalList' }],
         },
-        personalPageEntry: {
-            version: STORAGE_VERSIONS[8].date,
-            fields: {
-                normalizedPageUrl: { type: 'string' },
-                originalPageUrl: { type: 'string' },
-                title: { type: 'string', optional: true },
-            },
-            relationships: [{ childOf: 'personalList' }],
-        },
-        personalPageEntryDescription: {
+        personalListEntry: {
             version: STORAGE_VERSIONS[8].date,
             fields: {},
-            relationships: [{ singleChildOf: 'personalPageEntry' }],
+            relationships: [
+                { childOf: 'personalList' },
+                { childOf: 'personalContentMetadata' },
+            ],
+        },
+        personalListEntryDescription: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                description: { type: 'text' },
+            },
+            relationships: [{ singleChildOf: 'personalListEntry' }],
         },
     })
 

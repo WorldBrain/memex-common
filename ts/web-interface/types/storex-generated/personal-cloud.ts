@@ -82,17 +82,15 @@ export type PersonalListDescription =
         updatedWhen: number
     }
 
-export type PersonalPageEntry =
+export type PersonalListEntry =
     {
-        normalizedPageUrl: string
-        originalPageUrl: string
-        title?: string
         createdWhen: number
         updatedWhen: number
     }
 
-export type PersonalPageEntryDescription =
+export type PersonalListEntryDescription =
     {
+        description: string
         createdWhen: number
         updatedWhen: number
     }
