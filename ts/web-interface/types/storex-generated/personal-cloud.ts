@@ -48,6 +48,7 @@ export type PersonalTextTemplate =
 
 export type PersonalAnnotationPrivacyLevel =
     {
+        localId: string
         privacyLevel: number
         createdWhen: number
         updatedWhen: number

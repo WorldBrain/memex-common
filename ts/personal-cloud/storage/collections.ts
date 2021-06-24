@@ -90,9 +90,10 @@ export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections =>
         personalAnnotationPrivacyLevel: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
+                localId: { type: 'string' },
                 privacyLevel: { type: 'int' },
             },
-            relationships: [{ childOf: 'personalAnnotation' }],
+            relationships: [{ singleChildOf: 'personalAnnotation' }],
         },
         personalListShare: {
             version: STORAGE_VERSIONS[8].date,

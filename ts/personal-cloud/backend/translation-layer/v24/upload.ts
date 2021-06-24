@@ -379,6 +379,55 @@ export async function uploadClientUpdateV24(
 
             await deleteMany(toDelete)
         }
+    } else if (update.collection === 'annotationPrivacyLevels') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const annotationPrivacyLevel = update.object
+            const localId = extractIdFromAnnotationUrl(
+                annotationPrivacyLevel.annotation,
+            )
+            const annotation = await findOne('personalAnnotation', { localId })
+            if (!annotation) {
+                return
+            }
+
+            const updates = {
+                personalAnnotation: annotation.id,
+                localId: annotationPrivacyLevel.localId,
+                privacyLevel: annotationPrivacyLevel.privacyLevel,
+                createdWhen: annotationPrivacyLevel.createdWhen.getTime(),
+                updatedWhen: annotationPrivacyLevel.updatedWhen.getTime(),
+            }
+
+            const existing = await findOne('personalAnnotationPrivacyLevel', {
+                personalAnnotation: annotation.id,
+            })
+            if (existing) {
+                await updateById(
+                    'personalAnnotationPrivacyLevel',
+                    existing.id,
+                    updates,
+                )
+            } else {
+                await create('personalAnnotationPrivacyLevel', updates)
+            }
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const annotationUrl = update.where.annotation as string
+            const localId = extractIdFromAnnotationUrl(annotationUrl)
+            const annotation = await findOne('personalAnnotation', { localId })
+            if (!annotation) {
+                return
+            }
+            const existing = await findOne('personalAnnotationPrivacyLevel', {
+                personalAnnotation: annotation.id,
+            })
+            if (!existing) {
+                return
+            }
+
+            await deleteById('personalAnnotationPrivacyLevel', existing.id, {
+                id: existing.localId,
+            })
+        }
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const visit = update.object

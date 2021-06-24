@@ -10,6 +10,7 @@ import {
     PersonalTextTemplate,
     PersonalList,
     PersonalListEntry,
+    PersonalAnnotationPrivacyLevel,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -182,6 +183,42 @@ export async function downloadClientUpdatesV24(
                         selector,
                     ),
                 })
+            } else if (change.collection === 'personalAnnotationPrivacyLevel') {
+                const annotationPrivacyLevel = object as PersonalAnnotationPrivacyLevel & {
+                    personalAnnotation: string
+                }
+                const annotation = await findOne<
+                    PersonalAnnotation & { personalContentMetadata: string }
+                >('personalAnnotation', {
+                    id: annotationPrivacyLevel.personalAnnotation,
+                })
+                if (!annotation) {
+                    continue
+                }
+                const { locator } = await findLocatorForMetadata(
+                    annotation.personalContentMetadata,
+                )
+                const annotationUrl =
+                    locator != null &&
+                    constructAnnotationUrl(locator.location, annotation.localId)
+                if (annotationUrl) {
+                    continue
+                }
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'annotationPrivacyLevels',
+                    object: {
+                        annotation: annotationUrl,
+                        id: annotationPrivacyLevel.localId,
+                        privacyLevel: annotationPrivacyLevel.privacyLevel,
+                        createdWhen: new Date(
+                            annotationPrivacyLevel.createdWhen,
+                        ),
+                        updatedWhen: new Date(
+                            annotationPrivacyLevel.updatedWhen,
+                        ),
+                    },
+                })
             } else if (change.collection === 'personalTagConnection') {
                 const tagConnection = object as PersonalTagConnection & {
                     personalTag: number | string
@@ -297,6 +334,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'annotations',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalAnnotationPrivacyLevel') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'annotationPrivacyLevels',
                     where: change.info,
                 })
             } else if (change.collection === 'personalTagConnection') {
