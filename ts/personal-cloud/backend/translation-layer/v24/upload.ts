@@ -10,7 +10,10 @@ import {
     ContentLocatorType,
     ContentLocatorFormat,
 } from '../../../storage/types'
-import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
+import {
+    PersonalContentLocator,
+    PersonalList,
+} from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 
 type DeleteReference = {
@@ -475,7 +478,30 @@ export async function uploadClientUpdateV24(
         }
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const localList = update.object
+            const updates = {
+                name: localList.name,
+                localId: localList.id,
+                isNestable: localList.isNestable,
+                isDeletable: localList.isDeletable,
+                createdWhen: localList.createdAt.getTime(),
+            }
+
+            const existing = await findOne('personalList', {
+                localId: localList.id,
+            })
+            if (existing) {
+                await updateById('personalList', existing.id, updates)
+            } else {
+                await create('personalList', updates)
+            }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const localId = update.where.id
+            const existing = await findOne('personalList', { localId })
+
+            await deleteById('personalList', existing.id, {
+                id: localId,
+            })
         }
     } else if (update.collection === 'pageListEntries') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -493,7 +519,7 @@ export async function uploadClientUpdateV24(
 
             const existing = await findOne('personalTextTemplate', { localId })
             if (existing) {
-                await updateById('personalTextTemplate', localId, updates)
+                await updateById('personalTextTemplate', existing.id, updates)
             } else {
                 await create('personalTextTemplate', updates)
             }

@@ -8,6 +8,7 @@ import {
     PersonalAnnotation,
     PersonalAnnotationSelector,
     PersonalTextTemplate,
+    PersonalList,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -224,6 +225,20 @@ export async function downloadClientUpdatesV24(
                         name: tag.name,
                     },
                 })
+            } else if (change.collection === 'personalList') {
+                const list = object as PersonalList
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'customLists',
+                    object: {
+                        name: list.name,
+                        id: list.localId,
+                        searchableName: list.name,
+                        isNestable: list.isNestable,
+                        isDeletable: list.isDeletable,
+                        createdAt: new Date(list.createdWhen),
+                    },
+                })
             } else if (change.collection === 'personalTextTemplate') {
                 const template = object as PersonalTextTemplate
                 batch.push({
@@ -245,6 +260,7 @@ export async function downloadClientUpdatesV24(
                     where: { url: change.info?.normalizedUrl },
                 })
             } else if (change.collection === 'personalContentRead') {
+                // TODO: Update all these to explicitly refer to the fields that are being used from change.info (safer)
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'visits',
@@ -260,6 +276,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'tags',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalList') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'customLists',
                     where: change.info,
                 })
             } else if (change.collection === 'personalTextTemplate') {

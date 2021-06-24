@@ -69,6 +69,7 @@ export type PersonalAnnotationShare =
 export type PersonalList =
     {
         name: string
+        localId: string
         isDeletable?: boolean
         isNestable?: boolean
         createdWhen: number
