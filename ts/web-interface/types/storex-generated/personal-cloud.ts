@@ -56,6 +56,7 @@ export type PersonalAnnotationPrivacyLevel =
 
 export type PersonalListShare =
     {
+        remoteId: string
         createdWhen: number
         updatedWhen: number
     }

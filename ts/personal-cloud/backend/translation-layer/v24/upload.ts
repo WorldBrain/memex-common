@@ -584,6 +584,40 @@ export async function uploadClientUpdateV24(
                 listId: localListId,
             })
         }
+    } else if (update.collection === 'sharedListMetadata') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const localListId = update.object.localId as string
+
+            const list = await findOne('personalList', { localId: localListId })
+            if (!list) {
+                return
+            }
+            await findOrCreate(
+                'personalListShare',
+                { personalList: list.id },
+                {
+                    personalList: list.id,
+                    remoteId: update.object.remoteId,
+                },
+            )
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const localListId = update.where.localId as string
+
+            const list = await findOne('personalList', { localId: localListId })
+            if (!list) {
+                return
+            }
+            const existing = await findOne('personalListShare', {
+                personalList: list.id,
+            })
+            if (!existing) {
+                return
+            }
+
+            await deleteById('personalListShare', existing.id, {
+                localId: localListId,
+            })
+        }
     } else if (update.collection === 'templates') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localId = update.object.id

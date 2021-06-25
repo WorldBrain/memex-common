@@ -97,11 +97,10 @@ export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections =>
         },
         personalListShare: {
             version: STORAGE_VERSIONS[8].date,
-            fields: {},
-            relationships: [
-                { singleChildOf: 'personalAnnotation' },
-                { singleChildOf: 'sharedAnnotation' },
-            ],
+            fields: {
+                remoteId: { type: 'string' },
+            },
+            relationships: [{ singleChildOf: 'personalList' }],
         },
         personalAnnotationShare: {
             version: STORAGE_VERSIONS[8].date,

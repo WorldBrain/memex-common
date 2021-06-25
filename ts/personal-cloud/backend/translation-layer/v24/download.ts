@@ -11,6 +11,7 @@ import {
     PersonalList,
     PersonalListEntry,
     PersonalAnnotationPrivacyLevel,
+    PersonalListShare,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -303,6 +304,25 @@ export async function downloadClientUpdatesV24(
                         createdAt: new Date(listEntry.createdWhen),
                     },
                 })
+            } else if (change.collection === 'personalListShare') {
+                const listShareMetadata = object as PersonalListShare & {
+                    personalList: string
+                }
+                const list = await findOne<PersonalList>('personalList', {
+                    id: listShareMetadata.personalList,
+                })
+                if (!list) {
+                    continue
+                }
+
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'sharedListMetadata',
+                    object: {
+                        localId: list.localId,
+                        remoteId: listShareMetadata.remoteId,
+                    },
+                })
             } else if (change.collection === 'personalTextTemplate') {
                 const template = object as PersonalTextTemplate
                 batch.push({
@@ -358,6 +378,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'pageListEntries',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalListShare') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'sharedListMetadata',
                     where: change.info,
                 })
             } else if (change.collection === 'personalTextTemplate') {
