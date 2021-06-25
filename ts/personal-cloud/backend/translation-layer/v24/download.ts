@@ -12,6 +12,7 @@ import {
     PersonalListEntry,
     PersonalAnnotationPrivacyLevel,
     PersonalListShare,
+    PersonalAnnotationShare,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -220,6 +221,36 @@ export async function downloadClientUpdatesV24(
                         ),
                     },
                 })
+            } else if (change.collection === 'personalAnnotationShare') {
+                const annotationShare = object as PersonalAnnotationShare & {
+                    personalAnnotation: string
+                }
+                const annotation = await findOne<
+                    PersonalAnnotation & { personalContentMetadata: string }
+                >('personalAnnotation', {
+                    id: annotationShare.personalAnnotation,
+                })
+                if (!annotation) {
+                    continue
+                }
+                const { locator } = await findLocatorForMetadata(
+                    annotation.personalContentMetadata,
+                )
+                const annotationUrl =
+                    locator != null &&
+                    constructAnnotationUrl(locator.location, annotation.localId)
+                if (!annotationUrl) {
+                    continue
+                }
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'sharedAnnotationMetadata',
+                    object: {
+                        localId: annotationUrl,
+                        remoteId: annotationShare.remoteId,
+                        excludeFromLists: annotationShare.excludeFromLists,
+                    },
+                })
             } else if (change.collection === 'personalTagConnection') {
                 const tagConnection = object as PersonalTagConnection & {
                     personalTag: number | string
@@ -360,6 +391,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'annotationPrivacyLevels',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalAnnotationShare') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'sharedAnnotationMetadata',
                     where: change.info,
                 })
             } else if (change.collection === 'personalTagConnection') {

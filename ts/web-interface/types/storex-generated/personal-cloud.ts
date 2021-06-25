@@ -63,6 +63,7 @@ export type PersonalListShare =
 
 export type PersonalAnnotationShare =
     {
+        remoteId: string
         excludeFromLists?: boolean
         createdWhen: number
         updatedWhen: number

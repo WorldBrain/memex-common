@@ -95,22 +95,20 @@ export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections =>
             },
             relationships: [{ singleChildOf: 'personalAnnotation' }],
         },
+        personalAnnotationShare: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                remoteId: { type: 'string' },
+                excludeFromLists: { type: 'boolean', optional: true },
+            },
+            relationships: [{ singleChildOf: 'personalAnnotation' }],
+        },
         personalListShare: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
                 remoteId: { type: 'string' },
             },
             relationships: [{ singleChildOf: 'personalList' }],
-        },
-        personalAnnotationShare: {
-            version: STORAGE_VERSIONS[8].date,
-            fields: {
-                excludeFromLists: { type: 'boolean', optional: true },
-            },
-            relationships: [
-                { singleChildOf: 'personalAnnotation' },
-                { singleChildOf: 'sharedAnnotation' },
-            ],
         },
     })
 export const PERSONAL_TAG_COLLECTIONS = (): StorageModuleCollections =>

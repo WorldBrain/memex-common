@@ -420,6 +420,56 @@ export async function uploadClientUpdateV24(
                 id: localId,
             })
         }
+    } else if (update.collection === 'sharedAnnotationMetadata') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const annotationUrl = update.object.localId as string
+            const localAnnotationId = extractIdFromAnnotationUrl(annotationUrl)
+
+            const annotation = await findOne('personalAnnotation', {
+                localId: localAnnotationId,
+            })
+            if (!annotation) {
+                return
+            }
+            const existing = await findOne('personalAnnotationShare', {
+                personalAnnotation: annotation.id,
+            })
+
+            const updates = {
+                excludeFromLists: !!update.object.excludeFromLists,
+                personalAnnotation: annotation.id,
+                remoteId: update.object.remoteId,
+            }
+
+            if (existing) {
+                await updateById(
+                    'personalAnnotationShare',
+                    existing.id,
+                    updates,
+                )
+            } else {
+                await create('personalAnnotationShare', updates)
+            }
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const annotationUrl = update.where.localId as string
+            const localAnnotationId = extractIdFromAnnotationUrl(annotationUrl)
+
+            const annotation = await findOne('personalAnnotation', {
+                localId: localAnnotationId,
+            })
+            if (!annotation) {
+                return
+            }
+            const existing = await findOne('personalAnnotationShare', {
+                personalAnnotation: annotation.id,
+            })
+            if (!existing) {
+                return
+            }
+            await deleteById('personalAnnotationShare', existing.id, {
+                localId: annotationUrl,
+            })
+        }
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const visit = update.object
