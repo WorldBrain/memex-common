@@ -201,7 +201,7 @@ export async function downloadClientUpdatesV24(
                 const annotationUrl =
                     locator != null &&
                     constructAnnotationUrl(locator.location, annotation.localId)
-                if (annotationUrl) {
+                if (!annotationUrl) {
                     continue
                 }
                 batch.push({

@@ -392,7 +392,7 @@ export async function uploadClientUpdateV24(
 
             const updates = {
                 personalAnnotation: annotation.id,
-                localId: annotationPrivacyLevel.localId,
+                localId: annotationPrivacyLevel.id,
                 privacyLevel: annotationPrivacyLevel.privacyLevel,
                 createdWhen: annotationPrivacyLevel.createdWhen.getTime(),
                 updatedWhen: annotationPrivacyLevel.updatedWhen.getTime(),
@@ -411,21 +411,13 @@ export async function uploadClientUpdateV24(
                 await create('personalAnnotationPrivacyLevel', updates)
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
-            const annotationUrl = update.where.annotation as string
-            const localId = extractIdFromAnnotationUrl(annotationUrl)
-            const annotation = await findOne('personalAnnotation', { localId })
-            if (!annotation) {
-                return
-            }
+            const localId = update.where.id as string
             const existing = await findOne('personalAnnotationPrivacyLevel', {
-                personalAnnotation: annotation.id,
+                localId,
             })
-            if (!existing) {
-                return
-            }
 
             await deleteById('personalAnnotationPrivacyLevel', existing.id, {
-                id: existing.localId,
+                id: localId,
             })
         }
     } else if (update.collection === 'visits') {
