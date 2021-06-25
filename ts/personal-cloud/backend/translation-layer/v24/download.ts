@@ -13,6 +13,7 @@ import {
     PersonalAnnotationPrivacyLevel,
     PersonalListShare,
     PersonalAnnotationShare,
+    PersonalBookmark,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import {
     DataChangeType,
@@ -156,6 +157,24 @@ export async function downloadClientUpdatesV24(
                                 ? (read.scrollProgress / read.scrollTotal) * 100
                                 : undefined,
                         scrollPx: read.scrollProgress,
+                    },
+                })
+            } else if (change.collection === 'personalBookmark') {
+                const bookmark = object as PersonalBookmark & {
+                    personalContentMetadata: string
+                }
+                const { locator } = await findLocatorForMetadata(
+                    bookmark.personalContentMetadata,
+                )
+                if (!locator) {
+                    continue
+                }
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'bookmarks',
+                    object: {
+                        url: locator.location,
+                        time: bookmark.createdWhen,
                     },
                 })
             } else if (change.collection === 'personalAnnotation') {
@@ -379,6 +398,12 @@ export async function downloadClientUpdatesV24(
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'visits',
+                    where: change.info,
+                })
+            } else if (change.collection === 'personalBookmark') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'bookmarks',
                     where: change.info,
                 })
             } else if (change.collection === 'personalAnnotation') {

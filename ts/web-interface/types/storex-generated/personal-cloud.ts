@@ -143,7 +143,6 @@ export type PersonalContentRead =
 
 export type PersonalBookmark =
     {
-        normalizedPageUrl: string
         createdWhen: number
         updatedWhen: number
     }

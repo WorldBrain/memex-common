@@ -470,6 +470,38 @@ export async function uploadClientUpdateV24(
                 localId: annotationUrl,
             })
         }
+    } else if (update.collection === 'bookmarks') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const bookmark = update.object
+            const normalizedUrl = bookmark.url
+            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            if (!contentMetadata) {
+                return
+            }
+            await findOrCreate(
+                'personalBookmark',
+                { personalContentMetadata: contentMetadata.id },
+                {
+                    personalContentMetadata: contentMetadata.id,
+                    createdWhen: bookmark.time,
+                },
+            )
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const normalizedUrl = update.where.url as string
+            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            if (!contentMetadata) {
+                return
+            }
+            const existing = await findOne('personalBookmark', {
+                personalContentMetadata: contentMetadata.id,
+            })
+            if (!existing) {
+                return
+            }
+            await deleteById('personalBookmark', existing.id, {
+                url: normalizedUrl,
+            })
+        }
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const visit = update.object

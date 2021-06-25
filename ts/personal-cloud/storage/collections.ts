@@ -220,9 +220,7 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections =>
         },
         personalBookmark: {
             version: STORAGE_VERSIONS[8].date,
-            fields: {
-                normalizedPageUrl: { type: 'string' },
-            },
+            fields: {},
             relationships: [{ singleChildOf: 'personalContentMetadata' }],
         },
     })
