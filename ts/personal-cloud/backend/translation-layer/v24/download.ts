@@ -394,65 +394,74 @@ export async function downloadClientUpdatesV24(
                     where: { url: change.info?.normalizedUrl },
                 })
             } else if (change.collection === 'personalContentRead') {
-                // TODO: Update all these to explicitly refer to the fields that are being used from change.info (safer)
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'visits',
-                    where: change.info,
+                    where: {
+                        url: change.info.url,
+                        time: change.info.time,
+                    },
                 })
             } else if (change.collection === 'personalBookmark') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'bookmarks',
-                    where: change.info,
+                    where: {
+                        url: change.info.url,
+                    },
                 })
             } else if (change.collection === 'personalAnnotation') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'annotations',
-                    where: change.info,
+                    where: {
+                        url: change.info.url,
+                    },
                 })
             } else if (change.collection === 'personalAnnotationPrivacyLevel') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'annotationPrivacyLevels',
-                    where: change.info,
+                    where: { id: change.info.id },
                 })
             } else if (change.collection === 'personalAnnotationShare') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'sharedAnnotationMetadata',
-                    where: change.info,
+                    where: { localId: change.info.localId },
                 })
             } else if (change.collection === 'personalTagConnection') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'tags',
-                    where: change.info,
+                    where: { url: change.info.url, name: change.info.name },
                 })
             } else if (change.collection === 'personalList') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'customLists',
-                    where: change.info,
+                    where: { id: change.info.id },
                 })
             } else if (change.collection === 'personalListEntry') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'pageListEntries',
-                    where: change.info,
+                    where: {
+                        listId: change.info.listId,
+                        pageUrl: change.info.pageUrl,
+                    },
                 })
             } else if (change.collection === 'personalListShare') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'sharedListMetadata',
-                    where: change.info,
+                    where: { localId: change.info.localId },
                 })
             } else if (change.collection === 'personalTextTemplate') {
                 batch.push({
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'templates',
-                    where: change.info,
+                    where: { id: change.info.id },
                 })
             }
         }
