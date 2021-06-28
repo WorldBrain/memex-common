@@ -1,4 +1,3 @@
-import { FindManyOptions } from '@worldbrain/storex'
 import {
     PersonalDataChange,
     PersonalContentLocator,
@@ -15,82 +14,35 @@ import {
     PersonalAnnotationShare,
     PersonalBookmark,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
-import {
-    DataChangeType,
-    LocationSchemeType,
-} from '../../../../personal-cloud/storage/types'
+import { DataChangeType } from '../../../../personal-cloud/storage/types'
 import { DOWNLOAD_CHANGE_BATCH_SIZE } from '../constants'
 import {
     TranslationLayerDependencies,
     PersonalCloudUpdateBatch,
     PersonalCloudUpdateType,
+    DownloadClientUpdatesReturnType,
 } from '../../types'
 import {
     constructAnnotationUrl,
     constructPageFromRemote,
     constructAnnotationFromRemote,
 } from '../utils'
+import { DownloadStorageUtils } from '../storage-utils'
 
 export async function downloadClientUpdatesV24(
     params: TranslationLayerDependencies & {
         startTime: number
     },
-) {
-    const { storageManager } = params
-    const findOne = async <T = any>(
-        collection: string,
-        where: any,
-    ): Promise<T> => {
-        return storageManager
-            .collection(collection)
-            .findObject({ ...where, user: params.userId }) as any
-    }
-    const findMany = async <T = any>(
-        collection: string,
-        where: any,
-        options?: FindManyOptions,
-    ): Promise<T[]> => {
-        return params.storageManager.collection(collection).findObjects(
-            {
-                ...where,
-                user: params.userId,
-            },
-            options,
-        )
-    }
+): Promise<DownloadClientUpdatesReturnType> {
+    const storageUtils = new DownloadStorageUtils(params)
 
-    const findLocatorForMetadata = async (
-        metadataId: string | number,
-        locationScheme = LocationSchemeType.NormalizedUrlV1,
-    ): Promise<{
-        metadata?: PersonalContentMetadata
-        locator?: PersonalContentLocator
-    }> => {
-        const metadata = await findOne<
-            PersonalContentMetadata & { id: string | number }
-        >('personalContentMetadata', { id: metadataId })
-        if (!metadata) {
-            return {}
-        }
-        const allContentLocators = await findMany<PersonalContentLocator>(
-            'personalContentLocator',
-            {
-                personalContentMetadata: metadata.id,
-            },
-        )
-        const locator = allContentLocators.find(
-            (locator) => locator.locationScheme === locationScheme,
-        )
-        return { metadata, locator }
-    }
-
-    const changes = (await findMany(
+    const changes = await storageUtils.findMany<PersonalDataChange>(
         'personalDataChange',
         {
             createdWhen: { $gt: params.startTime },
         },
         { limit: DOWNLOAD_CHANGE_BATCH_SIZE },
-    )) as PersonalDataChange[]
+    )
 
     let lastSeen = params.startTime
     const batch: PersonalCloudUpdateBatch = []
@@ -105,7 +57,7 @@ export async function downloadClientUpdatesV24(
                 continue
             }
 
-            const object = await findOne(change.collection, {
+            const object = await storageUtils.findOne(change.collection, {
                 id: change.objectId,
             })
             if (!object) {
@@ -116,7 +68,7 @@ export async function downloadClientUpdatesV24(
                 const metadata = object as PersonalContentMetadata & {
                     id: string | number
                 }
-                const locatorArray = (await findMany(
+                const locatorArray = (await storageUtils.findMany(
                     'personalContentLocator',
                     {
                         personalContentMetadata: metadata.id,
@@ -135,7 +87,7 @@ export async function downloadClientUpdatesV24(
                 const read = object as PersonalContentRead & {
                     personalContentMetadata: number | string
                 }
-                const locatorArray = (await findMany(
+                const locatorArray = (await storageUtils.findMany(
                     'personalContentLocator',
                     {
                         personalContentMetadata: read.personalContentMetadata,
@@ -163,7 +115,7 @@ export async function downloadClientUpdatesV24(
                 const bookmark = object as PersonalBookmark & {
                     personalContentMetadata: string
                 }
-                const { locator } = await findLocatorForMetadata(
+                const { locator } = await storageUtils.findLocatorForMetadata(
                     bookmark.personalContentMetadata,
                 )
                 if (!locator) {
@@ -182,18 +134,20 @@ export async function downloadClientUpdatesV24(
                     id: string | number
                     personalContentMetadata: number | string
                 }
-                const { locator, metadata } = await findLocatorForMetadata(
+                const {
+                    locator,
+                    metadata,
+                } = await storageUtils.findLocatorForMetadata(
                     annotation.personalContentMetadata,
                 )
                 if (!locator || !metadata) {
                     continue
                 }
-                const selector = await findOne<PersonalAnnotationSelector>(
-                    'personalAnnotationSelector',
-                    {
-                        personalAnnotation: annotation.id,
-                    },
-                )
+                const selector = await storageUtils.findOne<
+                    PersonalAnnotationSelector
+                >('personalAnnotationSelector', {
+                    personalAnnotation: annotation.id,
+                })
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'annotations',
@@ -208,7 +162,7 @@ export async function downloadClientUpdatesV24(
                 const annotationPrivacyLevel = object as PersonalAnnotationPrivacyLevel & {
                     personalAnnotation: string
                 }
-                const annotation = await findOne<
+                const annotation = await storageUtils.findOne<
                     PersonalAnnotation & { personalContentMetadata: string }
                 >('personalAnnotation', {
                     id: annotationPrivacyLevel.personalAnnotation,
@@ -216,7 +170,7 @@ export async function downloadClientUpdatesV24(
                 if (!annotation) {
                     continue
                 }
-                const { locator } = await findLocatorForMetadata(
+                const { locator } = await storageUtils.findLocatorForMetadata(
                     annotation.personalContentMetadata,
                 )
                 const annotationUrl =
@@ -244,7 +198,7 @@ export async function downloadClientUpdatesV24(
                 const annotationShare = object as PersonalAnnotationShare & {
                     personalAnnotation: string
                 }
-                const annotation = await findOne<
+                const annotation = await storageUtils.findOne<
                     PersonalAnnotation & { personalContentMetadata: string }
                 >('personalAnnotation', {
                     id: annotationShare.personalAnnotation,
@@ -252,7 +206,7 @@ export async function downloadClientUpdatesV24(
                 if (!annotation) {
                     continue
                 }
-                const { locator } = await findLocatorForMetadata(
+                const { locator } = await storageUtils.findLocatorForMetadata(
                     annotation.personalContentMetadata,
                 )
                 const annotationUrl =
@@ -277,18 +231,22 @@ export async function downloadClientUpdatesV24(
 
                 let tagUrl: string
                 if (tagConnection.collection === 'personalContentMetadata') {
-                    const { locator } = await findLocatorForMetadata(
+                    const {
+                        locator,
+                    } = await storageUtils.findLocatorForMetadata(
                         tagConnection.objectId,
                     )
                     tagUrl = locator?.location
                 } else if (tagConnection.collection === 'personalAnnotation') {
-                    const annotation = await findOne<
+                    const annotation = await storageUtils.findOne<
                         PersonalAnnotation & { personalContentMetadata: string }
                     >(tagConnection.collection, {
                         id: tagConnection.objectId,
                     })
 
-                    const { locator } = await findLocatorForMetadata(
+                    const {
+                        locator,
+                    } = await storageUtils.findLocatorForMetadata(
                         annotation.personalContentMetadata,
                     )
                     tagUrl =
@@ -302,7 +260,7 @@ export async function downloadClientUpdatesV24(
                     continue
                 }
 
-                const tag = await findOne('personalTag', {
+                const tag = await storageUtils.findOne('personalTag', {
                     id: tagConnection.personalTag,
                 })
 
@@ -334,8 +292,10 @@ export async function downloadClientUpdatesV24(
                     personalContentMetadata: string
                 }
                 const [{ locator }, list] = await Promise.all([
-                    findLocatorForMetadata(listEntry.personalContentMetadata),
-                    findOne<PersonalList>('personalList', {
+                    storageUtils.findLocatorForMetadata(
+                        listEntry.personalContentMetadata,
+                    ),
+                    storageUtils.findOne<PersonalList>('personalList', {
                         id: listEntry.personalList,
                     }),
                 ])
@@ -358,9 +318,12 @@ export async function downloadClientUpdatesV24(
                 const listShareMetadata = object as PersonalListShare & {
                     personalList: string
                 }
-                const list = await findOne<PersonalList>('personalList', {
-                    id: listShareMetadata.personalList,
-                })
+                const list = await storageUtils.findOne<PersonalList>(
+                    'personalList',
+                    {
+                        id: listShareMetadata.personalList,
+                    },
+                )
                 if (!list) {
                     continue
                 }
@@ -467,10 +430,9 @@ export async function downloadClientUpdatesV24(
         }
     }
 
-    const result = {
+    return {
         batch,
         lastSeen,
         maybeHasMore: changes.length === DOWNLOAD_CHANGE_BATCH_SIZE,
     }
-    return result
 }

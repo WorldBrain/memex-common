@@ -1,26 +1,16 @@
-import { OperationBatch } from '@worldbrain/storex'
 import {
     PersonalCloudUpdateType,
     PersonalCloudUpdatePush,
     TranslationLayerDependencies,
 } from '../../types'
 import {
-    DataChangeType,
     LocationSchemeType,
     ContentLocatorType,
     ContentLocatorFormat,
 } from '../../../storage/types'
-import {
-    PersonalContentLocator,
-    PersonalList,
-} from '../../../../web-interface/types/storex-generated/personal-cloud'
+import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
-
-type DeleteReference = {
-    collection: string
-    id: number | string
-    changeInfo?: any
-}
+import { UploadStorageUtils, DeleteReference } from '../storage-utils'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -29,219 +19,23 @@ type DeleteReference = {
 // `deleteObjects` that scope those operations down to users' personal data. Any
 // direct usage of `storageManager` should be handled with care and security in mind.
 
-export async function uploadClientUpdateV24(
-    params: TranslationLayerDependencies & {
-        update: PersonalCloudUpdatePush
-    },
-) {
-    const { storageManager } = params
+export async function uploadClientUpdateV24({
+    update,
+    ...params
+}: TranslationLayerDependencies & {
+    update: PersonalCloudUpdatePush
+}) {
+    const storageUtils = new UploadStorageUtils({ ...params, update })
 
-    // NOTE: In any operation, userId should overwrite whatever is in the client-side provided object
-    // to prevent users from overwriting each others' data
-    const create = async (
-        collection: string,
-        toCreate: any,
-        options?: { changeInfo?: any },
-    ) => {
-        const now = params.getNow()
-
-        const batch: OperationBatch = [
-            {
-                placeholder: 'creation',
-                operation: 'createObject',
-                collection,
-                args: {
-                    createdWhen: now,
-                    updatedWhen: now,
-                    ...toCreate,
-                    user: params.userId,
-                    createdByDevice: params.update.deviceId,
-                },
-            },
-            {
-                placeholder: 'update-entry',
-                operation: 'createObject',
-                collection: 'personalDataChange',
-                args: maybeWith(
-                    {
-                        createdWhen: now,
-                        user: params.userId,
-                        createdByDevice: params.update.deviceId,
-                        type: DataChangeType.Create,
-                        collection,
-                    },
-                    {
-                        info: options?.changeInfo,
-                    },
-                ),
-                replace: [
-                    {
-                        path: 'objectId',
-                        placeholder: 'creation',
-                    },
-                ],
-            },
-        ]
-        const result = await storageManager.operation('executeBatch', batch)
-        const object = result.info.creation.object
-        return object
-    }
-    const findOrCreate = async (
-        collection: string,
-        where: any,
-        defaults: any = {},
-    ) => {
-        const existing = await storageManager
-            .collection(collection)
-            .findObject({ ...where, user: params.userId })
-        if (existing) {
-            return existing
-        }
-        return create(collection, { ...where, ...defaults })
-    }
-    const findOne = async (collection: string, where: any) => {
-        return storageManager
-            .collection(collection)
-            .findObject({ ...where, user: params.userId }) as any
-    }
-    const findMany = async (collection: string, where: any) => {
-        return storageManager
-            .collection(collection)
-            .findObjects({ ...where, user: params.userId }) as any
-    }
-    const findContentLocator = async (normalizedUrl: string) => {
-        const contentLocator: PersonalContentLocator & {
-            id: string | number
-            personalContentMetadata: string | number
-        } = await findOne('personalContentLocator', {
-            locationScheme: LocationSchemeType.NormalizedUrlV1,
-            location: normalizedUrl,
-        })
-        return contentLocator
-    }
-    const findContentMetadata = async (normalizedUrl: string) => {
-        const contentLocator = await findContentLocator(normalizedUrl)
-        if (!contentLocator) {
-            return { contentMetadata: null, contentLocator: null }
-        }
-        const contentMetadata = await findOne('personalContentMetadata', {
-            id: contentLocator.personalContentMetadata,
-        })
-        return { contentMetadata, contentLocator }
-    }
-    const updateById = async (
-        collection: string,
-        id: number | string,
-        updates: any,
-        options?: { changeInfo?: any },
-    ) => {
-        const now = params.getNow()
-        const batch: OperationBatch = [
-            {
-                placeholder: 'update',
-                operation: 'updateObjects',
-                collection,
-                where: { id, user: params.userId },
-                updates: {
-                    updatedWhen: now,
-                    ...updates,
-                    user: params.userId,
-                },
-            },
-            {
-                placeholder: 'update-entry',
-                operation: 'createObject',
-                collection: 'personalDataChange',
-                args: maybeWith(
-                    {
-                        createdWhen: now,
-                        user: params.userId,
-                        createdByDevice: params.update.deviceId,
-                        type: DataChangeType.Modify,
-                        collection,
-                        objectId: id,
-                    },
-                    {
-                        info: options?.changeInfo,
-                    },
-                ),
-            },
-        ]
-        await storageManager.operation('executeBatch', batch)
-    }
-    const deleteById = async (
-        collection: string,
-        id: number | string,
-        changeInfo?: any,
-    ) => {
-        await deleteMany([{ collection, id, changeInfo }])
-    }
-    const deleteMany = async (references: DeleteReference[]) => {
-        const batch: OperationBatch = []
-        for (const [index, reference] of references.entries()) {
-            batch.push({
-                placeholder: `deletion-${index}`,
-                operation: 'deleteObjects',
-                collection: reference.collection,
-                where: {
-                    user: params.userId,
-                    id: reference.id,
-                },
-            })
-            batch.push({
-                placeholder: `entry-${index}`,
-                operation: 'createObject',
-                collection: 'personalDataChange',
-                args: maybeWith(
-                    {
-                        createdWhen: params.getNow(),
-                        user: params.userId,
-                        createdByDevice: params.update.deviceId,
-                        type: DataChangeType.Delete,
-                        collection: reference.collection,
-                        objectId: reference.id,
-                    },
-                    {
-                        info: reference.changeInfo,
-                    },
-                ),
-            })
-        }
-        await storageManager.operation('executeBatch', batch)
-    }
-    const findTagAssociatedData = async (
-        normalizedUrl: string,
-    ): Promise<{
-        objectId?: string
-        collection: 'personalAnnotation' | 'personalContentMetadata'
-    }> => {
-        const annotationId = extractIdFromAnnotationUrl(normalizedUrl)
-        if (annotationId == null) {
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
-            return {
-                objectId: contentMetadata?.id,
-                collection: 'personalContentMetadata',
-            }
-        }
-
-        const annotation = await findOne('personalAnnotation', {
-            localId: annotationId,
-        })
-        return {
-            objectId: annotation?.id,
-            collection: 'personalAnnotation',
-        }
-    }
-
-    const { update } = params
     if (update.collection === 'pages') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const page = update.object
             const normalizedUrl = page.url
 
-            let { contentLocator, contentMetadata } = await findContentMetadata(
-                normalizedUrl,
-            )
+            let {
+                contentLocator,
+                contentMetadata,
+            } = await storageUtils.findContentMetadata(normalizedUrl)
             const updates = {
                 canonicalUrl: page.canonicalUrl ?? page.fullUrl,
                 title: page.fullTitle,
@@ -250,26 +44,29 @@ export async function uploadClientUpdateV24(
             }
 
             if (!contentLocator) {
-                contentMetadata = await create(
+                contentMetadata = await storageUtils.create(
                     'personalContentMetadata',
                     updates,
                 )
-                contentLocator = await create('personalContentLocator', {
-                    personalContentMetadata: contentMetadata.id,
-                    locationType: ContentLocatorType.Remote,
-                    locationScheme: LocationSchemeType.NormalizedUrlV1,
-                    format: ContentLocatorFormat.HTML,
-                    location: normalizedUrl,
-                    originalLocation: page.fullUrl,
-                    version: 0, // TODO: later, when visits are written, this is updated
-                    valid: true,
-                    primary: true,
-                    // contentSize: null,
-                    // fingerprint: null,
-                    lastVisited: 0,
-                })
+                contentLocator = await storageUtils.create(
+                    'personalContentLocator',
+                    {
+                        personalContentMetadata: contentMetadata.id,
+                        locationType: ContentLocatorType.Remote,
+                        locationScheme: LocationSchemeType.NormalizedUrlV1,
+                        format: ContentLocatorFormat.HTML,
+                        location: normalizedUrl,
+                        originalLocation: page.fullUrl,
+                        version: 0, // TODO: later, when visits are written, this is updated
+                        valid: true,
+                        primary: true,
+                        // contentSize: null,
+                        // fingerprint: null,
+                        lastVisited: 0,
+                    },
+                )
             } else if (contentMetadata) {
-                await updateById(
+                await storageUtils.updateById(
                     'personalContentMetadata',
                     contentMetadata.id,
                     updates,
@@ -277,7 +74,9 @@ export async function uploadClientUpdateV24(
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const normalizedUrl = update.where.url as string
-            const firstConttentLocator = await findContentLocator(normalizedUrl)
+            const firstConttentLocator = await storageUtils.findFirstContentLocator(
+                normalizedUrl,
+            )
             if (!firstConttentLocator) {
                 return
             }
@@ -285,7 +84,7 @@ export async function uploadClientUpdateV24(
                 PersonalContentLocator & {
                     id: number | string
                 }
-            > = await findMany('personalContentLocator', {
+            > = await storageUtils.findMany('personalContentLocator', {
                 personalContentMetadata:
                     firstConttentLocator.personalContentMetadata,
             })
@@ -302,7 +101,7 @@ export async function uploadClientUpdateV24(
                 collection: 'personalContentLocator',
                 id: locator.id,
             }))
-            await deleteMany([
+            await storageUtils.deleteMany([
                 {
                     collection: 'personalContentMetadata',
                     id: firstConttentLocator.personalContentMetadata,
@@ -317,7 +116,9 @@ export async function uploadClientUpdateV24(
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const annotation = update.object
             const normalizedUrl = annotation.pageUrl
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            const { contentMetadata } = await storageUtils.findContentMetadata(
+                normalizedUrl,
+            )
             if (!contentMetadata) {
                 return
             }
@@ -330,23 +131,26 @@ export async function uploadClientUpdateV24(
                 updatedWhen: annotation.lastEdited?.getTime(),
             }
 
-            const existingAnnotation = await findOne('personalAnnotation', {
-                localId: updates.localId,
-                personalContentMetadata: updates.personalContentMetadata,
-            })
+            const existingAnnotation = await storageUtils.findOne(
+                'personalAnnotation',
+                {
+                    localId: updates.localId,
+                    personalContentMetadata: updates.personalContentMetadata,
+                },
+            )
             if (!existingAnnotation) {
-                const remoteAnnotation = await create(
+                const remoteAnnotation = await storageUtils.create(
                     'personalAnnotation',
                     updates,
                 )
                 if (annotation.selector != null) {
-                    await create('personalAnnotationSelector', {
+                    await storageUtils.create('personalAnnotationSelector', {
                         selector: annotation.selector,
                         personalAnnotation: remoteAnnotation.id,
                     })
                 }
             } else {
-                await updateById(
+                await storageUtils.updateById(
                     'personalAnnotation',
                     existingAnnotation.id,
                     updates,
@@ -355,13 +159,19 @@ export async function uploadClientUpdateV24(
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const annotationUrl = update.where.url as string
             const localId = extractIdFromAnnotationUrl(annotationUrl)
-            const annotation = await findOne('personalAnnotation', { localId })
+            const annotation = await storageUtils.findOne(
+                'personalAnnotation',
+                { localId },
+            )
             if (!annotation) {
                 return
             }
-            const selector = await findOne('personalAnnotationSelector', {
-                personalAnnotation: annotation.id,
-            })
+            const selector = await storageUtils.findOne(
+                'personalAnnotationSelector',
+                {
+                    personalAnnotation: annotation.id,
+                },
+            )
 
             const toDelete: DeleteReference[] = [
                 {
@@ -377,7 +187,7 @@ export async function uploadClientUpdateV24(
                 })
             }
 
-            await deleteMany(toDelete)
+            await storageUtils.deleteMany(toDelete)
         }
     } else if (update.collection === 'annotationPrivacyLevels') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -385,7 +195,10 @@ export async function uploadClientUpdateV24(
             const localId = extractIdFromAnnotationUrl(
                 annotationPrivacyLevel.annotation,
             )
-            const annotation = await findOne('personalAnnotation', { localId })
+            const annotation = await storageUtils.findOne(
+                'personalAnnotation',
+                { localId },
+            )
             if (!annotation) {
                 return
             }
@@ -398,42 +211,61 @@ export async function uploadClientUpdateV24(
                 updatedWhen: annotationPrivacyLevel.updatedWhen.getTime(),
             }
 
-            const existing = await findOne('personalAnnotationPrivacyLevel', {
-                personalAnnotation: annotation.id,
-            })
+            const existing = await storageUtils.findOne(
+                'personalAnnotationPrivacyLevel',
+                {
+                    personalAnnotation: annotation.id,
+                },
+            )
             if (existing) {
-                await updateById(
+                await storageUtils.updateById(
                     'personalAnnotationPrivacyLevel',
                     existing.id,
                     updates,
                 )
             } else {
-                await create('personalAnnotationPrivacyLevel', updates)
+                await storageUtils.create(
+                    'personalAnnotationPrivacyLevel',
+                    updates,
+                )
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const localId = update.where.id as string
-            const existing = await findOne('personalAnnotationPrivacyLevel', {
-                localId,
-            })
+            const existing = await storageUtils.findOne(
+                'personalAnnotationPrivacyLevel',
+                {
+                    localId,
+                },
+            )
 
-            await deleteById('personalAnnotationPrivacyLevel', existing.id, {
-                id: localId,
-            })
+            await storageUtils.deleteById(
+                'personalAnnotationPrivacyLevel',
+                existing.id,
+                {
+                    id: localId,
+                },
+            )
         }
     } else if (update.collection === 'sharedAnnotationMetadata') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const annotationUrl = update.object.localId as string
             const localAnnotationId = extractIdFromAnnotationUrl(annotationUrl)
 
-            const annotation = await findOne('personalAnnotation', {
-                localId: localAnnotationId,
-            })
+            const annotation = await storageUtils.findOne(
+                'personalAnnotation',
+                {
+                    localId: localAnnotationId,
+                },
+            )
             if (!annotation) {
                 return
             }
-            const existing = await findOne('personalAnnotationShare', {
-                personalAnnotation: annotation.id,
-            })
+            const existing = await storageUtils.findOne(
+                'personalAnnotationShare',
+                {
+                    personalAnnotation: annotation.id,
+                },
+            )
 
             const updates = {
                 excludeFromLists: !!update.object.excludeFromLists,
@@ -442,43 +274,55 @@ export async function uploadClientUpdateV24(
             }
 
             if (existing) {
-                await updateById(
+                await storageUtils.updateById(
                     'personalAnnotationShare',
                     existing.id,
                     updates,
                 )
             } else {
-                await create('personalAnnotationShare', updates)
+                await storageUtils.create('personalAnnotationShare', updates)
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const annotationUrl = update.where.localId as string
             const localAnnotationId = extractIdFromAnnotationUrl(annotationUrl)
 
-            const annotation = await findOne('personalAnnotation', {
-                localId: localAnnotationId,
-            })
+            const annotation = await storageUtils.findOne(
+                'personalAnnotation',
+                {
+                    localId: localAnnotationId,
+                },
+            )
             if (!annotation) {
                 return
             }
-            const existing = await findOne('personalAnnotationShare', {
-                personalAnnotation: annotation.id,
-            })
+            const existing = await storageUtils.findOne(
+                'personalAnnotationShare',
+                {
+                    personalAnnotation: annotation.id,
+                },
+            )
             if (!existing) {
                 return
             }
-            await deleteById('personalAnnotationShare', existing.id, {
-                localId: annotationUrl,
-            })
+            await storageUtils.deleteById(
+                'personalAnnotationShare',
+                existing.id,
+                {
+                    localId: annotationUrl,
+                },
+            )
         }
     } else if (update.collection === 'bookmarks') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const bookmark = update.object
             const normalizedUrl = bookmark.url
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            const { contentMetadata } = await storageUtils.findContentMetadata(
+                normalizedUrl,
+            )
             if (!contentMetadata) {
                 return
             }
-            await findOrCreate(
+            await storageUtils.findOrCreate(
                 'personalBookmark',
                 { personalContentMetadata: contentMetadata.id },
                 {
@@ -488,17 +332,19 @@ export async function uploadClientUpdateV24(
             )
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const normalizedUrl = update.where.url as string
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            const { contentMetadata } = await storageUtils.findContentMetadata(
+                normalizedUrl,
+            )
             if (!contentMetadata) {
                 return
             }
-            const existing = await findOne('personalBookmark', {
+            const existing = await storageUtils.findOne('personalBookmark', {
                 personalContentMetadata: contentMetadata.id,
             })
             if (!existing) {
                 return
             }
-            await deleteById('personalBookmark', existing.id, {
+            await storageUtils.deleteById('personalBookmark', existing.id, {
                 url: normalizedUrl,
             })
         }
@@ -509,7 +355,7 @@ export async function uploadClientUpdateV24(
             const {
                 contentMetadata,
                 contentLocator,
-            } = await findContentMetadata(normalizedUrl)
+            } = await storageUtils.findContentMetadata(normalizedUrl)
             if (!contentMetadata) {
                 return
             }
@@ -522,33 +368,45 @@ export async function uploadClientUpdateV24(
                 scrollTotal: visit.scrollMaxPx ?? null,
                 scrollProgress: visit.scrollPx ?? null,
             }
-            const contentRead = await findOne('personalContentRead', {
-                readWhen: visit.time,
-                personalContentMetadata: contentMetadata.id,
-            })
+            const contentRead = await storageUtils.findOne(
+                'personalContentRead',
+                {
+                    readWhen: visit.time,
+                    personalContentMetadata: contentMetadata.id,
+                },
+            )
             if (!contentRead) {
-                await create('personalContentRead', updates)
+                await storageUtils.create('personalContentRead', updates)
             } else {
-                await updateById('personalContentRead', contentRead.id, updates)
+                await storageUtils.updateById(
+                    'personalContentRead',
+                    contentRead.id,
+                    updates,
+                )
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const time = update.where.time
             const normalizedUrl = update.where.url as string
 
-            const { contentMetadata } = await findContentMetadata(normalizedUrl)
+            const { contentMetadata } = await storageUtils.findContentMetadata(
+                normalizedUrl,
+            )
             if (!contentMetadata) {
                 return
             }
 
-            const contentRead = await findOne('personalContentRead', {
-                readWhen: time,
-                personalContentMetadata: contentMetadata.id,
-            })
+            const contentRead = await storageUtils.findOne(
+                'personalContentRead',
+                {
+                    readWhen: time,
+                    personalContentMetadata: contentMetadata.id,
+                },
+            )
             if (!contentRead) {
                 return
             }
 
-            await deleteById(
+            await storageUtils.deleteById(
                 'personalContentRead',
                 contentRead.id,
                 update.where,
@@ -559,15 +417,18 @@ export async function uploadClientUpdateV24(
             const tagName = update.object.name
             const normalizedUrl = update.object.url
 
-            const { objectId, collection } = await findTagAssociatedData(
-                normalizedUrl,
-            )
+            const {
+                objectId,
+                collection,
+            } = await storageUtils.findTagAssociatedData(normalizedUrl)
             if (!objectId) {
                 return
             }
 
-            const tag = await findOrCreate('personalTag', { name: tagName })
-            await findOrCreate('personalTagConnection', {
+            const tag = await storageUtils.findOrCreate('personalTag', {
+                name: tagName,
+            })
+            await storageUtils.findOrCreate('personalTagConnection', {
                 personalTag: tag.id,
                 collection,
                 objectId,
@@ -576,24 +437,30 @@ export async function uploadClientUpdateV24(
             const tagName = update.where.name
             const normalizedUrl = update.where.url as string
 
-            const tag = await findOne('personalTag', { name: tagName })
+            const tag = await storageUtils.findOne('personalTag', {
+                name: tagName,
+            })
             if (!tag) {
                 return
             }
 
-            const { objectId, collection } = await findTagAssociatedData(
-                normalizedUrl,
-            )
+            const {
+                objectId,
+                collection,
+            } = await storageUtils.findTagAssociatedData(normalizedUrl)
             if (!objectId) {
                 return
             }
 
-            const tagConnection = await findOne('personalTagConnection', {
-                personalTag: tag.id,
-                collection,
-                objectId,
-            })
-            await deleteById(
+            const tagConnection = await storageUtils.findOne(
+                'personalTagConnection',
+                {
+                    personalTag: tag.id,
+                    collection,
+                    objectId,
+                },
+            )
+            await storageUtils.deleteById(
                 'personalTagConnection',
                 tagConnection.id,
                 update.where,
@@ -610,19 +477,25 @@ export async function uploadClientUpdateV24(
                 createdWhen: localList.createdAt.getTime(),
             }
 
-            const existing = await findOne('personalList', {
+            const existing = await storageUtils.findOne('personalList', {
                 localId: localList.id,
             })
             if (existing) {
-                await updateById('personalList', existing.id, updates)
+                await storageUtils.updateById(
+                    'personalList',
+                    existing.id,
+                    updates,
+                )
             } else {
-                await create('personalList', updates)
+                await storageUtils.create('personalList', updates)
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const localId = update.where.id
-            const existing = await findOne('personalList', { localId })
+            const existing = await storageUtils.findOne('personalList', {
+                localId,
+            })
 
-            await deleteById('personalList', existing.id, {
+            await storageUtils.deleteById('personalList', existing.id, {
                 id: localId,
             })
         }
@@ -632,14 +505,16 @@ export async function uploadClientUpdateV24(
             const normalizedPageUrl = localListEntry.pageUrl
 
             const [{ contentMetadata }, list] = await Promise.all([
-                findContentMetadata(normalizedPageUrl),
-                findOne('personalList', { localId: localListEntry.listId }),
+                storageUtils.findContentMetadata(normalizedPageUrl),
+                storageUtils.findOne('personalList', {
+                    localId: localListEntry.listId,
+                }),
             ])
             if (!contentMetadata || !list) {
                 return
             }
 
-            await findOrCreate('personalListEntry', {
+            await storageUtils.findOrCreate('personalListEntry', {
                 personalContentMetadata: contentMetadata.id,
                 personalList: list.id,
                 createdWhen: localListEntry.createdAt.getTime(),
@@ -649,10 +524,10 @@ export async function uploadClientUpdateV24(
             const localListId = update.where.listId
 
             const [{ contentMetadata }, list] = await Promise.all([
-                findContentMetadata(normalizedPageUrl),
-                findOne('personalList', { localId: localListId }),
+                storageUtils.findContentMetadata(normalizedPageUrl),
+                storageUtils.findOne('personalList', { localId: localListId }),
             ])
-            const existing = await findOne('personalListEntry', {
+            const existing = await storageUtils.findOne('personalListEntry', {
                 personalContentMetadata: contentMetadata.id,
                 personalList: list.id,
             })
@@ -661,7 +536,7 @@ export async function uploadClientUpdateV24(
                 return
             }
 
-            await deleteById('personalListEntry', existing.id, {
+            await storageUtils.deleteById('personalListEntry', existing.id, {
                 pageUrl: normalizedPageUrl,
                 listId: localListId,
             })
@@ -670,11 +545,13 @@ export async function uploadClientUpdateV24(
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localListId = update.object.localId as string
 
-            const list = await findOne('personalList', { localId: localListId })
+            const list = await storageUtils.findOne('personalList', {
+                localId: localListId,
+            })
             if (!list) {
                 return
             }
-            await findOrCreate(
+            await storageUtils.findOrCreate(
                 'personalListShare',
                 { personalList: list.id },
                 {
@@ -685,18 +562,20 @@ export async function uploadClientUpdateV24(
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const localListId = update.where.localId as string
 
-            const list = await findOne('personalList', { localId: localListId })
+            const list = await storageUtils.findOne('personalList', {
+                localId: localListId,
+            })
             if (!list) {
                 return
             }
-            const existing = await findOne('personalListShare', {
+            const existing = await storageUtils.findOne('personalListShare', {
                 personalList: list.id,
             })
             if (!existing) {
                 return
             }
 
-            await deleteById('personalListShare', existing.id, {
+            await storageUtils.deleteById('personalListShare', existing.id, {
                 localId: localListId,
             })
         }
@@ -710,29 +589,29 @@ export async function uploadClientUpdateV24(
                 localId,
             }
 
-            const existing = await findOne('personalTextTemplate', { localId })
+            const existing = await storageUtils.findOne(
+                'personalTextTemplate',
+                { localId },
+            )
             if (existing) {
-                await updateById('personalTextTemplate', existing.id, updates)
+                await storageUtils.updateById(
+                    'personalTextTemplate',
+                    existing.id,
+                    updates,
+                )
             } else {
-                await create('personalTextTemplate', updates)
+                await storageUtils.create('personalTextTemplate', updates)
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const localId = update.where.id
-            const existing = await findOne('personalTextTemplate', { localId })
+            const existing = await storageUtils.findOne(
+                'personalTextTemplate',
+                { localId },
+            )
 
-            await deleteById('personalTextTemplate', existing.id, {
+            await storageUtils.deleteById('personalTextTemplate', existing.id, {
                 id: localId,
             })
         }
     }
-}
-
-function maybeWith(object: any, extras: any) {
-    for (const [key, value] of Object.entries(extras)) {
-        if (typeof value !== 'undefined' && value !== null) {
-            object[key] = value
-        }
-    }
-
-    return object
 }

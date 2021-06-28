@@ -5,18 +5,20 @@ export interface PersonalCloudBackend {
     streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch>
 }
 
+export interface DownloadClientUpdatesReturnType {
+    batch: PersonalCloudUpdateBatch
+    lastSeen: number
+    maybeHasMore: boolean
+}
+
 export interface PersonalCloudService {
-    uploadClientUpdates(
-        params: {
-            updates: PersonalCloudUpdatePushBatch
-        },
-    ): Promise<void>
-    downloadClientUpdates(
-        params: {
-            clientSchemaVersion: Date
-            startTime: number
-        },
-    ): Promise<{ batch: PersonalCloudUpdateBatch, lastSeen: number, maybeHasMore: boolean }>
+    uploadClientUpdates(params: {
+        updates: PersonalCloudUpdatePushBatch
+    }): Promise<void>
+    downloadClientUpdates(params: {
+        clientSchemaVersion: Date
+        startTime: number
+    }): Promise<DownloadClientUpdatesReturnType>
 }
 
 export type PersonalCloudUpdate =
