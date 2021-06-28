@@ -248,8 +248,10 @@ export async function uploadClientUpdateV24({
         }
     } else if (update.collection === 'sharedAnnotationMetadata') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
-            const annotationUrl = update.object.localId as string
-            const localAnnotationId = extractIdFromAnnotationUrl(annotationUrl)
+            const metadata = update.object
+            const localAnnotationId = extractIdFromAnnotationUrl(
+                metadata.localId,
+            )
 
             const annotation = await storageUtils.findOne(
                 'personalAnnotation',
@@ -268,9 +270,9 @@ export async function uploadClientUpdateV24({
             )
 
             const updates = {
-                excludeFromLists: !!update.object.excludeFromLists,
+                excludeFromLists: !!metadata.excludeFromLists,
                 personalAnnotation: annotation.id,
-                remoteId: update.object.remoteId,
+                remoteId: metadata.remoteId,
             }
 
             if (existing) {
@@ -351,11 +353,10 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'visits') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const visit = update.object
-            const normalizedUrl = visit.url
             const {
                 contentMetadata,
                 contentLocator,
-            } = await storageUtils.findContentMetadata(normalizedUrl)
+            } = await storageUtils.findContentMetadata(visit.url)
             if (!contentMetadata) {
                 return
             }
@@ -409,27 +410,29 @@ export async function uploadClientUpdateV24({
             await storageUtils.deleteById(
                 'personalContentRead',
                 contentRead.id,
-                update.where,
+                {
+                    time,
+                    url: normalizedUrl,
+                },
             )
         }
     } else if (update.collection === 'tags') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
-            const tagName = update.object.name
-            const normalizedUrl = update.object.url
+            const tag = update.object
 
             const {
                 objectId,
                 collection,
-            } = await storageUtils.findTagAssociatedData(normalizedUrl)
+            } = await storageUtils.findTagAssociatedData(tag.url)
             if (!objectId) {
                 return
             }
 
-            const tag = await storageUtils.findOrCreate('personalTag', {
-                name: tagName,
+            const storedTag = await storageUtils.findOrCreate('personalTag', {
+                name: tag.name,
             })
             await storageUtils.findOrCreate('personalTagConnection', {
-                personalTag: tag.id,
+                personalTag: storedTag.id,
                 collection,
                 objectId,
             })
@@ -463,7 +466,10 @@ export async function uploadClientUpdateV24({
             await storageUtils.deleteById(
                 'personalTagConnection',
                 tagConnection.id,
-                update.where,
+                {
+                    name: tagName,
+                    url: normalizedUrl,
+                },
             )
         }
     } else if (update.collection === 'customLists') {
@@ -543,10 +549,10 @@ export async function uploadClientUpdateV24({
         }
     } else if (update.collection === 'sharedListMetadata') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
-            const localListId = update.object.localId as string
+            const metadata = update.object
 
             const list = await storageUtils.findOne('personalList', {
-                localId: localListId,
+                localId: metadata.localId,
             })
             if (!list) {
                 return
@@ -556,7 +562,7 @@ export async function uploadClientUpdateV24({
                 { personalList: list.id },
                 {
                     personalList: list.id,
-                    remoteId: update.object.remoteId,
+                    remoteId: metadata.remoteId,
                 },
             )
         } else if (update.type === PersonalCloudUpdateType.Delete) {
@@ -581,17 +587,17 @@ export async function uploadClientUpdateV24({
         }
     } else if (update.collection === 'templates') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
-            const localId = update.object.id
+            const template = update.object
             const updates = {
-                isFavourite: update.object.isFavourite,
-                title: update.object.title,
-                code: update.object.code,
-                localId,
+                isFavourite: template.isFavourite,
+                title: template.title,
+                localId: template.id,
+                code: template.code,
             }
 
             const existing = await storageUtils.findOne(
                 'personalTextTemplate',
-                { localId },
+                { localId: template.id },
             )
             if (existing) {
                 await storageUtils.updateById(
