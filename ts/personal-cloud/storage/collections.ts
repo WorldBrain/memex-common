@@ -99,7 +99,7 @@ export const PERSONAL_SHARING_COLLECTIONS = (): StorageModuleCollections =>
             version: STORAGE_VERSIONS[8].date,
             fields: {
                 remoteId: { type: 'string' },
-                excludeFromLists: { type: 'boolean', optional: true },
+                excludeFromLists: { type: 'boolean' },
             },
             relationships: [{ singleChildOf: 'personalAnnotation' }],
         },
@@ -135,8 +135,8 @@ export const PERSONAL_LIST_COLLECTIONS = (): StorageModuleCollections =>
             fields: {
                 name: { type: 'text' },
                 localId: { type: 'string' },
-                isDeletable: { type: 'boolean', optional: true },
-                isNestable: { type: 'boolean', optional: true },
+                isDeletable: { type: 'boolean' },
+                isNestable: { type: 'boolean' },
             },
         },
         personalListDescription: {

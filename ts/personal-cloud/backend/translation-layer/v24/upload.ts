@@ -60,8 +60,8 @@ export async function uploadClientUpdateV24({
                         version: 0, // TODO: later, when visits are written, this is updated
                         valid: true,
                         primary: true,
-                        // contentSize: null,
-                        // fingerprint: null,
+                        contentSize: null,
+                        fingerprint: null,
                         lastVisited: 0,
                     },
                 )
@@ -125,10 +125,10 @@ export async function uploadClientUpdateV24({
             const updates = {
                 personalContentMetadata: contentMetadata.id,
                 localId: extractIdFromAnnotationUrl(annotation.url),
-                body: annotation.body,
-                comment: annotation.comment,
+                body: annotation.body ?? null,
+                comment: annotation.comment ?? null,
                 createdWhen: annotation.createdWhen.getTime(),
-                updatedWhen: annotation.lastEdited?.getTime(),
+                updatedWhen: annotation.lastEdited?.getTime() ?? null,
             }
 
             const existingAnnotation = await storageUtils.findOne(
@@ -270,7 +270,7 @@ export async function uploadClientUpdateV24({
             )
 
             const updates = {
-                excludeFromLists: !!metadata.excludeFromLists,
+                excludeFromLists: !!metadata.excludeFromLists ?? false,
                 personalAnnotation: annotation.id,
                 remoteId: metadata.remoteId,
             }
@@ -481,8 +481,8 @@ export async function uploadClientUpdateV24({
             const updates = {
                 name: localList.name,
                 localId: localList.id,
-                isNestable: localList.isNestable,
-                isDeletable: localList.isDeletable,
+                isNestable: localList.isNestable ?? false,
+                isDeletable: localList.isDeletable ?? false,
                 createdWhen: localList.createdAt.getTime(),
             }
 
