@@ -2,6 +2,8 @@ import {
     PersonalCloudUpdateType,
     PersonalCloudUpdatePush,
     TranslationLayerDependencies,
+    PersonalCloudClientInstruction,
+    PersonalCloudClientInstructionType,
 } from '../../types'
 import {
     LocationSchemeType,
@@ -27,8 +29,9 @@ export async function uploadClientUpdateV24({
     ...params
 }: TranslationLayerDependencies & {
     update: PersonalCloudUpdatePush
-}) {
+}): Promise<{ clientInstructions: PersonalCloudClientInstruction[] }> {
     const storageUtils = new UploadStorageUtils({ ...params, update })
+    const clientInstructions: PersonalCloudClientInstruction[] = []
 
     if (update.collection === 'pages') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -74,6 +77,17 @@ export async function uploadClientUpdateV24({
                     contentMetadata.id,
                     updates,
                 )
+            }
+
+            if (contentMetadata) {
+                clientInstructions.push({
+                    type: PersonalCloudClientInstructionType.UploadToStorage,
+                    storage: 'persistent',
+                    collection: 'pageContent',
+                    where: { normalizedUrl },
+                    field: 'htmlBody',
+                    path: `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`
+                })
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const normalizedUrl = update.where.url as string
@@ -642,4 +656,6 @@ export async function uploadClientUpdateV24({
             })
         }
     }
+
+    return { clientInstructions }
 }

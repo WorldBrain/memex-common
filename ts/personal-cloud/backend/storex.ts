@@ -7,6 +7,8 @@ import {
 import { uploadClientUpdates, downloadClientUpdates } from './translation-layer'
 
 export class StorexPersonalCloudBackend implements PersonalCloudBackend {
+    storedObjects: Array<{ path: string, object: Blob | string }> = []
+
     constructor(
         public options: {
             storageManager: StorageManager,
@@ -24,13 +26,14 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
             throw new Error(`User tried to push update without being logged in`)
         }
 
-        await uploadClientUpdates({
+        const { clientInstructions } = await uploadClientUpdates({
             storageManager: this.options.storageManager,
             getNow: this.options.getNow,
             userId,
             updates,
         })
         await this.options.changeSource.pushUpdates(updates)
+        return { clientInstructions }
     }
 
     async *streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch> {
@@ -62,6 +65,10 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
             }
         }
     }
+
+    async uploadToStorage(params: { path: string, object: string | Blob }): Promise<void> {
+        this.storedObjects.push({ ...params })
+    }
 }
 
 export class PersonalCloudChangeSourceView {
@@ -71,6 +78,7 @@ export class PersonalCloudChangeSourceView {
 
     pushUpdates: PersonalCloudBackend['pushUpdates'] = async (updates) => {
         this.bus.pushUpdate(this.id, updates)
+        return { clientInstructions: [] }
     }
 
     async *streamObjects(): AsyncIterableIterator<PersonalCloudUpdateBatch> {

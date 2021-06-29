@@ -1,8 +1,13 @@
 import StorageManager from '@worldbrain/storex'
 
 export interface PersonalCloudBackend {
-    pushUpdates(updates: PersonalCloudUpdatePushBatch): Promise<void>
+    pushUpdates(updates: PersonalCloudUpdatePushBatch): Promise<UploadClientUpdatesResult>
     streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch>
+    uploadToStorage(params: { path: string, object: string | Blob }): Promise<void>
+}
+
+export interface UploadClientUpdatesResult {
+    clientInstructions: PersonalCloudClientInstruction[]
 }
 
 export interface DownloadClientUpdatesReturnType {
@@ -14,7 +19,7 @@ export interface DownloadClientUpdatesReturnType {
 export interface PersonalCloudService {
     uploadClientUpdates(params: {
         updates: PersonalCloudUpdatePushBatch
-    }): Promise<void>
+    }): Promise<UploadClientUpdatesResult>
     downloadClientUpdates(params: {
         clientSchemaVersion: Date
         startTime: number
@@ -55,4 +60,17 @@ export interface TranslationLayerDependencies {
     storageManager: StorageManager
     userId: number | string
     getNow(): number
+}
+
+export enum PersonalCloudClientInstructionType {
+    UploadToStorage = 'upload-to-storage'
+}
+export type PersonalCloudClientInstruction = UploadToStorageClientInstruction
+export interface UploadToStorageClientInstruction {
+    type: PersonalCloudClientInstructionType.UploadToStorage
+    storage: 'normal' | 'persistent'
+    collection: string
+    where: { [key: string]: any }
+    field: string
+    path: string
 }
