@@ -8,7 +8,10 @@ import {
     ContentLocatorType,
     ContentLocatorFormat,
 } from '../../../storage/types'
-import { PersonalContentLocator } from '../../../../web-interface/types/storex-generated/personal-cloud'
+import {
+    PersonalContentLocator,
+    PersonalContentRead,
+} from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
 
@@ -57,7 +60,7 @@ export async function uploadClientUpdateV24({
                         format: ContentLocatorFormat.HTML,
                         location: normalizedUrl,
                         originalLocation: page.fullUrl,
-                        version: 0, // TODO: later, when visits are written, this is updated
+                        version: 0, // TODO: we don't yet have a clear idea of concept of versions here - needs more thought
                         valid: true,
                         primary: true,
                         contentSize: null,
@@ -380,6 +383,11 @@ export async function uploadClientUpdateV24({
                 },
             )
             if (!contentRead) {
+                await storageUtils.updateById(
+                    'personalContentLocator',
+                    contentLocator.id,
+                    { lastVisited: updates.readWhen },
+                )
                 await storageUtils.create('personalContentRead', updates)
             } else {
                 await storageUtils.updateById(
@@ -392,27 +400,38 @@ export async function uploadClientUpdateV24({
             const time = update.where.time
             const normalizedUrl = update.where.url as string
 
-            const { contentMetadata } = await storageUtils.findContentMetadata(
-                normalizedUrl,
-            )
+            const {
+                contentMetadata,
+                contentLocator,
+            } = await storageUtils.findContentMetadata(normalizedUrl)
             if (!contentMetadata) {
                 return
             }
 
-            const contentRead = await storageUtils.findOne(
-                'personalContentRead',
-                {
-                    readWhen: time,
-                    personalContentMetadata: contentMetadata.id,
-                },
-            )
-            if (!contentRead) {
+            const contentReads = await storageUtils.findMany<
+                PersonalContentRead & { id: string | number }
+            >('personalContentRead', {
+                personalContentMetadata: contentMetadata.id,
+            })
+            if (!contentReads?.length) {
                 return
             }
 
+            const [latestRead, secondLatestRead] = contentReads.sort(
+                (a, b) => b.readWhen - a.readWhen,
+            )
+            if (!latestRead) {
+                return
+            }
+
+            await storageUtils.updateById(
+                'personalContentLocator',
+                contentLocator.id,
+                { lastVisited: secondLatestRead?.readWhen ?? 0 },
+            )
             await storageUtils.deleteById(
                 'personalContentRead',
-                contentRead.id,
+                latestRead.id,
                 {
                     time,
                     url: normalizedUrl,
