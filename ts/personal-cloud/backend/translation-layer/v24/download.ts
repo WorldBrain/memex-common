@@ -101,14 +101,10 @@ export async function downloadClientUpdatesV24(
                         url: locatorArray[0].location,
                         time: read.readWhen,
                         duration: read.readDuration,
-                        scrollMaxPerc: 100,
-                        scrollMaxPx: read.scrollTotal,
-                        scrollPerc:
-                            typeof read.scrollProgress === 'number' &&
-                            typeof read.scrollTotal === 'number'
-                                ? (read.scrollProgress / read.scrollTotal) * 100
-                                : undefined,
-                        scrollPx: read.scrollProgress,
+                        scrollMaxPx: read.scrollMaxPixel,
+                        scrollMaxPerc: read.scrollMaxPercentage,
+                        scrollPerc: read.scrollEndPercentage,
+                        scrollPx: read.scrollEndPixel,
                     },
                 })
             } else if (change.collection === 'personalBookmark') {

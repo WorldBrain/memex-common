@@ -130,13 +130,12 @@ export type PersonalContentRead =
     {
         readWhen: number
         readDuration?: number
-        progressPercentage?: number
-        scrollTotal?: number
-        scrollProgress?: number
-        pageTotal?: number
-        pageProgress?: number
-        durationTotal?: number
-        durationProgress?: number
+        scrollMaxPercentage?: number
+        scrollEndPercentage?: number
+        scrollMaxPixel?: number
+        scrollEndPixel?: number
+        pageEnd?: number
+        pageMax?: number
         createdWhen: number
         updatedWhen: number
     }

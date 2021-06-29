@@ -365,9 +365,12 @@ export async function uploadClientUpdateV24({
                 personalContentLocator: contentLocator.id,
                 readWhen: visit.time,
                 readDuration: visit.duration ?? null,
-                progressPercentage: visit.scrollPerc ?? null,
-                scrollTotal: visit.scrollMaxPx ?? null,
-                scrollProgress: visit.scrollPx ?? null,
+                scrollEndPercentage: visit.scrollPerc ?? null,
+                scrollMaxPercentage: visit.scrollMaxPerc ?? null,
+                scrollMaxPixel: visit.scrollMaxPx ?? null,
+                scrollEndPixel: visit.scrollPx ?? null,
+                pageEnd: null,
+                pageMax: null,
             }
             const contentRead = await storageUtils.findOne(
                 'personalContentRead',

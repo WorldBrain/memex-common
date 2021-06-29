@@ -201,17 +201,14 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections =>
         personalContentRead: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
-                // progress is the units of the total, like 400px of 1200px total
-
                 readWhen: { type: 'timestamp' },
                 readDuration: { type: 'int', optional: true },
-                progressPercentage: { type: 'float', optional: true },
-                scrollTotal: { type: 'int', optional: true },
-                scrollProgress: { type: 'int', optional: true },
-                pageTotal: { type: 'int', optional: true },
-                pageProgress: { type: 'int', optional: true },
-                durationTotal: { type: 'int', optional: true },
-                durationProgress: { type: 'int', optional: true },
+                scrollMaxPercentage: { type: 'float', optional: true },
+                scrollEndPercentage: { type: 'float', optional: true },
+                scrollMaxPixel: { type: 'int', optional: true },
+                scrollEndPixel: { type: 'int', optional: true },
+                pageEnd: { type: 'int', optional: true },
+                pageMax: { type: 'int', optional: true },
             },
             relationships: [
                 { childOf: 'personalContentMetadata' },
