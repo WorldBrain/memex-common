@@ -1,21 +1,22 @@
+import StorageManager from '@worldbrain/storex'
 import createResolvable from '@josephg/resolvable'
 import {
     PersonalCloudBackend,
     PersonalCloudUpdateBatch,
-    PersonalCloudUpdate,
 } from './types'
-import StorageManager from '@worldbrain/storex'
-import { uploadClientUpdates } from './translation-layer'
+import { uploadClientUpdates, downloadClientUpdates } from './translation-layer'
 
 export class StorexPersonalCloudBackend implements PersonalCloudBackend {
     constructor(
         public options: {
-            storageManager: StorageManager
+            storageManager: StorageManager,
+            clientSchemaVersion: Date,
             changeSource: PersonalCloudChangeSourceView
             getUserId: () => Promise<number | string | null>
             getNow(): number
+            useDownloadTranslationLayer?: boolean
         },
-    ) {}
+    ) { }
 
     pushUpdates: PersonalCloudBackend['pushUpdates'] = async (updates) => {
         const userId = await this.options.getUserId()
@@ -33,14 +34,40 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
     }
 
     async *streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch> {
-        yield* this.options.changeSource.streamObjects()
+        const userId = await this.options.getUserId()
+        if (!userId) {
+            throw new Error(`User tried to push update without being logged in`)
+        }
+
+        if (!this.options.useDownloadTranslationLayer) {
+            yield* this.options.changeSource.streamObjects()
+            return
+        }
+
+        let lastSeen = 0
+        for await (const batch of this.options.changeSource.streamObjects()) {
+            while (true) {
+                const { batch, lastSeen: newLastSeen, maybeHasMore } = await downloadClientUpdates({
+                    storageManager: this.options.storageManager,
+                    clientSchemaVersion: this.options.clientSchemaVersion,
+                    getNow: this.options.getNow,
+                    userId,
+                    startTime: lastSeen,
+                })
+                lastSeen = newLastSeen
+                yield batch
+                if (!maybeHasMore) {
+                    break
+                }
+            }
+        }
     }
 }
 
 export class PersonalCloudChangeSourceView {
     nextObjects = createResolvable<PersonalCloudUpdateBatch>()
 
-    constructor(public bus: PersonalCloudChangeSourceBus, public id: number) {}
+    constructor(public bus: PersonalCloudChangeSourceBus, public id: number) { }
 
     pushUpdates: PersonalCloudBackend['pushUpdates'] = async (updates) => {
         this.bus.pushUpdate(this.id, updates)
