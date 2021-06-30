@@ -13,6 +13,7 @@ import {
 import {
     PersonalContentLocator,
     PersonalContentRead,
+    PersonalTagConnection,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
@@ -86,7 +87,7 @@ export async function uploadClientUpdateV24({
                     collection: 'pageContent',
                     where: { normalizedUrl },
                     field: 'htmlBody',
-                    path: `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`
+                    path: `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`,
                 })
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
@@ -492,14 +493,21 @@ export async function uploadClientUpdateV24({
                 return
             }
 
-            const tagConnection = await storageUtils.findOne(
-                'personalTagConnection',
-                {
+            const [tagConnection, otherConnections] = await Promise.all([
+                storageUtils.findOne<
+                    PersonalTagConnection & { id: string | number }
+                >('personalTagConnection', {
                     personalTag: tag.id,
                     collection,
                     objectId,
-                },
-            )
+                }),
+                storageUtils.findMany<PersonalTagConnection>(
+                    'personalTagConnection',
+                    { personalTag: tag.id },
+                    { limit: 2 },
+                ),
+            ])
+
             await storageUtils.deleteById(
                 'personalTagConnection',
                 tagConnection.id,
@@ -508,6 +516,12 @@ export async function uploadClientUpdateV24({
                     url: normalizedUrl,
                 },
             )
+
+            // Ensure orphaned tags are removed
+            // TODO: Remove this when we have a way to explicitly remove tags + update the ext's tag data model
+            if (otherConnections.length === 1) {
+                await storageUtils.deleteById('personalTag', tag.id)
+            }
         }
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
