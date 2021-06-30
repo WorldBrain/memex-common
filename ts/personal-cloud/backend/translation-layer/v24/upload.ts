@@ -81,13 +81,20 @@ export async function uploadClientUpdateV24({
             }
 
             if (contentMetadata) {
+                const uploadPath = `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`
                 clientInstructions.push({
                     type: PersonalCloudClientInstructionType.UploadToStorage,
                     storage: 'persistent',
                     collection: 'pageContent',
-                    where: { normalizedUrl },
-                    field: 'htmlBody',
-                    path: `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`,
+                    uploadWhere: { normalizedUrl },
+                    uploadField: 'htmlBody',
+                    uploadPath: uploadPath,
+                    updateObject: {
+                        normalizedUrl,
+                    },
+                    updateMedia: {
+                        htmlBody: uploadPath
+                    },
                 })
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {

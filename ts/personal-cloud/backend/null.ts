@@ -1,7 +1,6 @@
 import {
     PersonalCloudBackend,
     PersonalCloudUpdateBatch,
-    PersonalCloudObjectInfo,
 } from './types'
 
 export class NullPersonalCloudBackend implements PersonalCloudBackend {
@@ -15,7 +14,13 @@ export class NullPersonalCloudBackend implements PersonalCloudBackend {
         await new Promise(() => { })
     }
 
-    async uploadToStorage(params: { path: string, object: string | Blob }): Promise<void> {
+    async uploadToMedia(params: {}): Promise<void> {
 
+    }
+
+    async downloadFromMedia(params: {
+        path: string
+    }): Promise<string | Blob | null> {
+        return null
     }
 }

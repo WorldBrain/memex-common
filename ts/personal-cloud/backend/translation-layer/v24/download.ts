@@ -21,6 +21,7 @@ import {
     PersonalCloudUpdateBatch,
     PersonalCloudUpdateType,
     DownloadClientUpdatesReturnType,
+    MediaChangeInfo,
 } from '../../types'
 import {
     constructAnnotationUrl,
@@ -54,6 +55,18 @@ export async function downloadClientUpdatesV24(
             lastSeen = change.createdWhen
 
             if (change.collection === 'personalContentLocator') {
+                continue
+            }
+
+            if (change.collection === ':media') {
+                const changeInfo: MediaChangeInfo = change.info!
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: changeInfo.dbCollection,
+                    object: changeInfo.dbObject,
+                    storage: changeInfo.dbStorage,
+                    media: changeInfo.dbMedia,
+                })
                 continue
             }
 
