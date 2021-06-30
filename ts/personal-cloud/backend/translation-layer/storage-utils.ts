@@ -51,14 +51,12 @@ export class DownloadStorageUtils {
         if (!metadata) {
             return {}
         }
-        const allContentLocators = await this.findMany<PersonalContentLocator>(
+        const locator = await this.findOne<PersonalContentLocator>(
             'personalContentLocator',
             {
                 personalContentMetadata: metadata.id,
+                locationScheme,
             },
-        )
-        const locator = allContentLocators.find(
-            (locator) => locator.locationScheme === locationScheme,
         )
         return { metadata, locator }
     }

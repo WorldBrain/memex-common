@@ -68,37 +68,33 @@ export async function downloadClientUpdatesV24(
                 const metadata = object as PersonalContentMetadata & {
                     id: string | number
                 }
-                const locatorArray = (await storageUtils.findMany(
-                    'personalContentLocator',
-                    {
-                        personalContentMetadata: metadata.id,
-                    },
-                    { limit: 1 },
-                )) as PersonalContentLocator[]
-                if (!locatorArray.length) {
+                const locator = await storageUtils.findOne<
+                    PersonalContentLocator
+                >('personalContentLocator', {
+                    personalContentMetadata: metadata.id,
+                })
+                if (!locator) {
                     continue
                 }
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'pages',
-                    object: constructPageFromRemote(metadata, locatorArray[0]),
+                    object: constructPageFromRemote(metadata, locator),
                 })
             } else if (change.collection === 'personalContentRead') {
                 const read = object as PersonalContentRead & {
                     personalContentMetadata: number | string
                 }
-                const locatorArray = (await storageUtils.findMany(
-                    'personalContentLocator',
-                    {
-                        personalContentMetadata: read.personalContentMetadata,
-                    },
-                    { limit: 1 },
-                )) as PersonalContentLocator[]
+                const locator = await storageUtils.findOne<
+                    PersonalContentLocator
+                >('personalContentLocator', {
+                    personalContentMetadata: read.personalContentMetadata,
+                })
                 batch.push({
                     type: PersonalCloudUpdateType.Overwrite,
                     collection: 'visits',
                     object: {
-                        url: locatorArray[0].location,
+                        url: locator.location,
                         time: read.readWhen,
                         duration: read.readDuration,
                         scrollMaxPx: read.scrollMaxPixel,

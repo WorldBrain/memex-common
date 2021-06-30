@@ -112,13 +112,6 @@ export async function uploadClientUpdateV24({
                     LocationSchemeType.NormalizedUrlV1,
             )
 
-            const references: Array<{
-                collection: string
-                id: number | string
-            }> = allContentLocators.map((locator) => ({
-                collection: 'personalContentLocator',
-                id: locator.id,
-            }))
             await storageUtils.deleteMany([
                 {
                     collection: 'personalContentMetadata',
@@ -127,7 +120,10 @@ export async function uploadClientUpdateV24({
                         ? { normalizedUrl: normalizedContentLocator.location }
                         : null,
                 },
-                ...references,
+                ...allContentLocators.map((locator) => ({
+                    collection: 'personalContentLocator',
+                    id: locator.id,
+                })),
             ])
         }
     } else if (update.collection === 'annotations') {
@@ -426,10 +422,14 @@ export async function uploadClientUpdateV24({
 
             const contentReads = await storageUtils.findMany<
                 PersonalContentRead & { id: string | number }
-            >('personalContentRead', {
-                personalContentMetadata: contentMetadata.id,
-            })
-            if (!contentReads?.length) {
+            >(
+                'personalContentRead',
+                {
+                    personalContentMetadata: contentMetadata.id,
+                },
+                { limit: 2 },
+            )
+            if (!contentReads.length) {
                 return
             }
 
