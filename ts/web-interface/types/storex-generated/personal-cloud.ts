@@ -134,6 +134,7 @@ export type PersonalContentRead =
         scrollEndPercentage?: number
         scrollMaxPixel?: number
         scrollEndPixel?: number
+        pageTotal?: number
         pageEnd?: number
         pageMax?: number
         createdWhen: number

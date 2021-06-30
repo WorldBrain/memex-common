@@ -386,6 +386,7 @@ export async function uploadClientUpdateV24({
                 scrollMaxPercentage: visit.scrollMaxPerc ?? null,
                 scrollMaxPixel: visit.scrollMaxPx ?? null,
                 scrollEndPixel: visit.scrollPx ?? null,
+                pageTotal: null,
                 pageEnd: null,
                 pageMax: null,
             }

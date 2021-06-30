@@ -207,6 +207,7 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections =>
                 scrollEndPercentage: { type: 'float', optional: true },
                 scrollMaxPixel: { type: 'int', optional: true },
                 scrollEndPixel: { type: 'int', optional: true },
+                pageTotal: { type: 'int', optional: true },
                 pageEnd: { type: 'int', optional: true },
                 pageMax: { type: 'int', optional: true },
             },
