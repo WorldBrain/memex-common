@@ -14,7 +14,7 @@ export default class StorexPersonalCloudService implements PersonalCloudService 
         params: {
             updates: PersonalCloudUpdatePushBatch
         },
-    ): Promise<void> {
+    ) {
         const userId = await this.options.getCurrentUserId()
         if (!userId) {
             throw new Error(`Tried to upload client updates without being logged in`)
