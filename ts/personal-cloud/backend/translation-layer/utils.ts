@@ -15,6 +15,9 @@ export const constructAnnotationUrl = (
     id: string,
 ): string => annotationUrl + '#' + id
 
+export const isUrlForAnnotation = (url: string): boolean =>
+    /#\d{10,}$/.test(url)
+
 export function constructPageFromRemote(
     metadata: PersonalContentMetadata,
     locator: PersonalContentLocator,
