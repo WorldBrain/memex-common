@@ -89,11 +89,9 @@ export async function uploadClientUpdateV24({
                     uploadWhere: { normalizedUrl },
                     uploadField: 'htmlBody',
                     uploadPath: uploadPath,
-                    updateObject: {
+                    changeInfo: {
+                        type: 'htmlBody',
                         normalizedUrl,
-                    },
-                    updateMedia: {
-                        htmlBody: uploadPath
                     },
                 })
             }

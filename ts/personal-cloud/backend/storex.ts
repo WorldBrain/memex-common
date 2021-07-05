@@ -81,10 +81,17 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
             throw new Error(`User tried to upload to storage without being logged in`)
         }
 
-        this.options.view.hub.storedObjects.push({
-            path: params.mediaPath,
-            object: params.mediaObject,
-        })
+        const { storedObjects } = this.options.view.hub
+        const existingIndex = storedObjects.findIndex(entry => entry.path === params.mediaPath)
+        if (existingIndex >= 0) {
+            storedObjects[existingIndex].object = params.mediaObject
+        } else {
+            storedObjects.push({
+                path: params.mediaPath,
+                object: params.mediaObject,
+            })
+        }
+
         const dataChange: PersonalDataChange = {
             type: DataChangeType.Modify,
             createdWhen: '$now' as any,
@@ -99,9 +106,8 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
         })
         await this.options.view.pushUpdates([{
             type: PersonalCloudUpdateType.Overwrite,
-            storage: params.changeInfo.dbStorage,
-            collection: params.changeInfo.dbCollection,
-            object: params.changeInfo.dbObject,
+            collection: ':storage',
+            object: { nope: 'this is a media change, use the download translation layer' },
         }])
     }
 

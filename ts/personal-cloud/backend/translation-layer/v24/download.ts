@@ -60,13 +60,16 @@ export async function downloadClientUpdatesV24(
 
             if (change.collection === ':media') {
                 const changeInfo: MediaChangeInfo = change.info!
-                batch.push({
-                    type: PersonalCloudUpdateType.Overwrite,
-                    collection: changeInfo.dbCollection,
-                    object: changeInfo.dbObject,
-                    storage: changeInfo.dbStorage,
-                    media: changeInfo.dbMedia,
-                })
+                if (changeInfo.type === 'htmlBody') {
+                    batch.push({
+                        type: PersonalCloudUpdateType.Overwrite,
+                        collection: 'pageContent',
+                        where: { normalizedUrl: changeInfo.normalizedUrl },
+                        object: {},
+                        storage: 'persistent',
+                        media: { htmlBody: change.objectId },
+                    })
+                }
                 continue
             }
 
