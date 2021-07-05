@@ -531,6 +531,9 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localList = update.object
+            if (typeof localList.createdAt === 'string') {
+                localList.createdAt = new Date(localList.createdAt)
+            }
             const updates = {
                 name: localList.name,
                 localId: localList.id,
@@ -564,6 +567,9 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'pageListEntries') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localListEntry = update.object
+            if (typeof localListEntry.createdAt === 'string') {
+                localListEntry.createdAt = new Date(localListEntry.createdAt)
+            }
             const normalizedPageUrl = localListEntry.pageUrl
 
             const [{ contentMetadata }, list] = await Promise.all([
