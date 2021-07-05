@@ -77,14 +77,21 @@ export class ReadwisePostStorageChange {
             return
         }
 
-        const annotationUrl =
-            change.type === 'create'
-                ? (change.pk as string)
-                : (change.pks[0] as string)
-        await this.scheduleReadwiseHighlightUpdate({
-            url: annotationUrl,
-            ...change.values,
-        })
+        if (change.type === 'create') {
+            const annotationUrl = change.pk as string
+            await this.scheduleReadwiseHighlightUpdate({
+                url: annotationUrl,
+                ...change.values,
+            })
+        } else if (change.type === 'modify') {
+            for (const pk of change.pks) {
+                const annotationUrl = pk as string
+                await this.scheduleReadwiseHighlightUpdate({
+                    url: annotationUrl,
+                    ...change.updates,
+                })
+            }
+        }
     }
 
     private async handleTagPostStorageChange(change: StorageChange<'post'>) {
