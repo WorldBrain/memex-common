@@ -12,6 +12,8 @@ export const PERSONAL_CLOUD_STORAGE_COLLECTIONS = (): StorageModuleCollections =
     ...PERSONAL_LIST_COLLECTIONS(),
     ...PERSONAL_CONTENT_COLLECTIONS(),
     ...PERSONAL_TAG_COLLECTIONS(),
+    ...PERSONAL_ACTION_QUEUE_COLLECTIONS(),
+    ...PERSONAL_SETTING_COLLECTIONS(),
 })
 
 function addCommonalities(
@@ -250,6 +252,25 @@ export const PERSONAL_EXPORT_COLLECTIONS = (): StorageModuleCollections =>
                 title: { type: 'string' },
                 code: { type: 'string' },
                 isFavourite: { type: 'boolean' },
+            },
+        },
+    })
+export const PERSONAL_ACTION_QUEUE_COLLECTIONS = (): StorageModuleCollections =>
+    addCommonalities({
+        personalReadwiseActionQueue: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                action: { type: 'json' },
+            },
+        },
+    })
+export const PERSONAL_SETTING_COLLECTIONS = (): StorageModuleCollections =>
+    addCommonalities({
+        personalMemexExtensionSetting: {
+            version: STORAGE_VERSIONS[8].date,
+            fields: {
+                name: { type: 'string' },
+                value: { type: 'json' },
             },
         },
     })
