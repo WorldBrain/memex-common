@@ -1,6 +1,7 @@
 import type { DeviceServiceInterface } from './device/types'
 import type { OverlayServiceInterface } from './overlay/types'
 import type { ClipboardServiceInterface } from './clipboard/types'
+import type { ActivityStreamsService } from '../activity-streams/types'
 import type { LogicRegistryServiceInterface } from './logic-registry/types'
 import type { ContentSharingServiceInterface } from '../content-sharing/service/types'
 import type { ContentConversationsServiceInterface } from '../content-conversations/service/types'
@@ -15,6 +16,7 @@ export interface Services {
     device: DeviceServiceInterface
     overlay: OverlayServiceInterface
     clipboard: ClipboardServiceInterface
+    activityStreams: ActivityStreamsService
     logicRegistry: LogicRegistryServiceInterface
 
     // Feature specific services
