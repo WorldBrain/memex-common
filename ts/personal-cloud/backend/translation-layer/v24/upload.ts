@@ -14,9 +14,11 @@ import {
     PersonalContentLocator,
     PersonalContentRead,
     PersonalTagConnection,
+    PersonalMemexExtensionSetting,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
+import { EXTENSION_SETTINGS_NAME } from 'src/extension-settings/constants'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -33,6 +35,22 @@ export async function uploadClientUpdateV24({
 }): Promise<{ clientInstructions: PersonalCloudClientInstruction[] }> {
     const storageUtils = new UploadStorageUtils({ ...params, update })
     const clientInstructions: PersonalCloudClientInstruction[] = []
+    let readwiseAPIKey: string | null = null
+
+    if (
+        (update.collection === 'annotations' &&
+            update.type === PersonalCloudUpdateType.Overwrite) ||
+        update.collection === 'tags'
+    ) {
+        const settingsRecord = await storageUtils.findOne<
+            PersonalMemexExtensionSetting
+        >('personalMemexExtensionSettings', {
+            name: EXTENSION_SETTINGS_NAME.ReadwiseAPIKey,
+        })
+        if (typeof settingsRecord?.value === 'string') {
+            readwiseAPIKey = settingsRecord.value
+        }
+    }
 
     if (update.collection === 'pages') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {

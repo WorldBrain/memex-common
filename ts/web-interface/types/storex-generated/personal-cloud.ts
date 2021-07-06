@@ -161,3 +161,18 @@ export type PersonalTagConnection =
         createdWhen: number
         updatedWhen: number
     }
+
+export type PersonalReadwiseActionQueue =
+    {
+        action: any
+        createdWhen: number
+        updatedWhen: number
+    }
+
+export type PersonalMemexExtensionSetting =
+    {
+        name: string
+        value: any
+        createdWhen: number
+        updatedWhen: number
+    }
