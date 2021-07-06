@@ -22,9 +22,8 @@ export function constructPageFromRemote(
     metadata: PersonalContentMetadata,
     locator: PersonalContentLocator,
 ) {
-    const urlParts = extractUrlParts(locator.originalLocation, {
-        supressParseError: false,
-    })
+    const urlParts = extractUrlParts(locator.originalLocation)
+
     return {
         url: locator.location,
         fullUrl: locator.originalLocation,
