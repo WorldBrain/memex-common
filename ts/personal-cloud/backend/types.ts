@@ -3,15 +3,17 @@ import StorageManager from '@worldbrain/storex'
 export interface PersonalCloudBackend {
     pushUpdates(updates: PersonalCloudUpdatePushBatch): Promise<UploadClientUpdatesResult>
     streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch>
-    uploadToMedia(params: {
-        deviceId: number | string,
-        mediaPath: string,
-        mediaObject: string | Blob
-        changeInfo: MediaChangeInfo
-    }): Promise<void>
+    uploadToMedia(params: UploadToMediaParams): Promise<void>
     downloadFromMedia(params: {
         path: string
     }): Promise<string | Blob | null>
+}
+
+export interface UploadToMediaParams {
+    deviceId: number | string
+    mediaPath: string
+    mediaObject: string | Blob
+    changeInfo: MediaChangeInfo
 }
 
 export interface UploadClientUpdatesResult {
