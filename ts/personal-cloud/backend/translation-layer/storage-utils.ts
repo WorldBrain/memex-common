@@ -69,11 +69,11 @@ export class UploadStorageUtils extends DownloadStorageUtils {
         super(deps)
     }
 
-    async create(
+    async create<T = any>(
         collection: string,
         toCreate: any,
         options?: { changeInfo?: any },
-    ) {
+    ): Promise<T> {
         if (!this.deps.update) {
             throw new Error('')
         }
@@ -122,28 +122,32 @@ export class UploadStorageUtils extends DownloadStorageUtils {
             'executeBatch',
             batch,
         )
-        const object = result.info.creation.object
+        const object = result.info.creation.object as T
         return object
     }
 
-    async findOrCreate(collection: string, where: any, defaults: any = {}) {
-        const existing = await this.deps.storageManager
-            .collection(collection)
-            .findObject({ ...where, user: this.deps.userId })
+    async findOrCreate<T = any>(
+        collection: string,
+        where: any,
+        defaults: any = {},
+    ) {
+        const existing = await this.findOne<T>(collection, where)
         if (existing) {
             return existing
         }
-        return this.create(collection, { ...where, ...defaults })
+        return this.create<T>(collection, { ...where, ...defaults })
     }
 
     async findFirstContentLocator(
         normalizedUrl: string,
         locationScheme = LocationSchemeType.NormalizedUrlV1,
     ) {
-        const contentLocator: PersonalContentLocator & {
-            id: string | number
-            personalContentMetadata: string | number
-        } = await this.findOne('personalContentLocator', {
+        const contentLocator = await this.findOne<
+            PersonalContentLocator & {
+                id: string | number
+                personalContentMetadata: string | number
+            }
+        >('personalContentLocator', {
             locationScheme,
             location: normalizedUrl,
         })
@@ -161,7 +165,9 @@ export class UploadStorageUtils extends DownloadStorageUtils {
         if (!contentLocator) {
             return { contentMetadata: null, contentLocator: null }
         }
-        const contentMetadata = await this.findOne('personalContentMetadata', {
+        const contentMetadata = await this.findOne<
+            PersonalContentMetadata & { id: string }
+        >('personalContentMetadata', {
             id: contentLocator.personalContentMetadata,
         })
         return { contentMetadata, contentLocator }

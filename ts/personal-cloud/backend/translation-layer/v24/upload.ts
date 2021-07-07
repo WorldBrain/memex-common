@@ -15,8 +15,9 @@ import type {
     PersonalContentRead,
     PersonalTagConnection,
     PersonalMemexExtensionSetting,
+    PersonalAnnotation,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
-import { extractIdFromAnnotationUrl } from '../utils'
+import { extractIdFromAnnotationUrl, isUrlForAnnotation } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
 import { EXTENSION_SETTINGS_NAME } from '../../../../extension-settings/constants'
 
@@ -168,22 +169,21 @@ export async function uploadClientUpdateV24({
                 updatedWhen: annotation.lastEdited?.getTime() ?? null,
             }
 
-            const existingAnnotation = await storageUtils.findOne(
-                'personalAnnotation',
-                {
-                    localId: updates.localId,
-                    personalContentMetadata: updates.personalContentMetadata,
-                },
-            )
+            let existingAnnotation = await storageUtils.findOne<
+                PersonalAnnotation & { id: string }
+            >('personalAnnotation', {
+                localId: updates.localId,
+                personalContentMetadata: updates.personalContentMetadata,
+            })
             if (!existingAnnotation) {
-                const remoteAnnotation = await storageUtils.create(
+                existingAnnotation = await storageUtils.create(
                     'personalAnnotation',
                     updates,
                 )
                 if (annotation.selector != null) {
                     await storageUtils.create('personalAnnotationSelector', {
                         selector: annotation.selector,
-                        personalAnnotation: remoteAnnotation.id,
+                        personalAnnotation: existingAnnotation.id,
                     })
                 }
             } else {
@@ -192,6 +192,11 @@ export async function uploadClientUpdateV24({
                     existingAnnotation.id,
                     updates,
                 )
+            }
+            if (readwiseAPIKey != null) {
+                await storageUtils.findOrCreate('personalReadwiseAction', {
+                    personalAnnotation: existingAnnotation.id,
+                })
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const annotationUrl = update.where.url as string
@@ -478,6 +483,7 @@ export async function uploadClientUpdateV24({
             )
         }
     } else if (update.collection === 'tags') {
+        let personalAnnotationId: string | null = null
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const tag = update.object
 
@@ -488,6 +494,8 @@ export async function uploadClientUpdateV24({
             if (!objectId) {
                 return
             }
+            personalAnnotationId =
+                collection === 'personalAnnotation' ? objectId : null
 
             const storedTag = await storageUtils.findOrCreate('personalTag', {
                 name: tag.name,
@@ -515,6 +523,8 @@ export async function uploadClientUpdateV24({
             if (!objectId) {
                 return
             }
+            personalAnnotationId =
+                collection === 'personalAnnotation' ? objectId : null
 
             const [tagConnection, otherConnections] = await Promise.all([
                 storageUtils.findOne<
@@ -545,6 +555,11 @@ export async function uploadClientUpdateV24({
             if (otherConnections.length === 1) {
                 await storageUtils.deleteById('personalTag', tag.id)
             }
+        }
+        if (readwiseAPIKey != null && personalAnnotationId != null) {
+            await storageUtils.findOrCreate('personalReadwiseAction', {
+                personalAnnotation: personalAnnotationId,
+            })
         }
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
