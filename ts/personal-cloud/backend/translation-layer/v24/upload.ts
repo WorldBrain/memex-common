@@ -10,7 +10,7 @@ import {
     ContentLocatorType,
     ContentLocatorFormat,
 } from '../../../storage/types'
-import {
+import type {
     PersonalContentLocator,
     PersonalContentRead,
     PersonalTagConnection,
@@ -18,7 +18,7 @@ import {
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
-import { EXTENSION_SETTINGS_NAME } from 'src/extension-settings/constants'
+import { EXTENSION_SETTINGS_NAME } from '../../../../extension-settings/constants'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -44,7 +44,7 @@ export async function uploadClientUpdateV24({
     ) {
         const settingsRecord = await storageUtils.findOne<
             PersonalMemexExtensionSetting
-        >('personalMemexExtensionSettings', {
+        >('personalMemexExtensionSetting', {
             name: EXTENSION_SETTINGS_NAME.ReadwiseAPIKey,
         })
         if (typeof settingsRecord?.value === 'string') {

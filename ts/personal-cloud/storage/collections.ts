@@ -257,11 +257,12 @@ export const PERSONAL_EXPORT_COLLECTIONS = (): StorageModuleCollections =>
     })
 export const PERSONAL_ACTION_QUEUE_COLLECTIONS = (): StorageModuleCollections =>
     addCommonalities({
-        personalReadwiseActionQueue: {
+        personalReadwiseAction: {
             version: STORAGE_VERSIONS[8].date,
             fields: {
                 action: { type: 'json' },
             },
+            relationships: [{ childOf: 'personalAnnotation' }],
         },
     })
 export const PERSONAL_SETTING_COLLECTIONS = (): StorageModuleCollections =>
