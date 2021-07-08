@@ -194,9 +194,7 @@ export async function downloadClientUpdatesV24(
                         annotation: annotationUrl,
                         id: annotationPrivacyLevel.localId,
                         privacyLevel: annotationPrivacyLevel.privacyLevel,
-                        createdWhen: new Date(
-                            annotationPrivacyLevel.createdWhen,
-                        ),
+                        createdWhen: annotationPrivacyLevel.createdWhen,
                     },
                 })
             } else if (change.collection === 'personalAnnotationShare') {
@@ -288,7 +286,7 @@ export async function downloadClientUpdatesV24(
                         searchableName: list.name,
                         isNestable: list.isNestable,
                         isDeletable: list.isDeletable,
-                        createdAt: new Date(list.createdWhen),
+                        createdAt: list.createdWhen,
                     },
                 })
             } else if (change.collection === 'personalListEntry') {
@@ -316,7 +314,7 @@ export async function downloadClientUpdatesV24(
                         listId: list.localId,
                         pageUrl: locator.location,
                         fullUrl: locator.originalLocation,
-                        createdAt: new Date(listEntry.createdWhen),
+                        createdAt: listEntry.createdWhen,
                     },
                 })
             } else if (change.collection === 'personalListShare') {

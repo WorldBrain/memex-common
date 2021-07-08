@@ -50,7 +50,7 @@ export function constructAnnotationFromRemote(
         body: annotation.body ?? undefined,
         comment: annotation.comment ?? undefined,
         selector: annotationSelector?.selector,
-        lastEdited: new Date(annotation.updatedWhen),
-        createdWhen: new Date(annotation.createdWhen),
+        lastEdited: annotation.updatedWhen,
+        createdWhen: annotation.createdWhen,
     }
 }

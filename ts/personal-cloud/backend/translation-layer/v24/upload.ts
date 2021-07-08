@@ -17,6 +17,7 @@ import {
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
+import { DATE_FIELDS } from './constants'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -33,6 +34,8 @@ export async function uploadClientUpdateV24({
 }): Promise<{ clientInstructions: PersonalCloudClientInstruction[] }> {
     const storageUtils = new UploadStorageUtils({ ...params, update })
     const clientInstructions: PersonalCloudClientInstruction[] = []
+
+    preprocessUpdate(update)
 
     if (update.collection === 'pages') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -141,7 +144,6 @@ export async function uploadClientUpdateV24({
             if (!contentMetadata) {
                 return { clientInstructions }
             }
-            ensureDateFields(annotation, ['createdWhen', 'lastEdited'])
             const updates = {
                 personalContentMetadata: contentMetadata.id,
                 localId: extractIdFromAnnotationUrl(annotation.url),
@@ -223,7 +225,6 @@ export async function uploadClientUpdateV24({
                 return { clientInstructions }
             }
 
-            ensureDateFields(annotationPrivacyLevel, ['createdWhen'])
             const updates = {
                 personalAnnotation: annotation.id,
                 localId: annotationPrivacyLevel.id,
@@ -532,7 +533,6 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localList = update.object
-            ensureDateFields(localList, ['createdAt'])
             const updates = {
                 name: localList.name,
                 localId: localList.id,
@@ -566,7 +566,6 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'pageListEntries') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localListEntry = update.object
-            ensureDateFields(localListEntry, ['createdAt'])
             const normalizedPageUrl = localListEntry.pageUrl
 
             const [{ contentMetadata }, list] = await Promise.all([
@@ -689,4 +688,13 @@ function ensureDateFields(object: any, fields: string[]) {
             object[field] = new Date(object[field])
         }
     }
+}
+
+function preprocessUpdate(update: PersonalCloudUpdatePush) {
+    if (update.type !== PersonalCloudUpdateType.Overwrite) {
+        return
+    }
+
+    const dateFields = DATE_FIELDS[update.collection] ?? []
+    ensureDateFields(update.object, dateFields)
 }
