@@ -223,13 +223,12 @@ export async function uploadClientUpdateV24({
                 return
             }
 
-            ensureDateFields(annotationPrivacyLevel, ['createdWhen', 'updatedWhen'])
+            ensureDateFields(annotationPrivacyLevel, ['createdWhen'])
             const updates = {
                 personalAnnotation: annotation.id,
                 localId: annotationPrivacyLevel.id,
                 privacyLevel: annotationPrivacyLevel.privacyLevel,
                 createdWhen: annotationPrivacyLevel.createdWhen.getTime(),
-                updatedWhen: annotationPrivacyLevel.updatedWhen.getTime(),
             }
 
             const existing = await storageUtils.findOne(
