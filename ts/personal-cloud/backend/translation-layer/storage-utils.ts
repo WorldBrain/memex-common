@@ -63,9 +63,7 @@ export class DownloadStorageUtils {
 }
 
 export class UploadStorageUtils extends DownloadStorageUtils {
-    constructor(
-        protected deps: Dependencies & { update: PersonalCloudUpdatePush },
-    ) {
+    constructor(protected deps: Dependencies & { deviceId: string | number }) {
         super(deps)
     }
 
@@ -74,7 +72,7 @@ export class UploadStorageUtils extends DownloadStorageUtils {
         toCreate: any,
         options?: { changeInfo?: any },
     ): Promise<T> {
-        if (!this.deps.update) {
+        if (!this.deps.deviceId) {
             throw new Error('')
         }
         const now = this.deps.getNow()
@@ -91,7 +89,7 @@ export class UploadStorageUtils extends DownloadStorageUtils {
                     updatedWhen: now,
                     ...toCreate,
                     user: this.deps.userId,
-                    createdByDevice: this.deps.update.deviceId,
+                    createdByDevice: this.deps.deviceId,
                 },
             },
             {
@@ -102,7 +100,7 @@ export class UploadStorageUtils extends DownloadStorageUtils {
                     {
                         createdWhen: now,
                         user: this.deps.userId,
-                        createdByDevice: this.deps.update.deviceId,
+                        createdByDevice: this.deps.deviceId,
                         type: DataChangeType.Create,
                         collection,
                     },
@@ -200,7 +198,7 @@ export class UploadStorageUtils extends DownloadStorageUtils {
                     {
                         createdWhen: now,
                         user: this.deps.userId,
-                        createdByDevice: this.deps.update.deviceId,
+                        createdByDevice: this.deps.deviceId,
                         type: DataChangeType.Modify,
                         collection,
                         objectId: id,
@@ -242,7 +240,7 @@ export class UploadStorageUtils extends DownloadStorageUtils {
                     {
                         createdWhen: this.deps.getNow(),
                         user: this.deps.userId,
-                        createdByDevice: this.deps.update.deviceId,
+                        createdByDevice: this.deps.deviceId,
                         type: DataChangeType.Delete,
                         collection: reference.collection,
                         objectId: reference.id,

@@ -4,6 +4,7 @@ import {
     TranslationLayerDependencies,
     PersonalCloudClientInstruction,
     PersonalCloudClientInstructionType,
+    UploadClientUpdatesResult,
 } from '../../types'
 import {
     LocationSchemeType,
@@ -14,12 +15,10 @@ import type {
     PersonalContentLocator,
     PersonalContentRead,
     PersonalTagConnection,
-    PersonalMemexExtensionSetting,
     PersonalAnnotation,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
-import { extractIdFromAnnotationUrl, isUrlForAnnotation } from '../utils'
+import { extractIdFromAnnotationUrl } from '../utils'
 import { UploadStorageUtils, DeleteReference } from '../storage-utils'
-import { EXTENSION_SETTINGS_NAME } from '../../../../extension-settings/constants'
 
 // READ BEFORE EDITING
 // `updates` comes from the client-side and can contain tampered data. As sunch,
@@ -33,25 +32,17 @@ export async function uploadClientUpdateV24({
     ...params
 }: TranslationLayerDependencies & {
     update: PersonalCloudUpdatePush
-}): Promise<{ clientInstructions: PersonalCloudClientInstruction[] }> {
-    const storageUtils = new UploadStorageUtils({ ...params, update })
-    const clientInstructions: PersonalCloudClientInstruction[] = []
-    let readwiseAPIKey: string | null = null
-
-    if (
-        (update.collection === 'annotations' &&
-            update.type === PersonalCloudUpdateType.Overwrite) ||
-        update.collection === 'tags'
-    ) {
-        const settingsRecord = await storageUtils.findOne<
-            PersonalMemexExtensionSetting
-        >('personalMemexExtensionSetting', {
-            name: EXTENSION_SETTINGS_NAME.ReadwiseAPIKey,
-        })
-        if (typeof settingsRecord?.value === 'string') {
-            readwiseAPIKey = settingsRecord.value
-        }
+}): Promise<
+    UploadClientUpdatesResult & {
+        annotationIdsForReadwise: Array<string | number>
     }
+> {
+    const storageUtils = new UploadStorageUtils({
+        ...params,
+        deviceId: update.deviceId,
+    })
+    const clientInstructions: PersonalCloudClientInstruction[] = []
+    const annotationIdsForReadwise: Array<string | number> = []
 
     if (update.collection === 'pages') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -170,34 +161,32 @@ export async function uploadClientUpdateV24({
                 updatedWhen: annotation.lastEdited?.getTime() ?? null,
             }
 
-            let existingAnnotation = await storageUtils.findOne<
+            const existingAnnotation = await storageUtils.findOne<
                 PersonalAnnotation & { id: string }
             >('personalAnnotation', {
                 localId: updates.localId,
                 personalContentMetadata: updates.personalContentMetadata,
             })
+
             if (!existingAnnotation) {
-                existingAnnotation = await storageUtils.create(
-                    'personalAnnotation',
-                    updates,
-                )
+                const newAnnotation = await storageUtils.create<
+                    PersonalAnnotation & { id: string | number }
+                >('personalAnnotation', updates)
+                annotationIdsForReadwise.push(newAnnotation.id)
+
                 if (annotation.selector != null) {
                     await storageUtils.create('personalAnnotationSelector', {
                         selector: annotation.selector,
-                        personalAnnotation: existingAnnotation.id,
+                        personalAnnotation: newAnnotation.id,
                     })
                 }
             } else {
+                annotationIdsForReadwise.push(existingAnnotation.id)
                 await storageUtils.updateById(
                     'personalAnnotation',
                     existingAnnotation.id,
                     updates,
                 )
-            }
-            if (readwiseAPIKey != null) {
-                await storageUtils.findOrCreate('personalReadwiseAction', {
-                    personalAnnotation: existingAnnotation.id,
-                })
             }
         } else if (update.type === PersonalCloudUpdateType.Delete) {
             const annotationUrl = update.where.url as string
@@ -484,7 +473,6 @@ export async function uploadClientUpdateV24({
             )
         }
     } else if (update.collection === 'tags') {
-        let personalAnnotationId: string | null = null
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const tag = update.object
 
@@ -495,8 +483,10 @@ export async function uploadClientUpdateV24({
             if (!objectId) {
                 return
             }
-            personalAnnotationId =
-                collection === 'personalAnnotation' ? objectId : null
+
+            if (collection === 'personalAnnotation') {
+                annotationIdsForReadwise.push(objectId)
+            }
 
             const storedTag = await storageUtils.findOrCreate('personalTag', {
                 name: tag.name,
@@ -524,8 +514,10 @@ export async function uploadClientUpdateV24({
             if (!objectId) {
                 return
             }
-            personalAnnotationId =
-                collection === 'personalAnnotation' ? objectId : null
+
+            if (collection === 'personalAnnotation') {
+                annotationIdsForReadwise.push(objectId)
+            }
 
             const [tagConnection, otherConnections] = await Promise.all([
                 storageUtils.findOne<
@@ -556,11 +548,6 @@ export async function uploadClientUpdateV24({
             if (otherConnections.length === 1) {
                 await storageUtils.deleteById('personalTag', tag.id)
             }
-        }
-        if (readwiseAPIKey != null && personalAnnotationId != null) {
-            await storageUtils.findOrCreate('personalReadwiseAction', {
-                personalAnnotation: personalAnnotationId,
-            })
         }
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
@@ -713,7 +700,7 @@ export async function uploadClientUpdateV24({
         }
     }
 
-    return { clientInstructions }
+    return { clientInstructions, annotationIdsForReadwise }
 }
 
 function ensureDateFields(object: any, fields: string[]) {

@@ -1,12 +1,12 @@
 import StorageManager from '@worldbrain/storex'
 
 export interface PersonalCloudBackend {
-    pushUpdates(updates: PersonalCloudUpdatePushBatch): Promise<UploadClientUpdatesResult>
+    pushUpdates(
+        updates: PersonalCloudUpdatePushBatch,
+    ): Promise<UploadClientUpdatesResult>
     streamUpdates(): AsyncIterableIterator<PersonalCloudUpdateBatch>
     uploadToMedia(params: UploadToMediaParams): Promise<void>
-    downloadFromMedia(params: {
-        path: string
-    }): Promise<string | Blob | null>
+    downloadFromMedia(params: { path: string }): Promise<string | Blob | null>
 }
 
 export interface UploadToMediaParams {
@@ -79,7 +79,7 @@ export interface TranslationLayerDependencies {
 }
 
 export enum PersonalCloudClientInstructionType {
-    UploadToStorage = 'upload-to-storage'
+    UploadToStorage = 'upload-to-storage',
 }
 export type PersonalCloudClientInstruction = UploadToStorageClientInstruction
 export interface UploadToStorageClientInstruction {
