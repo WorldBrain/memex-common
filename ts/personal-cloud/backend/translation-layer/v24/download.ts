@@ -197,9 +197,6 @@ export async function downloadClientUpdatesV24(
                         createdWhen: new Date(
                             annotationPrivacyLevel.createdWhen,
                         ),
-                        updatedWhen: new Date(
-                            annotationPrivacyLevel.updatedWhen,
-                        ),
                     },
                 })
             } else if (change.collection === 'personalAnnotationShare') {
