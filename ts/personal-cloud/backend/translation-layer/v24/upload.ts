@@ -101,7 +101,7 @@ export async function uploadClientUpdateV24({
                 normalizedUrl,
             )
             if (!firstConttentLocator) {
-                return
+                return { clientInstructions }
             }
             const allContentLocators: Array<
                 PersonalContentLocator & {
@@ -139,7 +139,7 @@ export async function uploadClientUpdateV24({
                 normalizedUrl,
             )
             if (!contentMetadata) {
-                return
+                return { clientInstructions }
             }
             ensureDateFields(annotation, ['createdWhen', 'lastEdited'])
             const updates = {
@@ -184,7 +184,7 @@ export async function uploadClientUpdateV24({
                 { localId },
             )
             if (!annotation) {
-                return
+                return { clientInstructions }
             }
             const selector = await storageUtils.findOne(
                 'personalAnnotationSelector',
@@ -220,7 +220,7 @@ export async function uploadClientUpdateV24({
                 { localId },
             )
             if (!annotation) {
-                return
+                return { clientInstructions }
             }
 
             ensureDateFields(annotationPrivacyLevel, ['createdWhen'])
@@ -280,7 +280,7 @@ export async function uploadClientUpdateV24({
                 },
             )
             if (!annotation) {
-                return
+                return { clientInstructions }
             }
             const existing = await storageUtils.findOne(
                 'personalAnnotationShare',
@@ -315,7 +315,7 @@ export async function uploadClientUpdateV24({
                 },
             )
             if (!annotation) {
-                return
+                return { clientInstructions }
             }
             const existing = await storageUtils.findOne(
                 'personalAnnotationShare',
@@ -324,7 +324,7 @@ export async function uploadClientUpdateV24({
                 },
             )
             if (!existing) {
-                return
+                return { clientInstructions }
             }
             await storageUtils.deleteById(
                 'personalAnnotationShare',
@@ -342,7 +342,7 @@ export async function uploadClientUpdateV24({
                 normalizedUrl,
             )
             if (!contentMetadata) {
-                return
+                return { clientInstructions }
             }
             await storageUtils.findOrCreate(
                 'personalBookmark',
@@ -358,13 +358,13 @@ export async function uploadClientUpdateV24({
                 normalizedUrl,
             )
             if (!contentMetadata) {
-                return
+                return { clientInstructions }
             }
             const existing = await storageUtils.findOne('personalBookmark', {
                 personalContentMetadata: contentMetadata.id,
             })
             if (!existing) {
-                return
+                return { clientInstructions }
             }
             await storageUtils.deleteById('personalBookmark', existing.id, {
                 url: normalizedUrl,
@@ -378,7 +378,7 @@ export async function uploadClientUpdateV24({
                 contentLocator,
             } = await storageUtils.findContentMetadata(visit.url)
             if (!contentMetadata) {
-                return
+                return { clientInstructions }
             }
             const updates = {
                 personalContentMetadata: contentMetadata.id,
@@ -423,7 +423,7 @@ export async function uploadClientUpdateV24({
                 contentLocator,
             } = await storageUtils.findContentMetadata(normalizedUrl)
             if (!contentMetadata) {
-                return
+                return { clientInstructions }
             }
 
             const contentReads = await storageUtils.findMany<
@@ -436,14 +436,14 @@ export async function uploadClientUpdateV24({
                 { limit: 2 },
             )
             if (!contentReads.length) {
-                return
+                return { clientInstructions }
             }
 
             const [latestRead, secondLatestRead] = contentReads.sort(
                 (a, b) => b.readWhen - a.readWhen,
             )
             if (!latestRead) {
-                return
+                return { clientInstructions }
             }
 
             await storageUtils.updateById(
@@ -469,7 +469,7 @@ export async function uploadClientUpdateV24({
                 collection,
             } = await storageUtils.findTagAssociatedData(tag.url)
             if (!objectId) {
-                return
+                return { clientInstructions }
             }
 
             const storedTag = await storageUtils.findOrCreate('personalTag', {
@@ -488,7 +488,7 @@ export async function uploadClientUpdateV24({
                 name: tagName,
             })
             if (!tag) {
-                return
+                return { clientInstructions }
             }
 
             const {
@@ -496,7 +496,7 @@ export async function uploadClientUpdateV24({
                 collection,
             } = await storageUtils.findTagAssociatedData(normalizedUrl)
             if (!objectId) {
-                return
+                return { clientInstructions }
             }
 
             const [tagConnection, otherConnections] = await Promise.all([
@@ -576,7 +576,7 @@ export async function uploadClientUpdateV24({
                 }),
             ])
             if (!contentMetadata || !list) {
-                return
+                return { clientInstructions }
             }
 
             await storageUtils.findOrCreate('personalListEntry', {
@@ -598,7 +598,7 @@ export async function uploadClientUpdateV24({
             })
 
             if (!existing) {
-                return
+                return { clientInstructions }
             }
 
             await storageUtils.deleteById('personalListEntry', existing.id, {
@@ -614,7 +614,7 @@ export async function uploadClientUpdateV24({
                 localId: metadata.localId,
             })
             if (!list) {
-                return
+                return { clientInstructions }
             }
             await storageUtils.findOrCreate(
                 'personalListShare',
@@ -631,13 +631,13 @@ export async function uploadClientUpdateV24({
                 localId: localListId,
             })
             if (!list) {
-                return
+                return { clientInstructions }
             }
             const existing = await storageUtils.findOne('personalListShare', {
                 personalList: list.id,
             })
             if (!existing) {
-                return
+                return { clientInstructions }
             }
 
             await storageUtils.deleteById('personalListShare', existing.id, {

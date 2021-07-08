@@ -1,4 +1,5 @@
 import type TypedEventEmitter from 'typed-emitter'
+import type React from 'react'
 
 export interface OverlayServiceEvents {
     closeRequest: (event: { id: number }) => void
