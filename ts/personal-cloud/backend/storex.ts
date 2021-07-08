@@ -11,6 +11,7 @@ import {
 } from './types'
 import { uploadClientUpdates, downloadClientUpdates } from './translation-layer'
 import { DataChangeType } from '../storage/types'
+import { writeMediaChange } from './utils'
 
 export class StorexPersonalCloudBackend implements PersonalCloudBackend {
     constructor(
@@ -92,17 +93,10 @@ export class StorexPersonalCloudBackend implements PersonalCloudBackend {
             })
         }
 
-        const dataChange: PersonalDataChange = {
-            type: DataChangeType.Modify,
-            createdWhen: '$now' as any,
-            collection: ':media',
-            objectId: params.mediaPath,
-            info: params.changeInfo,
-        }
-        await this.options.storageManager.collection('personalDataChange').createObject({
-            ...dataChange,
-            user: userId,
-            createdByDevice: params.deviceId,
+        await writeMediaChange({
+            ...params,
+            storageManager: this.options.storageManager,
+            userId,
         })
         await this.options.view.pushUpdates([{
             type: PersonalCloudUpdateType.Overwrite,

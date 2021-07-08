@@ -160,6 +160,7 @@ export async function uploadClientUpdateV24({
             if (!contentMetadata) {
                 return
             }
+            ensureDateFields(annotation, ['createdWhen', 'lastEdited'])
             const updates = {
                 personalContentMetadata: contentMetadata.id,
                 localId: extractIdFromAnnotationUrl(annotation.url),
@@ -245,12 +246,12 @@ export async function uploadClientUpdateV24({
                 return
             }
 
+            ensureDateFields(annotationPrivacyLevel, ['createdWhen'])
             const updates = {
                 personalAnnotation: annotation.id,
                 localId: annotationPrivacyLevel.id,
                 privacyLevel: annotationPrivacyLevel.privacyLevel,
                 createdWhen: annotationPrivacyLevel.createdWhen.getTime(),
-                updatedWhen: annotationPrivacyLevel.updatedWhen.getTime(),
             }
 
             const existing = await storageUtils.findOne(
@@ -564,9 +565,7 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'customLists') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localList = update.object
-            if (typeof localList.createdAt === 'string') {
-                localList.createdAt = new Date(localList.createdAt)
-            }
+            ensureDateFields(localList, ['createdAt'])
             const updates = {
                 name: localList.name,
                 localId: localList.id,
@@ -600,9 +599,7 @@ export async function uploadClientUpdateV24({
     } else if (update.collection === 'pageListEntries') {
         if (update.type === PersonalCloudUpdateType.Overwrite) {
             const localListEntry = update.object
-            if (typeof localListEntry.createdAt === 'string') {
-                localListEntry.createdAt = new Date(localListEntry.createdAt)
-            }
+            ensureDateFields(localListEntry, ['createdAt'])
             const normalizedPageUrl = localListEntry.pageUrl
 
             const [{ contentMetadata }, list] = await Promise.all([
@@ -717,4 +714,12 @@ export async function uploadClientUpdateV24({
     }
 
     return { clientInstructions }
+}
+
+function ensureDateFields(object: any, fields: string[]) {
+    for (const field of fields) {
+        if (typeof object[field] === 'string') {
+            object[field] = new Date(object[field])
+        }
+    }
 }
