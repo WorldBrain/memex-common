@@ -29,11 +29,11 @@ export function constructPageFromRemote(
         fullUrl: locator.originalLocation,
         domain: urlParts.domain,
         hostname: urlParts.hostname,
-        fullTitle: metadata.title,
+        fullTitle: metadata.title ?? undefined,
         text: '',
-        lang: metadata.lang,
+        lang: metadata.lang ?? undefined,
         canonicalUrl: metadata.canonicalUrl,
-        description: metadata.description,
+        description: metadata.description ?? undefined,
     }
 }
 

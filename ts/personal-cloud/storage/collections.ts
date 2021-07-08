@@ -176,7 +176,7 @@ export const PERSONAL_CONTENT_COLLECTIONS = (): StorageModuleCollections =>
                 // of the different ways it might have been accessed (locators).
                 canonicalUrl: { type: 'string' },
 
-                title: { type: 'string' },
+                title: { type: 'string', optional: true },
                 lang: { type: 'string', optional: true },
                 description: { type: 'string', optional: true },
             },

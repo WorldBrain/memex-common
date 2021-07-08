@@ -45,7 +45,7 @@ export async function uploadClientUpdateV24({
             } = await storageUtils.findContentMetadata(normalizedUrl)
             const updates = {
                 canonicalUrl: page.canonicalUrl ?? page.fullUrl,
-                title: page.fullTitle,
+                title: page.fullTitle?.length > 0 ? page.fullTitle : null,
                 lang: page.lang ?? null,
                 description: page.description ?? null,
             }
