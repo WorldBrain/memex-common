@@ -42,7 +42,7 @@ export type IconKeys =
     | 'webMonetizationLogo'
     | 'webMonetizationLogoConfirmed'
 
-export type FontThemeKeys = 'primary' | 'secondary'
+export type FontThemeKeys = 'primary' | 'secondary' | 'content'
 
 export declare type FontSizeThemeKeys =
     | 'header'
