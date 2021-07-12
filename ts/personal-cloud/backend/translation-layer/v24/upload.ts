@@ -693,10 +693,56 @@ export async function uploadClientUpdateV24({
                 'personalTextTemplate',
                 { localId },
             )
-
+            if (!existing) {
+                return { clientInstructions, annotationIdsForReadwise }
+            }
             await storageUtils.deleteById('personalTextTemplate', existing.id, {
                 id: localId,
             })
+        }
+    } else if (update.collection === 'userSettings') {
+        if (update.type === PersonalCloudUpdateType.Overwrite) {
+            const setting = update.object
+            const updates = {
+                name: setting.name,
+                value: setting.value,
+            }
+            const existing = await storageUtils.findOne(
+                'personalMemexExtensionSetting',
+                {
+                    name: setting.name,
+                },
+            )
+            if (existing) {
+                await storageUtils.updateById(
+                    'personalMemexExtensionSetting',
+                    existing.id,
+                    updates,
+                )
+            } else {
+                await storageUtils.create(
+                    'personalMemexExtensionSetting',
+                    updates,
+                )
+            }
+        } else if (update.type === PersonalCloudUpdateType.Delete) {
+            const name = update.where.name
+            const existing = await storageUtils.findOne(
+                'personalMemexExtensionSetting',
+                {
+                    name,
+                },
+            )
+            if (!existing) {
+                return { clientInstructions, annotationIdsForReadwise }
+            }
+            await storageUtils.deleteById(
+                'personalMemexExtensionSetting',
+                existing.id,
+                {
+                    name,
+                },
+            )
         }
     }
 

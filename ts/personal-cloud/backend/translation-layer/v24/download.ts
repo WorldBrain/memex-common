@@ -13,6 +13,7 @@ import {
     PersonalListShare,
     PersonalAnnotationShare,
     PersonalBookmark,
+    PersonalMemexExtensionSetting,
 } from '../../../../web-interface/types/storex-generated/personal-cloud'
 import { DataChangeType } from '../../../../personal-cloud/storage/types'
 import { DOWNLOAD_CHANGE_BATCH_SIZE } from '../constants'
@@ -353,6 +354,16 @@ export async function downloadClientUpdatesV24(
                         isFavourite: template.isFavourite,
                     },
                 })
+            } else if (change.collection === 'personalMemexExtensionSetting') {
+                const template = object as PersonalMemexExtensionSetting
+                batch.push({
+                    type: PersonalCloudUpdateType.Overwrite,
+                    collection: 'userSettings',
+                    object: {
+                        name: template.name,
+                        value: template.value,
+                    },
+                })
             }
         } else if (change.type === DataChangeType.Delete) {
             if (change.collection === 'personalContentMetadata') {
@@ -430,6 +441,12 @@ export async function downloadClientUpdatesV24(
                     type: PersonalCloudUpdateType.Delete,
                     collection: 'templates',
                     where: { id: change.info.id },
+                })
+            } else if (change.collection === 'personalMemexExtensionSetting') {
+                batch.push({
+                    type: PersonalCloudUpdateType.Delete,
+                    collection: 'userSettings',
+                    where: { name: change.info.name },
                 })
             }
         }
