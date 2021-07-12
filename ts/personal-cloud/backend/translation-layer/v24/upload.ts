@@ -1,3 +1,4 @@
+import extractUrlParts from '@worldbrain/memex-url-utils/lib/extract-parts'
 import {
     PersonalCloudUpdateType,
     PersonalCloudUpdatePush,
@@ -84,17 +85,33 @@ export async function uploadClientUpdateV24({
             }
 
             if (contentMetadata) {
-                const uploadPath = `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`
+                const htmlUploadPath = `/u/${params.userId}/htmlBody/${contentMetadata.id}.html`
                 clientInstructions.push({
                     type: PersonalCloudClientInstructionType.UploadToStorage,
                     storage: 'persistent',
                     collection: 'pageContent',
                     uploadWhere: { normalizedUrl },
                     uploadField: 'htmlBody',
-                    uploadPath: uploadPath,
+                    uploadPath: htmlUploadPath,
                     changeInfo: {
                         type: 'htmlBody',
                         normalizedUrl,
+                    },
+                })
+
+                const urlParts = extractUrlParts(page.fullUrl)
+                const { hostname } = urlParts
+                const favIconUploadPath = `/u/${params.userId}/favIcon/${hostname}`
+                clientInstructions.push({
+                    type: PersonalCloudClientInstructionType.UploadToStorage,
+                    storage: 'normal',
+                    collection: 'favIcons',
+                    uploadWhere: { hostname },
+                    uploadField: 'favIcon',
+                    uploadPath: favIconUploadPath,
+                    changeInfo: {
+                        type: 'favIcon',
+                        hostname,
                     },
                 })
             }
