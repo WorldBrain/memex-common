@@ -11,7 +11,7 @@ import { downloadClientUpdatesV24 } from './v24/download'
 import { UploadStorageUtils } from './storage-utils'
 import { EXTENSION_SETTINGS_NAME } from '../../../extension-settings/constants'
 
-async function maybeSendToReadwise(
+async function maybeTriggerReadwiseIntegration(
     params: TranslationLayerDependencies & {
         annotationIds: Set<string | number>
         deviceId: string | number
@@ -57,7 +57,7 @@ export async function uploadClientUpdates(
     // TODO: Confirm deviceId is always the same for all updates in batch
     const deviceId = params.updates[0]?.deviceId
     if (deviceId) {
-        await maybeSendToReadwise({
+        await maybeTriggerReadwiseIntegration({
             ...params,
             deviceId,
             annotationIds: readwiseAnnotationIds,

@@ -162,9 +162,8 @@ export type PersonalTagConnection =
         updatedWhen: number
     }
 
-export type PersonalReadwiseActionQueue =
+export type PersonalReadwiseAction =
     {
-        action: any
         createdWhen: number
         updatedWhen: number
     }

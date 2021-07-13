@@ -35,7 +35,7 @@ export function cloudDataToReadwiseHighlight({
         highlighted_at: new Date(annotation.createdWhen),
         text: formatReadwiseHighlightText(annotation.body),
         location_type: 'order',
-        location: formatReadwiseHighlightLocation(selector.selector),
+        location: formatReadwiseHighlightLocation(selector?.selector),
     }
 }
 

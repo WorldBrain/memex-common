@@ -13,10 +13,15 @@ export type DeleteReference = {
     changeInfo?: any
 }
 
-export interface Dependencies extends TranslationLayerDependencies {}
+export interface DownloadStorageDependencies
+    extends Omit<TranslationLayerDependencies, 'getNow'> {}
+export interface UploadStorageDependencies
+    extends TranslationLayerDependencies {
+    deviceId: string | number
+}
 
 export class DownloadStorageUtils {
-    constructor(protected deps: Dependencies) {}
+    constructor(protected deps: DownloadStorageDependencies) {}
 
     async findOne<T = any>(collection: string, where: any): Promise<T> {
         return this.deps.storageManager
@@ -63,7 +68,7 @@ export class DownloadStorageUtils {
 }
 
 export class UploadStorageUtils extends DownloadStorageUtils {
-    constructor(protected deps: Dependencies & { deviceId: string | number }) {
+    constructor(protected deps: UploadStorageDependencies) {
         super(deps)
     }
 
