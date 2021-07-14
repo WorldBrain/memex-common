@@ -1,4 +1,5 @@
-import { extractUrlParts, URLParts } from '@worldbrain/memex-url-utils/lib'
+import extractUrlParts from '@worldbrain/memex-url-utils/lib/extract-parts/index'
+import { URLParts } from '@worldbrain/memex-url-utils/lib/extract-parts/types'
 import {
     PersonalCloudUpdateType,
     PersonalCloudUpdatePush,
