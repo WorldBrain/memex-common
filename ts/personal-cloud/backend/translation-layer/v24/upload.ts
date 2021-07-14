@@ -1,4 +1,4 @@
-import extractUrlParts from '@worldbrain/memex-url-utils/lib/extract-parts'
+import { extractUrlParts, URLParts } from '@worldbrain/memex-url-utils/lib'
 import {
     PersonalCloudUpdateType,
     PersonalCloudUpdatePush,
@@ -99,7 +99,13 @@ export async function uploadClientUpdateV24({
                     },
                 })
 
-                const urlParts = extractUrlParts(page.fullUrl)
+                let urlParts: URLParts
+                try {
+                    urlParts = extractUrlParts(page.fullUrl, { suppressParseErrors: false })
+                } catch (e) {
+                    console.error(e)
+                    return { clientInstructions }
+                }
                 const { hostname } = urlParts
                 const favIconUploadPath = `/u/${params.userId}/favIcon/${hostname}`
                 clientInstructions.push({

@@ -60,14 +60,24 @@ export async function downloadClientUpdatesV24(
 
             if (change.collection === ':media') {
                 const changeInfo: MediaChangeInfo = change.info!
+                const mediaPath = change.objectId
                 if (changeInfo.type === 'htmlBody') {
                     batch.push({
                         type: PersonalCloudUpdateType.Overwrite,
+                        storage: 'persistent',
                         collection: 'pageContent',
                         where: { normalizedUrl: changeInfo.normalizedUrl },
                         object: {},
-                        storage: 'persistent',
-                        media: { htmlBody: change.objectId },
+                        media: { htmlBody: mediaPath },
+                    })
+                } else if (changeInfo.type === 'favIcon') {
+                    batch.push({
+                        type: PersonalCloudUpdateType.Overwrite,
+                        storage: 'normal',
+                        collection: 'favIcons',
+                        where: { hostname: changeInfo.hostname },
+                        object: {},
+                        media: { favIcon: mediaPath },
                     })
                 }
                 continue
