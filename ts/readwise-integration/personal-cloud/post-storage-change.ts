@@ -1,8 +1,11 @@
 import StorageManager from '@worldbrain/storex'
-import type { StorageOperationEvent } from '@worldbrain/storex-middleware-change-watcher/lib/types'
+import type {
+    StorageOperationEvent,
+    CreationStorageChange,
+} from '@worldbrain/storex-middleware-change-watcher/lib/types'
 import type { ReadwiseHighlight, ReadwiseAPI } from '../api/types'
 import { HTTPReadwiseAPI } from '../api'
-import { DownloadStorageUtils } from 'src/personal-cloud/backend/translation-layer/storage-utils'
+import { DownloadStorageUtils } from '../../personal-cloud/backend/translation-layer/storage-utils'
 import {
     PersonalReadwiseAction as RawPersonalReadwiseAction,
     PersonalAnnotation,
@@ -12,7 +15,7 @@ import {
     PersonalMemexExtensionSetting,
 } from '../../web-interface/types/storex-generated/personal-cloud'
 import { cloudDataToReadwiseHighlight } from '../utils'
-import { EXTENSION_SETTINGS_NAME } from 'src/extension-settings/constants'
+import { EXTENSION_SETTINGS_NAME } from '../../extension-settings/constants'
 
 type PersonalReadwiseAction = RawPersonalReadwiseAction & {
     id: string | number
@@ -24,12 +27,10 @@ type PersonalReadwiseAction = RawPersonalReadwiseAction & {
 export interface Dependencies {
     storageManager: StorageManager
     fetch: typeof fetch
-    getAPIKey: () => Promise<string>
 }
 
 export class ReadwisePostStorageChange {
     private readwiseAPI: ReadwiseAPI
-    private storageUtils: DownloadStorageUtils
 
     constructor(private options: Dependencies) {
         this.readwiseAPI = new HTTPReadwiseAPI({ fetch: options.fetch })
@@ -39,24 +40,22 @@ export class ReadwisePostStorageChange {
         // TODO: Some kind of error tracking
     }
 
-    private async getAPIKey(): Promise<string | null> {
-        const settingsRecord = await this.storageUtils.findOne<
-            PersonalMemexExtensionSetting
-        >('personalMemexExtensionSetting', {
-            name: EXTENSION_SETTINGS_NAME.ReadwiseAPIKey,
-        })
+    private async getAPIKey(userId: string | number): Promise<string | null> {
+        const settingsRecord = (await this.options.storageManager
+            .collection('personalMemexExtensionSetting')
+            .findOneObject({
+                name: EXTENSION_SETTINGS_NAME.ReadwiseAPIKey,
+                user: userId,
+            })) as PersonalMemexExtensionSetting | null
 
         return typeof settingsRecord?.value === 'string'
             ? settingsRecord.value
             : null
     }
 
-    async handlePostStorageChange(event: StorageOperationEvent<'post'>) {
-        const readwiseAPIKey = await this.getAPIKey()
-        if (readwiseAPIKey == null) {
-            return
-        }
-
+    async handlePostStorageChange(
+        event: StorageOperationEvent<'post'>,
+    ): Promise<void> {
         const readwiseActionChangePks = event.info.changes
             .filter(
                 (change) =>
@@ -64,7 +63,7 @@ export class ReadwisePostStorageChange {
                     change.type === 'create' &&
                     change.pk != null,
             )
-            .map((change) => change.pk)
+            .map((change: CreationStorageChange<'post'>) => change.pk)
 
         const records = (await this.options.storageManager
             .collection('personalReadwiseAction')
@@ -73,6 +72,11 @@ export class ReadwisePostStorageChange {
             })) as PersonalReadwiseAction[]
 
         if (!records.length) {
+            return
+        }
+
+        const readwiseAPIKey = await this.getAPIKey(records[0].user)
+        if (readwiseAPIKey == null) {
             return
         }
 
@@ -88,6 +92,8 @@ export class ReadwisePostStorageChange {
         }
     }
 
+    // TODO: properly cache all these assoc. data lookups so that if N annots of the same page,
+    //  for ex, are to be processed, we don't need to look up the same page N times
     private async readwiseActionToHighlight(
         readwiseAction: PersonalReadwiseAction,
     ): Promise<ReadwiseHighlight | null> {
@@ -95,12 +101,12 @@ export class ReadwisePostStorageChange {
             .collection('personalReadwiseAction')
             .deleteOneObject({ id: readwiseAction.id })
 
-        this.storageUtils = new DownloadStorageUtils({
+        const storageUtils = new DownloadStorageUtils({
             storageManager: this.options.storageManager,
             userId: readwiseAction.user,
         })
 
-        const annotation = await this.storageUtils.findOne<
+        const annotation = await storageUtils.findOne<
             PersonalAnnotation & {
                 id: string | number
                 personalContentMetadata: number | string
@@ -110,31 +116,26 @@ export class ReadwisePostStorageChange {
             return null
         }
 
-        const selector = await this.storageUtils.findOne<
-            PersonalAnnotationSelector
-        >('personalAnnotationSelector', { personalAnnotation: annotation.id })
-        const {
-            metadata,
-            locator,
-        } = await this.storageUtils.findLocatorForMetadata(
+        const selector = await storageUtils.findOne<PersonalAnnotationSelector>(
+            'personalAnnotationSelector',
+            { personalAnnotation: annotation.id },
+        )
+        const { metadata, locator } = await storageUtils.findLocatorForMetadata(
             annotation.personalContentMetadata,
         )
         if (!metadata || !locator) {
             return null
         }
 
-        const tagConnections = await this.storageUtils.findMany<
+        const tagConnections = await storageUtils.findMany<
             PersonalTagConnection & { personalTag: string | number }
         >('personalTagConnection', {
             collection: 'personalAnnotation',
             objectId: annotation.id,
         })
-        const tags = await this.storageUtils.findMany<PersonalTag>(
-            'personalTag',
-            {
-                id: { $in: tagConnections.map((conn) => conn.personalTag) },
-            },
-        )
+        const tags = await storageUtils.findMany<PersonalTag>('personalTag', {
+            id: { $in: tagConnections.map((conn) => conn.personalTag) },
+        })
 
         return cloudDataToReadwiseHighlight({
             annotation,

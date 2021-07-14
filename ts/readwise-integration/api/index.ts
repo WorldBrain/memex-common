@@ -1,4 +1,4 @@
-import type { ReadwiseAPI, ReadwiseHighlight } from './types'
+import type { ReadwiseAPI } from './types'
 import { READWISE_API_URL } from './constants'
 
 export class HTTPReadwiseAPI implements ReadwiseAPI {
